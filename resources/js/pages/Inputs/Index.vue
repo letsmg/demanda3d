@@ -34,7 +34,11 @@ const deletingInput = ref<Input | null>(null);
 const deleteForm = useForm({});
 
 const goToPage = (pageNumber: number) => {
-    router.get('/inputs', { page: pageNumber }, { preserveState: true, replace: true });
+    router.get(
+        '/inputs',
+        { page: pageNumber },
+        { preserveState: true, replace: true },
+    );
 };
 
 const confirmDelete = (input: Input) => {
@@ -54,7 +58,10 @@ const executeDelete = () => {
 };
 
 const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
 
 const formatDate = (dateStr: string) =>
     new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -63,28 +70,50 @@ const formatDate = (dateStr: string) =>
 <template>
     <Head title="Insumos" />
     <div class="space-y-6 p-4 md:p-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Insumos</h1>
-                <p class="text-sm text-muted-foreground">Gerenciar filamentos, materiais e recursos ({{ inputs.total }} total)</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Insumos
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Gerenciar filamentos, materiais e recursos ({{
+                        inputs.total
+                    }}
+                    total)
+                </p>
             </div>
             <Button as-child>
-                <Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Novo Insumo</Link>
+                <Link :href="inputsCreate()"
+                    ><Plus class="mr-2 h-4 w-4" /> Novo Insumo</Link
+                >
             </Button>
         </div>
 
-        <div v-if="inputs.data.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+        <div
+            v-if="inputs.data.length === 0"
+            class="flex flex-col items-center justify-center py-16 text-center"
+        >
             <Box class="mb-4 h-12 w-12 text-muted-foreground/50" />
             <h3 class="mb-2 text-lg font-semibold">Nenhum insumo encontrado</h3>
-            <p class="mb-6 text-sm text-muted-foreground">Registre seu primeiro filamento ou material.</p>
-            <Button as-child><Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Criar Insumo</Link></Button>
+            <p class="mb-6 text-sm text-muted-foreground">
+                Registre seu primeiro filamento ou material.
+            </p>
+            <Button as-child
+                ><Link :href="inputsCreate()"
+                    ><Plus class="mr-2 h-4 w-4" /> Criar Insumo</Link
+                ></Button
+            >
         </div>
 
         <template v-else>
             <div class="hidden overflow-hidden rounded-xl border md:block">
                 <table class="w-full">
                     <thead>
-                        <tr class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground">
+                        <tr
+                            class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground"
+                        >
                             <th class="px-6 py-4">Filamento</th>
                             <th class="px-6 py-4">Data Compra</th>
                             <th class="px-6 py-4">Custo</th>
@@ -94,18 +123,48 @@ const formatDate = (dateStr: string) =>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="input in inputs.data" :key="input.id" class="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                            <td class="px-6 py-4 font-medium">{{ input.filaments }}</td>
-                            <td class="px-6 py-4 text-sm">{{ formatDate(input.dt_buy) }}</td>
-                            <td class="px-6 py-4 text-sm font-medium">{{ formatCurrency(Number(input.cost_buy)) }}</td>
-                            <td class="px-6 py-4 text-sm">{{ formatCurrency(Number(input.energy)) }}</td>
-                            <td class="px-6 py-4 text-sm">{{ Number(input.purge).toFixed(1) }}g</td>
+                        <tr
+                            v-for="input in inputs.data"
+                            :key="input.id"
+                            class="border-b transition-colors last:border-0 hover:bg-muted/30"
+                        >
+                            <td class="px-6 py-4 font-medium">
+                                {{ input.filaments }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                {{ formatDate(input.dt_buy) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                {{ formatCurrency(Number(input.cost_buy)) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                {{ formatCurrency(Number(input.energy)) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                {{ Number(input.purge).toFixed(1) }}g
+                            </td>
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <Button variant="outline" size="sm" as-child>
-                                        <Link :href="inputsEdit({ input: input.id })"><Edit class="h-3 w-3" /></Link>
+                                <div
+                                    class="flex items-center justify-end gap-2"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        as-child
+                                    >
+                                        <Link
+                                            :href="
+                                                inputsEdit({ input: input.id })
+                                            "
+                                            ><Edit class="h-3 w-3"
+                                        /></Link>
                                     </Button>
-                                    <Button variant="outline" size="sm" class="text-destructive hover:bg-destructive/10" @click="confirmDelete(input)">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="text-destructive hover:bg-destructive/10"
+                                        @click="confirmDelete(input)"
+                                    >
                                         <Trash2 class="h-3 w-3" />
                                     </Button>
                                 </div>
@@ -116,29 +175,60 @@ const formatDate = (dateStr: string) =>
             </div>
 
             <div class="grid gap-3 md:hidden">
-                <Card v-for="input in inputs.data" :key="input.id" class="border-border/50">
+                <Card
+                    v-for="input in inputs.data"
+                    :key="input.id"
+                    class="border-border/50"
+                >
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
-                            <CardTitle class="text-base">{{ input.filaments }}</CardTitle>
-                            <Badge variant="secondary" class="shrink-0">{{ formatDate(input.dt_buy) }}</Badge>
+                            <CardTitle class="text-base">{{
+                                input.filaments
+                            }}</CardTitle>
+                            <Badge variant="secondary" class="shrink-0">{{
+                                formatDate(input.dt_buy)
+                            }}</Badge>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div class="space-y-2 text-sm">
                             <div class="flex items-center gap-2 font-medium">
-                                <DollarSign class="h-3.5 w-3.5 text-green-600" />
-                                <span>{{ formatCurrency(Number(input.cost_buy)) }}</span>
+                                <DollarSign
+                                    class="h-3.5 w-3.5 text-green-600"
+                                />
+                                <span>{{
+                                    formatCurrency(Number(input.cost_buy))
+                                }}</span>
                             </div>
-                            <div class="flex items-center gap-2 text-muted-foreground">
+                            <div
+                                class="flex items-center gap-2 text-muted-foreground"
+                            >
                                 <Gauge class="h-3.5 w-3.5" />
-                                <span>Energia: {{ formatCurrency(Number(input.energy)) }} | Purga: {{ Number(input.purge).toFixed(1) }}g</span>
+                                <span
+                                    >Energia:
+                                    {{ formatCurrency(Number(input.energy)) }} |
+                                    Purga:
+                                    {{ Number(input.purge).toFixed(1) }}g</span
+                                >
                             </div>
                         </div>
                         <div class="mt-4 flex gap-2">
-                            <Button variant="outline" size="sm" class="flex-1" as-child>
-                                <Link :href="inputsEdit({ input: input.id })"><Edit class="mr-1 h-3 w-3" /> Editar</Link>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="flex-1"
+                                as-child
+                            >
+                                <Link :href="inputsEdit({ input: input.id })"
+                                    ><Edit class="mr-1 h-3 w-3" /> Editar</Link
+                                >
                             </Button>
-                            <Button variant="outline" size="sm" class="flex-1 text-destructive" @click="confirmDelete(input)">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="flex-1 text-destructive"
+                                @click="confirmDelete(input)"
+                            >
                                 <Trash2 class="mr-1 h-3 w-3" /> Excluir
                             </Button>
                         </div>
@@ -146,12 +236,33 @@ const formatDate = (dateStr: string) =>
                 </Card>
             </div>
 
-            <div v-if="inputs.last_page > 1" class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-                <p class="text-sm text-muted-foreground">Mostrando {{ inputs.from }} a {{ inputs.to }} de {{ inputs.total }}</p>
+            <div
+                v-if="inputs.last_page > 1"
+                class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between"
+            >
+                <p class="text-sm text-muted-foreground">
+                    Mostrando {{ inputs.from }} a {{ inputs.to }} de
+                    {{ inputs.total }}
+                </p>
                 <div class="flex gap-2">
-                    <Button variant="outline" size="sm" :disabled="inputs.current_page === 1" @click="goToPage(inputs.current_page - 1)">Anterior</Button>
-                    <span class="flex items-center px-4 text-sm">Página {{ inputs.current_page }} de {{ inputs.last_page }}</span>
-                    <Button variant="outline" size="sm" :disabled="inputs.current_page === inputs.last_page" @click="goToPage(inputs.current_page + 1)">Próxima</Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="inputs.current_page === 1"
+                        @click="goToPage(inputs.current_page - 1)"
+                        >Anterior</Button
+                    >
+                    <span class="flex items-center px-4 text-sm"
+                        >Página {{ inputs.current_page }} de
+                        {{ inputs.last_page }}</span
+                    >
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="inputs.current_page === inputs.last_page"
+                        @click="goToPage(inputs.current_page + 1)"
+                        >Próxima</Button
+                    >
                 </div>
             </div>
         </template>
@@ -161,11 +272,19 @@ const formatDate = (dateStr: string) =>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Excluir Insumo</DialogTitle>
-                <DialogDescription>Tem certeza que deseja excluir <strong>{{ deletingInput?.filaments }}</strong>? Esta ação não pode ser desfeita.</DialogDescription>
+                <DialogDescription
+                    >Tem certeza que deseja excluir
+                    <strong>{{ deletingInput?.filaments }}</strong
+                    >? Esta ação não pode ser desfeita.</DialogDescription
+                >
             </DialogHeader>
             <DialogFooter>
-                <Button variant="outline" @click="showDeleteDialog = false">Cancelar</Button>
-                <Button variant="destructive" @click="executeDelete">Excluir</Button>
+                <Button variant="outline" @click="showDeleteDialog = false"
+                    >Cancelar</Button
+                >
+                <Button variant="destructive" @click="executeDelete"
+                    >Excluir</Button
+                >
             </DialogFooter>
         </DialogContent>
     </Dialog>

@@ -3,7 +3,13 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { create as clientsCreate, edit as clientsEdit } from '@/routes/clients';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,7 +20,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Users, Plus, Search, Edit, Trash2, Phone, MapPin, ChevronLeft, ChevronRight } from '@lucide/vue';
+import {
+    Users,
+    Plus,
+    Search,
+    Edit,
+    Trash2,
+    Phone,
+    MapPin,
+    ChevronLeft,
+    ChevronRight,
+} from '@lucide/vue';
 import type { Client } from '@/types';
 
 type PaginatedClients = {
@@ -40,12 +56,20 @@ const searchTimeout = ref<ReturnType<typeof setTimeout>>();
 const onSearchInput = () => {
     clearTimeout(searchTimeout.value);
     searchTimeout.value = setTimeout(() => {
-        router.get('/clients', { search: searchQuery.value || undefined, page: 1 }, { preserveState: true, replace: true });
+        router.get(
+            '/clients',
+            { search: searchQuery.value || undefined, page: 1 },
+            { preserveState: true, replace: true },
+        );
     }, 400);
 };
 
 const goToPage = (pageNumber: number) => {
-    router.get('/clients', { page: pageNumber, search: searchQuery.value || undefined }, { preserveState: true, replace: true });
+    router.get(
+        '/clients',
+        { page: pageNumber, search: searchQuery.value || undefined },
+        { preserveState: true, replace: true },
+    );
 };
 
 const confirmDelete = (client: Client) => {
@@ -68,8 +92,13 @@ const executeDelete = () => {
 
 const formatDoc = (doc: string) => {
     if (!doc) return '-';
-    if (doc.length === 14) return doc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-    if (doc.length === 11) return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    if (doc.length === 14)
+        return doc.replace(
+            /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+            '$1.$2.$3/$4-$5',
+        );
+    if (doc.length === 11)
+        return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     return doc;
 };
 </script>
@@ -79,11 +108,16 @@ const formatDoc = (doc: string) => {
 
     <div class="space-y-6 p-4 md:p-6">
         <!-- Header -->
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Clientes</h1>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Clientes
+                </h1>
                 <p class="text-sm text-muted-foreground">
-                    Gerencie seus clientes de impressão 3D ({{ clients.total }} total)
+                    Gerencie seus clientes de impressão 3D ({{ clients.total }}
+                    total)
                 </p>
             </div>
             <Button as-child>
@@ -96,7 +130,9 @@ const formatDoc = (doc: string) => {
 
         <!-- Search -->
         <div class="relative">
-            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+                class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
                 v-model="searchQuery"
                 placeholder="Buscar por nome, documento, cidade ou telefone..."
@@ -106,11 +142,20 @@ const formatDoc = (doc: string) => {
         </div>
 
         <!-- Empty State -->
-        <div v-if="clients.data.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+        <div
+            v-if="clients.data.length === 0"
+            class="flex flex-col items-center justify-center py-16 text-center"
+        >
             <Users class="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 class="mb-2 text-lg font-semibold">Nenhum cliente encontrado</h3>
+            <h3 class="mb-2 text-lg font-semibold">
+                Nenhum cliente encontrado
+            </h3>
             <p class="mb-6 text-sm text-muted-foreground">
-                {{ searchQuery ? 'Nenhum cliente corresponde à sua busca.' : 'Comece cadastrando seu primeiro cliente.' }}
+                {{
+                    searchQuery
+                        ? 'Nenhum cliente corresponde à sua busca.'
+                        : 'Comece cadastrando seu primeiro cliente.'
+                }}
             </p>
             <Button v-if="!searchQuery" as-child>
                 <Link :href="clientsCreate()">
@@ -126,7 +171,9 @@ const formatDoc = (doc: string) => {
             <div class="hidden overflow-hidden rounded-xl border md:block">
                 <table class="w-full">
                     <thead>
-                        <tr class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground">
+                        <tr
+                            class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground"
+                        >
                             <th class="px-6 py-4">Nome / Documento</th>
                             <th class="px-6 py-4">Contato</th>
                             <th class="px-6 py-4">Localização</th>
@@ -137,31 +184,52 @@ const formatDoc = (doc: string) => {
                         <tr
                             v-for="client in clients.data"
                             :key="client.id"
-                            class="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                            class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-6 py-4">
                                 <div class="font-medium">{{ client.name }}</div>
-                                <div class="text-sm text-muted-foreground">{{ formatDoc(client.doc) }}</div>
+                                <div class="text-sm text-muted-foreground">
+                                    {{ formatDoc(client.doc) }}
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-1 text-sm">
-                                    <Phone class="h-3 w-3 text-muted-foreground" />
+                                    <Phone
+                                        class="h-3 w-3 text-muted-foreground"
+                                    />
                                     {{ client.phone1 }}
                                 </div>
-                                <div v-if="client.contact1" class="text-xs text-muted-foreground mt-0.5">
+                                <div
+                                    v-if="client.contact1"
+                                    class="mt-0.5 text-xs text-muted-foreground"
+                                >
                                     Contato: {{ client.contact1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-1 text-sm">
-                                    <MapPin class="h-3 w-3 text-muted-foreground" />
+                                    <MapPin
+                                        class="h-3 w-3 text-muted-foreground"
+                                    />
                                     {{ client.city }}, {{ client.state }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <Button variant="outline" size="sm" as-child>
-                                        <Link :href="clientsEdit({ client: client.id })">
+                                <div
+                                    class="flex items-center justify-end gap-2"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        as-child
+                                    >
+                                        <Link
+                                            :href="
+                                                clientsEdit({
+                                                    client: client.id,
+                                                })
+                                            "
+                                        >
                                             <Edit class="h-3 w-3" />
                                         </Link>
                                     </Button>
@@ -182,34 +250,63 @@ const formatDoc = (doc: string) => {
 
             <!-- Mobile Cards -->
             <div class="grid gap-3 md:hidden">
-                <Card v-for="client in clients.data" :key="client.id" class="border-border/50">
+                <Card
+                    v-for="client in clients.data"
+                    :key="client.id"
+                    class="border-border/50"
+                >
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
                             <div>
-                                <CardTitle class="text-base">{{ client.name }}</CardTitle>
-                                <CardDescription>{{ formatDoc(client.doc) }}</CardDescription>
+                                <CardTitle class="text-base">{{
+                                    client.name
+                                }}</CardTitle>
+                                <CardDescription>{{
+                                    formatDoc(client.doc)
+                                }}</CardDescription>
                             </div>
-                            <Badge variant="secondary" class="shrink-0">{{ client.state }}</Badge>
+                            <Badge variant="secondary" class="shrink-0">{{
+                                client.state
+                            }}</Badge>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div class="space-y-2 text-sm">
-                            <div class="flex items-center gap-2 text-muted-foreground">
+                            <div
+                                class="flex items-center gap-2 text-muted-foreground"
+                            >
                                 <Phone class="h-3.5 w-3.5" />
                                 <span>{{ client.phone1 }}</span>
                             </div>
-                            <div class="flex items-center gap-2 text-muted-foreground">
+                            <div
+                                class="flex items-center gap-2 text-muted-foreground"
+                            >
                                 <MapPin class="h-3.5 w-3.5" />
-                                <span>{{ client.city }}, {{ client.state }} - {{ client.zipcode }}</span>
+                                <span
+                                    >{{ client.city }}, {{ client.state }} -
+                                    {{ client.zipcode }}</span
+                                >
                             </div>
                         </div>
                         <div class="mt-4 flex gap-2">
-                            <Button variant="outline" size="sm" class="flex-1" as-child>
-                                <Link :href="clientsEdit({ client: client.id })">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="flex-1"
+                                as-child
+                            >
+                                <Link
+                                    :href="clientsEdit({ client: client.id })"
+                                >
                                     <Edit class="mr-1 h-3 w-3" /> Editar
                                 </Link>
                             </Button>
-                            <Button variant="outline" size="sm" class="flex-1 text-destructive" @click="confirmDelete(client)">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="flex-1 text-destructive"
+                                @click="confirmDelete(client)"
+                            >
                                 <Trash2 class="mr-1 h-3 w-3" /> Excluir
                             </Button>
                         </div>
@@ -218,18 +315,33 @@ const formatDoc = (doc: string) => {
             </div>
 
             <!-- Pagination -->
-            <div v-if="clients.last_page > 1" class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+            <div
+                v-if="clients.last_page > 1"
+                class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between"
+            >
                 <p class="text-sm text-muted-foreground">
-                    Mostrando {{ clients.from }} a {{ clients.to }} de {{ clients.total }} clientes
+                    Mostrando {{ clients.from }} a {{ clients.to }} de
+                    {{ clients.total }} clientes
                 </p>
                 <div class="flex items-center gap-1">
-                    <Button variant="outline" size="sm" :disabled="clients.current_page === 1" @click="goToPage(clients.current_page - 1)">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="clients.current_page === 1"
+                        @click="goToPage(clients.current_page - 1)"
+                    >
                         <ChevronLeft class="h-4 w-4" />
                     </Button>
                     <span class="flex items-center px-4 text-sm">
-                        Página {{ clients.current_page }} de {{ clients.last_page }}
+                        Página {{ clients.current_page }} de
+                        {{ clients.last_page }}
                     </span>
-                    <Button variant="outline" size="sm" :disabled="clients.current_page === clients.last_page" @click="goToPage(clients.current_page + 1)">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="clients.current_page === clients.last_page"
+                        @click="goToPage(clients.current_page + 1)"
+                    >
                         <ChevronRight class="h-4 w-4" />
                     </Button>
                 </div>
@@ -243,13 +355,18 @@ const formatDoc = (doc: string) => {
             <DialogHeader>
                 <DialogTitle>Excluir Cliente</DialogTitle>
                 <DialogDescription>
-                    Tem certeza que deseja excluir <strong>{{ deletingClient?.name }}</strong>?
-                    Esta ação não pode ser desfeita.
+                    Tem certeza que deseja excluir
+                    <strong>{{ deletingClient?.name }}</strong
+                    >? Esta ação não pode ser desfeita.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-                <Button variant="outline" @click="showDeleteDialog = false">Cancelar</Button>
-                <Button variant="destructive" @click="executeDelete">Excluir</Button>
+                <Button variant="outline" @click="showDeleteDialog = false"
+                    >Cancelar</Button
+                >
+                <Button variant="destructive" @click="executeDelete"
+                    >Excluir</Button
+                >
             </DialogFooter>
         </DialogContent>
     </Dialog>

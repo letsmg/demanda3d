@@ -2,7 +2,13 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { index as inputsIndex } from '@/routes/inputs';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
@@ -29,8 +35,12 @@ const submit = () => {
                 <Link :href="inputsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Criar Insumo</h1>
-                <p class="text-sm text-muted-foreground">Registrar um novo filamento ou material</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Criar Insumo
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Registrar um novo filamento ou material
+                </p>
             </div>
         </div>
 
@@ -44,47 +54,113 @@ const submit = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Insumo</CardTitle>
-                    <CardDescription>Preencha os dados do material abaixo</CardDescription>
+                    <CardDescription
+                        >Preencha os dados do material abaixo</CardDescription
+                    >
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="space-y-2">
                         <Label for="filaments">Filamento / Material *</Label>
-                        <Input id="filaments" v-model="form.filaments" placeholder="Ex: PLA 1.75mm" :class="{ 'border-destructive': form.errors.filaments }" />
-                        <span v-if="form.errors.filaments" class="text-sm text-destructive">{{ form.errors.filaments }}</span>
+                        <Input
+                            id="filaments"
+                            v-model="form.filaments"
+                            placeholder="Ex: PLA 1.75mm"
+                            :class="{
+                                'border-destructive': form.errors.filaments,
+                            }"
+                        />
+                        <span
+                            v-if="form.errors.filaments"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.filaments }}</span
+                        >
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="dt_buy">Data da Compra *</Label>
-                            <Input id="dt_buy" type="date" v-model="form.dt_buy" :class="{ 'border-destructive': form.errors.dt_buy }" />
-                            <span v-if="form.errors.dt_buy" class="text-sm text-destructive">{{ form.errors.dt_buy }}</span>
+                            <Input
+                                id="dt_buy"
+                                type="date"
+                                v-model="form.dt_buy"
+                                :class="{
+                                    'border-destructive': form.errors.dt_buy,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.dt_buy"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.dt_buy }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="cost_buy">Custo de Compra *</Label>
-                            <Input id="cost_buy" type="number" step="0.01" v-model="form.cost_buy" placeholder="0.00" :class="{ 'border-destructive': form.errors.cost_buy }" />
-                            <span v-if="form.errors.cost_buy" class="text-sm text-destructive">{{ form.errors.cost_buy }}</span>
+                            <Input
+                                id="cost_buy"
+                                type="number"
+                                step="0.01"
+                                v-model="form.cost_buy"
+                                placeholder="0.00"
+                                :class="{
+                                    'border-destructive': form.errors.cost_buy,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.cost_buy"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.cost_buy }}</span
+                            >
                         </div>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="energy">Custo de Energia *</Label>
-                            <Input id="energy" type="number" step="0.01" v-model="form.energy" placeholder="0.00" :class="{ 'border-destructive': form.errors.energy }" />
-                            <span v-if="form.errors.energy" class="text-sm text-destructive">{{ form.errors.energy }}</span>
+                            <Input
+                                id="energy"
+                                type="number"
+                                step="0.01"
+                                v-model="form.energy"
+                                placeholder="0.00"
+                                :class="{
+                                    'border-destructive': form.errors.energy,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.energy"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.energy }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="purge">Purga (gramas) *</Label>
-                            <Input id="purge" type="number" step="0.1" v-model="form.purge" placeholder="0.0" :class="{ 'border-destructive': form.errors.purge }" />
-                            <span v-if="form.errors.purge" class="text-sm text-destructive">{{ form.errors.purge }}</span>
+                            <Input
+                                id="purge"
+                                type="number"
+                                step="0.1"
+                                v-model="form.purge"
+                                placeholder="0.0"
+                                :class="{
+                                    'border-destructive': form.errors.purge,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.purge"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.purge }}</span
+                            >
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child><Link :href="inputsIndex()">Cancelar</Link></Button>
+                <Button variant="outline" as-child
+                    ><Link :href="inputsIndex()">Cancelar</Link></Button
+                >
                 <Button type="submit" :disabled="form.processing">
-                    <Save class="mr-2 h-4 w-4" /> {{ form.processing ? 'Salvando...' : 'Salvar Insumo' }}
+                    <Save class="mr-2 h-4 w-4" />
+                    {{ form.processing ? 'Salvando...' : 'Salvar Insumo' }}
                 </Button>
             </div>
         </form>

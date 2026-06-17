@@ -2,7 +2,13 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { index as clientsIndex } from '@/routes/clients';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
@@ -41,7 +47,9 @@ const submit = () => {
                 </Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Criar Cliente</h1>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Criar Cliente
+                </h1>
                 <p class="text-sm text-muted-foreground">
                     Cadastrar um novo cliente para serviços de impressão 3D
                 </p>
@@ -60,7 +68,9 @@ const submit = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Cliente</CardTitle>
-                    <CardDescription>Preencha os dados do cliente abaixo</CardDescription>
+                    <CardDescription
+                        >Preencha os dados do cliente abaixo</CardDescription
+                    >
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <!-- Name & Document -->
@@ -71,9 +81,15 @@ const submit = () => {
                                 id="name"
                                 v-model="form.name"
                                 placeholder="Nome do cliente"
-                                :class="{ 'border-destructive': form.errors.name }"
+                                :class="{
+                                    'border-destructive': form.errors.name,
+                                }"
                             />
-                            <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
+                            <span
+                                v-if="form.errors.name"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.name }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="doc">CPF / CNPJ *</Label>
@@ -81,9 +97,15 @@ const submit = () => {
                                 id="doc"
                                 v-model="form.doc"
                                 placeholder="00.000.000/0000-00"
-                                :class="{ 'border-destructive': form.errors.doc }"
+                                :class="{
+                                    'border-destructive': form.errors.doc,
+                                }"
                             />
-                            <span v-if="form.errors.doc" class="text-sm text-destructive">{{ form.errors.doc }}</span>
+                            <span
+                                v-if="form.errors.doc"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.doc }}</span
+                            >
                         </div>
                     </div>
 
@@ -95,9 +117,15 @@ const submit = () => {
                                 id="address"
                                 v-model="form.address"
                                 placeholder="Rua, Avenida..."
-                                :class="{ 'border-destructive': form.errors.address }"
+                                :class="{
+                                    'border-destructive': form.errors.address,
+                                }"
                             />
-                            <span v-if="form.errors.address" class="text-sm text-destructive">{{ form.errors.address }}</span>
+                            <span
+                                v-if="form.errors.address"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.address }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="number">Número *</Label>
@@ -105,9 +133,15 @@ const submit = () => {
                                 id="number"
                                 v-model="form.number"
                                 placeholder="123"
-                                :class="{ 'border-destructive': form.errors.number }"
+                                :class="{
+                                    'border-destructive': form.errors.number,
+                                }"
                             />
-                            <span v-if="form.errors.number" class="text-sm text-destructive">{{ form.errors.number }}</span>
+                            <span
+                                v-if="form.errors.number"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.number }}</span
+                            >
                         </div>
                     </div>
 
@@ -119,9 +153,15 @@ const submit = () => {
                                 id="city"
                                 v-model="form.city"
                                 placeholder="São Paulo"
-                                :class="{ 'border-destructive': form.errors.city }"
+                                :class="{
+                                    'border-destructive': form.errors.city,
+                                }"
                             />
-                            <span v-if="form.errors.city" class="text-sm text-destructive">{{ form.errors.city }}</span>
+                            <span
+                                v-if="form.errors.city"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.city }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="state">UF *</Label>
@@ -130,9 +170,15 @@ const submit = () => {
                                 v-model="form.state"
                                 placeholder="SP"
                                 maxlength="2"
-                                :class="{ 'border-destructive': form.errors.state }"
+                                :class="{
+                                    'border-destructive': form.errors.state,
+                                }"
                             />
-                            <span v-if="form.errors.state" class="text-sm text-destructive">{{ form.errors.state }}</span>
+                            <span
+                                v-if="form.errors.state"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.state }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="zipcode">CEP *</Label>
@@ -140,9 +186,15 @@ const submit = () => {
                                 id="zipcode"
                                 v-model="form.zipcode"
                                 placeholder="00000-000"
-                                :class="{ 'border-destructive': form.errors.zipcode }"
+                                :class="{
+                                    'border-destructive': form.errors.zipcode,
+                                }"
                             />
-                            <span v-if="form.errors.zipcode" class="text-sm text-destructive">{{ form.errors.zipcode }}</span>
+                            <span
+                                v-if="form.errors.zipcode"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.zipcode }}</span
+                            >
                         </div>
                     </div>
 
@@ -154,9 +206,15 @@ const submit = () => {
                                 id="phone1"
                                 v-model="form.phone1"
                                 placeholder="(11) 99999-0000"
-                                :class="{ 'border-destructive': form.errors.phone1 }"
+                                :class="{
+                                    'border-destructive': form.errors.phone1,
+                                }"
                             />
-                            <span v-if="form.errors.phone1" class="text-sm text-destructive">{{ form.errors.phone1 }}</span>
+                            <span
+                                v-if="form.errors.phone1"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.phone1 }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="phone2">Telefone 2</Label>

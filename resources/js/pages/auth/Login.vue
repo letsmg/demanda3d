@@ -48,7 +48,7 @@ function fillTestCredentials() {
     <div v-if="!email" class="mb-4 text-center">
         <button
             type="button"
-            class="text-sm text-primary underline hover:text-primary/80 transition-colors"
+            class="text-sm text-primary underline transition-colors hover:text-primary/80"
             @click="fillTestCredentials"
         >
             Usar conta de teste (admin@demanda3d.com)
