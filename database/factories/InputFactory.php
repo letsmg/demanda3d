@@ -20,6 +20,7 @@ class InputFactory extends Factory
         $filamentTypes = ['PLA', 'ABS', 'PETG', 'TPU', 'Nylon', 'Polycarbonate', 'PVA', 'HIPS'];
 
         return [
+            'tenant_id' => TenantFactory::new()->create()->id,
             'filaments' => fake()->randomElement($filamentTypes) . ' ' . fake()->randomFloat(1, 1.75, 2.85) . 'mm',
             'energy' => fake()->randomFloat(2, 100, 2000),
             'dt_buy' => fake()->dateTimeBetween('-3 months', 'now'),

@@ -4,14 +4,14 @@ namespace App\Enums;
 
 enum UserAccessLevel: int
 {
-    case STAFF = 0;
+    case PARTNER = 0;
     case ADMIN = 1;
     case CUSTOMER = 9;
 
     public function label(): string
     {
         return match($this) {
-            self::STAFF => 'Staff',
+            self::PARTNER => 'Partner',
             self::ADMIN => 'Administrator',
             self::CUSTOMER => 'Customer',
         };
@@ -20,9 +20,9 @@ enum UserAccessLevel: int
     public function description(): string
     {
         return match($this) {
-            self::STAFF => 'Funcionário com acesso limitado',
+            self::PARTNER => 'Sócio com acesso total ao SaaS',
             self::ADMIN => 'Administrador com acesso total',
-            self::CUSTOMER => 'Cliente externo',
+            self::CUSTOMER => 'Cliente com acesso apenas aos próprios dados',
         };
     }
 
@@ -31,9 +31,9 @@ enum UserAccessLevel: int
         return $this === self::ADMIN;
     }
 
-    public function isStaff(): bool
+    public function isPartner(): bool
     {
-        return $this === self::STAFF;
+        return $this === self::PARTNER;
     }
 
     public function isCustomer(): bool

@@ -15,14 +15,14 @@ class CreateStaffUser extends Command
      *
      * @var string
      */
-    protected $signature = 'user:create-staff {name} {email} {--password=}';
+    protected $signature = 'user:create-partner {name} {email} {--password=}';
 
     /**
      * The description of the console command.
      *
      * @var string
      */
-    protected $description = 'Create a new staff user with Argon2id hashing';
+    protected $description = 'Create a new partner user with Argon2id hashing';
 
     /**
      * Execute the console command.
@@ -48,11 +48,11 @@ class CreateStaffUser extends Command
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
-            'access_level' => UserAccessLevel::STAFF,
+            'access_level' => UserAccessLevel::PARTNER,
             'email_verified_at' => now(),
         ]);
 
-        $this->info("Staff user {$email} created successfully");
+        $this->info("Partner user {$email} created successfully");
 
         return 0;
     }

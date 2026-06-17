@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('doc');
             $table->string('address');
@@ -25,6 +26,8 @@ return new class extends Migration
             $table->string('contact1')->nullable();
             $table->string('contact2')->nullable();
             $table->timestamps();
+
+            $table->index('tenant_id');
         });
     }
 

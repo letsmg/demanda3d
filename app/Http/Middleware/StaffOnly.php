@@ -15,7 +15,7 @@ class StaffOnly
     {
         $user = $request->user();
 
-        if (! $user || (! $user->isAdmin() && ! $user->isStaff())) {
+        if (! $user || (! $user->isAdmin() && ! $user->isPartner())) {
             return response()->json(['message' => 'Forbidden: Staff or Admin access required'], 403);
         }
 

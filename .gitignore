@@ -28,3 +28,6 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+.clinerules
+app/Services/Stripe/
+app/Services/Billing/

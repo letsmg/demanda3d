@@ -26,6 +26,8 @@ class OrderService
 
     public function create(array $data): Order
     {
+        $data['tenant_id'] = auth()->user()->tenant->id;
+
         return Order::create($data);
     }
 

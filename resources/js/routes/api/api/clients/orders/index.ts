@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 export const byClient = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ byClient.definition = {
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 byClient.url = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -43,7 +43,7 @@ byClient.url = (args: { clientId: string | number } | [clientId: string | number
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 byClient.get = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ byClient.get = (args: { clientId: string | number } | [clientId: string | number
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 byClient.head = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ byClient.head = (args: { clientId: string | number } | [clientId: string | numbe
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 const byClientForm = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ const byClientForm = (args: { clientId: string | number } | [clientId: string | 
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 byClientForm.get = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -83,7 +83,7 @@ byClientForm.get = (args: { clientId: string | number } | [clientId: string | nu
 
 /**
 * @see \App\Http\Controllers\OrderController::byClient
-* @see app/Http/Controllers/OrderController.php:59
+* @see app/Http/Controllers/OrderController.php:55
 * @route '/api/clients/{clientId}/orders'
 */
 byClientForm.head = (args: { clientId: string | number } | [clientId: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

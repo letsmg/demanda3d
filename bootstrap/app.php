@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'access.level' => CheckAccessLevel::class,
             'admin.only' => AdminOnly::class,
             'staff.only' => StaffOnly::class,
+            'partner.only' => StaffOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

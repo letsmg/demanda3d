@@ -19,6 +19,8 @@ class InputService
 
     public function create(array $data): Input
     {
+        $data['tenant_id'] = auth()->user()->tenant->id;
+
         return Input::create($data);
     }
 

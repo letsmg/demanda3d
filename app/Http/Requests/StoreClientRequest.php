@@ -8,7 +8,7 @@ class StoreClientRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isAdmin() || $this->user()->isStaff();
+        return $this->user()->isAdmin() || $this->user()->isPartner();
     }
 
     public function rules(): array

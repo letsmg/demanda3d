@@ -18,6 +18,7 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
+            'tenant_id' => TenantFactory::new()->create()->id,
             'name' => fake()->company(),
             'doc' => fake()->numerify('##.###.###/####-##'),
             'address' => fake()->streetAddress(),

@@ -19,6 +19,8 @@ class ClientService
 
     public function create(array $data): Client
     {
+        $data['tenant_id'] = auth()->user()->tenant->id;
+
         return Client::create($data);
     }
 

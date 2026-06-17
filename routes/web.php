@@ -7,6 +7,7 @@ use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('welcome');
+Route::inertia('/home', 'Dashboard')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
@@ -40,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('{input}/edit', [InertiaInputController::class, 'edit'])->name('edit');
         Route::put('{input}', [InertiaInputController::class, 'update'])->name('update');
         Route::delete('{input}', [InertiaInputController::class, 'destroy'])->name('destroy');
-    });
+   });
 });
 
 require __DIR__.'/settings.php';

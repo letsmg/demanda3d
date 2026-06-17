@@ -19,6 +19,7 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
+            'tenant_id' => TenantFactory::new()->create()->id,
             'client_id' => Client::factory(),
             'order_date' => fake()->dateTimeBetween('-6 months', '-1 month'),
             'delivery_date' => fake()->dateTimeBetween('-1 month', '+1 month'),

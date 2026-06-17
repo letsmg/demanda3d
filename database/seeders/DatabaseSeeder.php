@@ -24,10 +24,10 @@ class DatabaseSeeder extends Seeder
             'password' => 'Mudar@123',
         ]);
 
-        // Create staff user
-        User::factory()->staff()->create([
-            'name' => 'Staff Usuário',
-            'email' => 'staff@demanda3d.com.br',
+        // Create partner user
+        User::factory()->partner()->create([
+            'name' => 'Partner Usuário',
+            'email' => 'partner@demanda3d.com.br',
         ]);
 
         // Create customer user

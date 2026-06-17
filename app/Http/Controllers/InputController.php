@@ -11,11 +11,7 @@ use Illuminate\Http\Request;
 
 class InputController extends Controller
 {
-    public function __construct(private InputService $inputService)
-    {
-        $this->middleware('staff.only')->except('show', 'index');
-        $this->middleware('admin.only')->only('destroy');
-    }
+    public function __construct(private InputService $inputService) {}
 
     public function index(Request $request): JsonResponse
     {

@@ -11,11 +11,7 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function __construct(private OrderService $orderService)
-    {
-        $this->middleware('staff.only')->except('show', 'index');
-        $this->middleware('admin.only')->only('destroy');
-    }
+    public function __construct(private OrderService $orderService) {}
 
     public function index(Request $request): JsonResponse
     {

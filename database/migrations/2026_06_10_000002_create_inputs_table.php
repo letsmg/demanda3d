@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('inputs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('filaments');
             $table->decimal('energy', 12, 2);
             $table->date('dt_buy');
             $table->decimal('cost_buy', 12, 2);
             $table->decimal('purge', 12, 2)->default(0);
             $table->timestamps();
+
+            $table->index('tenant_id');
         });
     }
 
