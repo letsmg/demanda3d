@@ -152,7 +152,7 @@ class AuthorizationTest extends TestCase
             'password' => \Hash::make('password'),
         ]);
 
-        $this->assertTrue(\Hash::verify('password', $user->password));
-        $this->assertFalse(\Hash::verify('wrong-password', $user->password));
+        $this->assertTrue(\Hash::check('password', $user->password));
+        $this->assertFalse(\Hash::check('wrong-password', $user->password));
     }
 }
