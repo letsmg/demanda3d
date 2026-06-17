@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserAccessLevel;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +17,32 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create admin user
+        User::factory()->admin()->create([
+            'name' => 'Admin Master',
+            'email' => 'admin@demanda3d.com.br',
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Create staff user
+        User::factory()->staff()->create([
+            'name' => 'Staff Usuário',
+            'email' => 'staff@demanda3d.com.br',
+        ]);
+
+        // Create customer user
+        User::factory()->customer()->create([
+            'name' => 'Cliente Teste',
+            'email' => 'cliente@demanda3d.com.br',
+        ]);
+
+        // Create random users
+        User::factory()->count(7)->create();
+
+        // Create clients, orders and inputs
+        $this->call([
+            ClientSeeder::class,
+            OrderSeeder::class,
+            InputSeeder::class,
         ]);
     }
 }

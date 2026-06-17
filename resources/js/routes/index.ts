@@ -222,12 +222,12 @@ register.form = registerForm
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-export const home = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: home.url(options),
+export const welcome = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: welcome.url(options),
     method: 'get',
 })
 
-home.definition = {
+welcome.definition = {
     methods: ["get","head"],
     url: '/',
 } satisfies RouteDefinition<["get","head"]>
@@ -237,8 +237,8 @@ home.definition = {
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-home.url = (options?: RouteQueryOptions) => {
-    return home.definition.url + queryParams(options)
+welcome.url = (options?: RouteQueryOptions) => {
+    return welcome.definition.url + queryParams(options)
 }
 
 /**
@@ -246,8 +246,8 @@ home.url = (options?: RouteQueryOptions) => {
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: home.url(options),
+welcome.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: welcome.url(options),
     method: 'get',
 })
 
@@ -256,8 +256,8 @@ home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: home.url(options),
+welcome.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: welcome.url(options),
     method: 'head',
 })
 
@@ -266,8 +266,8 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-const homeForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: home.url(options),
+const welcomeForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: welcome.url(options),
     method: 'get',
 })
 
@@ -276,8 +276,8 @@ const homeForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-homeForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: home.url(options),
+welcomeForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: welcome.url(options),
     method: 'get',
 })
 
@@ -286,8 +286,8 @@ homeForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 * @see vendor/inertiajs/inertia-laravel/src/Controller.php:13
 * @route '/'
 */
-homeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-    action: home.url({
+welcomeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: welcome.url({
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
             ...(options?.query ?? options?.mergeQuery ?? {}),
@@ -296,7 +296,7 @@ homeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     method: 'get',
 })
 
-home.form = homeForm
+welcome.form = welcomeForm
 
 /**
 * @see \Inertia\Controller::__invoke

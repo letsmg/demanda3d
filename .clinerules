@@ -10,7 +10,7 @@ it will use:
         3 - ALL FILES OF THIS PROJETCT HAS TO HAVE A ENGLISH NAME EVEN WHEN I ASK YOU IN PORTUGESE, YOU TRANSLATE IT AND DO IT IN ENGLISH.
 
 
-    1- postgres
+    1- postgres + redis
     2- laravel
     3- vuejs + typescript
     4- config variables ENUMS php fos user access level where:
@@ -34,7 +34,13 @@ it will use:
         so between the header component and the footer component there will be the vue code for each page the header will ends on body tag
         and the footer will start closing the body tag for easier maninpulation of layout ont the future
     11- always tell me before start the development if there is a better way of doing it. make a list of what youre going to do to me approve you
-
+    12- verify if all dependencies are installed, if needed ask me 
+    13- Laravel + Inertia Rules:
+        - Never hardcode image URLs.
+        - For files stored in storage/app/public always use Storage::url().
+        - Pass generated URLs from Laravel controllers/resources to Vue components.
+        - Vue components must consume image_url fields and never build storage paths manually.
+        - Do not concatenate '/storage/' strings in Vue.
 
 #################### remove it when near in production #############
     11- never create an add migration for complement the create migration
@@ -57,3 +63,4 @@ DATABASE
     users
     orders - must have date of order, date of develivery, price, what was contracted
     clients - must have, name, doc, address, number, state, zipcode, city, phone1, phone2, contact1 (nullable), contact2 (nullable)
+    inputs - filaments, energy, dt_buy, cost_buy, purge
