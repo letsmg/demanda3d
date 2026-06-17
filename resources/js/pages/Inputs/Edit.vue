@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Input as InputType } from '@/types';
 
 const props = defineProps<{
-    input: Input;
+    input: InputType;
 }>();
 
 const form = useForm({
