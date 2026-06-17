@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Inertia\InputController::index
 * @see app/Http/Controllers/Inertia/InputController.php:18
@@ -502,13 +502,6 @@ destroyForm.delete = (args: { input: number | { id: number } } | [input: number 
 
 destroy.form = destroyForm
 
-const inputs = {
-    index: Object.assign(index, index),
-    create: Object.assign(create, create),
-    store: Object.assign(store, store),
-    edit: Object.assign(edit, edit),
-    update: Object.assign(update, update),
-    destroy: Object.assign(destroy, destroy),
-}
+const InputController = { index, create, store, edit, update, destroy }
 
-export default inputs
+export default InputController

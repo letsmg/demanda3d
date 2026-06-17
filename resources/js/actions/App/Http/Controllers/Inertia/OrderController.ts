@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Inertia\OrderController::index
 * @see app/Http/Controllers/Inertia/OrderController.php:19
@@ -502,13 +502,6 @@ destroyForm.delete = (args: { order: number | { id: number } } | [order: number 
 
 destroy.form = destroyForm
 
-const orders = {
-    index: Object.assign(index, index),
-    create: Object.assign(create, create),
-    store: Object.assign(store, store),
-    edit: Object.assign(edit, edit),
-    update: Object.assign(update, update),
-    destroy: Object.assign(destroy, destroy),
-}
+const OrderController = { index, create, store, edit, update, destroy }
 
-export default orders
+export default OrderController

@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Inertia\ClientController::index
 * @see app/Http/Controllers/Inertia/ClientController.php:18
@@ -502,13 +502,6 @@ destroyForm.delete = (args: { client: number | { id: number } } | [client: numbe
 
 destroy.form = destroyForm
 
-const clients = {
-    index: Object.assign(index, index),
-    create: Object.assign(create, create),
-    store: Object.assign(store, store),
-    edit: Object.assign(edit, edit),
-    update: Object.assign(update, update),
-    destroy: Object.assign(destroy, destroy),
-}
+const ClientController = { index, create, store, edit, update, destroy }
 
-export default clients
+export default ClientController

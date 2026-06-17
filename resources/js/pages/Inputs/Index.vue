@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input as InputUI } from '@/components/ui/input';
 import {
     Dialog,
     DialogContent,
@@ -14,11 +12,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Box, Plus, Search, Edit, Trash2, Calendar, DollarSign, Gauge } from '@lucide/vue';
+import { Box, Plus, Edit, Trash2, DollarSign, Gauge } from '@lucide/vue';
 import { create as inputsCreate, edit as inputsEdit } from '@/routes/inputs';
 import type { Input } from '@/types';
 
-type PaginatedData = {
+type PaginatedInputs = {
     data: Input[];
     current_page: number;
     last_page: number;
@@ -27,37 +25,16 @@ type PaginatedData = {
     to: number;
 };
 
-const inputs = ref<PaginatedData | null>(null);
-const loading = ref(true);
-const page = ref(1);
+const props = defineProps<{
+    inputs: PaginatedInputs;
+}>();
 
 const showDeleteDialog = ref(false);
 const deletingInput = ref<Input | null>(null);
-const deleting = ref(false);
+const deleteForm = useForm({});
 
-const fetchInputs = async (pageNumber: number = 1) => {
-    loading.value = true;
-    try {
-        const params = new URLSearchParams({ page: pageNumber.toString(), per_page: '10' });
-        const response = await fetch(`/api/inputs?${params}`, {
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-        if (!response.ok) {
-            inputs.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
-            return;
-        }
-        const data = await response.json();
-        inputs.value = data;
-    } catch (error) {
-        console.error('Error fetching inputs:', error);
-        inputs.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
-    } finally {
-        loading.value = false;
-    }
+const goToPage = (pageNumber: number) => {
+    router.get('/inputs', { page: pageNumber }, { preserveState: true, replace: true });
 };
 
 const confirmDelete = (input: Input) => {
@@ -65,19 +42,15 @@ const confirmDelete = (input: Input) => {
     showDeleteDialog.value = true;
 };
 
-const executeDelete = async () => {
+const executeDelete = () => {
     if (!deletingInput.value) return;
-    deleting.value = true;
-    try {
-        await fetch(`/api/inputs/${deletingInput.value.id}`, { method: 'DELETE' });
-        showDeleteDialog.value = false;
-        deletingInput.value = null;
-        fetchInputs(page.value);
-    } catch (error) {
-        console.error('Error deleting input:', error);
-    } finally {
-        deleting.value = false;
-    }
+    deleteForm.delete(`/inputs/${deletingInput.value.id}`, {
+        preserveState: true,
+        onSuccess: () => {
+            showDeleteDialog.value = false;
+            deletingInput.value = null;
+        },
+    });
 };
 
 const formatCurrency = (value: number) =>
@@ -85,52 +58,39 @@ const formatCurrency = (value: number) =>
 
 const formatDate = (dateStr: string) =>
     new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
-
-onMounted(() => fetchInputs());
 </script>
 
 <template>
-    <Head title="Inputs" />
-
+    <Head title="Insumos" />
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Inputs</h1>
-                <p class="text-sm text-muted-foreground">Manage filaments, materials and resources</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Insumos</h1>
+                <p class="text-sm text-muted-foreground">Gerenciar filamentos, materiais e recursos ({{ inputs.total }} total)</p>
             </div>
             <Button as-child>
-                <Link :href="inputsCreate()">
-                    <Plus class="mr-2 h-4 w-4" /> New Input
-                </Link>
+                <Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Novo Insumo</Link>
             </Button>
         </div>
 
-        <template v-if="loading && !inputs">
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton v-for="i in 6" :key="i" class="h-40 rounded-xl" />
-            </div>
-        </template>
-
-        <div v-else-if="inputs && inputs.data.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+        <div v-if="inputs.data.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
             <Box class="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 class="mb-2 text-lg font-semibold">No inputs found</h3>
-            <p class="mb-6 text-sm text-muted-foreground">Register your first filament or material input.</p>
-            <Button as-child>
-                <Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Create Input</Link>
-            </Button>
+            <h3 class="mb-2 text-lg font-semibold">Nenhum insumo encontrado</h3>
+            <p class="mb-6 text-sm text-muted-foreground">Registre seu primeiro filamento ou material.</p>
+            <Button as-child><Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Criar Insumo</Link></Button>
         </div>
 
-        <template v-else-if="inputs">
+        <template v-else>
             <div class="hidden overflow-hidden rounded-xl border md:block">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground">
-                            <th class="px-6 py-4">Filament</th>
-                            <th class="px-6 py-4">Purchase Date</th>
-                            <th class="px-6 py-4">Cost</th>
-                            <th class="px-6 py-4">Energy</th>
-                            <th class="px-6 py-4">Purge</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
+                            <th class="px-6 py-4">Filamento</th>
+                            <th class="px-6 py-4">Data Compra</th>
+                            <th class="px-6 py-4">Custo</th>
+                            <th class="px-6 py-4">Energia</th>
+                            <th class="px-6 py-4">Purga</th>
+                            <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,15 +131,15 @@ onMounted(() => fetchInputs());
                             </div>
                             <div class="flex items-center gap-2 text-muted-foreground">
                                 <Gauge class="h-3.5 w-3.5" />
-                                <span>Energy: {{ formatCurrency(Number(input.energy)) }} | Purge: {{ Number(input.purge).toFixed(1) }}g</span>
+                                <span>Energia: {{ formatCurrency(Number(input.energy)) }} | Purga: {{ Number(input.purge).toFixed(1) }}g</span>
                             </div>
                         </div>
                         <div class="mt-4 flex gap-2">
                             <Button variant="outline" size="sm" class="flex-1" as-child>
-                                <Link :href="inputsEdit({ input: input.id })"><Edit class="mr-1 h-3 w-3" /> Edit</Link>
+                                <Link :href="inputsEdit({ input: input.id })"><Edit class="mr-1 h-3 w-3" /> Editar</Link>
                             </Button>
-                            <Button variant="outline" size="sm" class="flex-1 text-destructive hover:bg-destructive/10" @click="confirmDelete(input)">
-                                <Trash2 class="mr-1 h-3 w-3" /> Delete
+                            <Button variant="outline" size="sm" class="flex-1 text-destructive" @click="confirmDelete(input)">
+                                <Trash2 class="mr-1 h-3 w-3" /> Excluir
                             </Button>
                         </div>
                     </CardContent>
@@ -187,11 +147,11 @@ onMounted(() => fetchInputs());
             </div>
 
             <div v-if="inputs.last_page > 1" class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-                <p class="text-sm text-muted-foreground">Showing {{ inputs.from }} to {{ inputs.to }} of {{ inputs.total }}</p>
+                <p class="text-sm text-muted-foreground">Mostrando {{ inputs.from }} a {{ inputs.to }} de {{ inputs.total }}</p>
                 <div class="flex gap-2">
-                    <Button variant="outline" size="sm" :disabled="inputs.current_page === 1" @click="page--; fetchInputs(page)">Previous</Button>
-                    <span class="flex items-center px-4 text-sm">Page {{ inputs.current_page }} of {{ inputs.last_page }}</span>
-                    <Button variant="outline" size="sm" :disabled="inputs.current_page === inputs.last_page" @click="page++; fetchInputs(page)">Next</Button>
+                    <Button variant="outline" size="sm" :disabled="inputs.current_page === 1" @click="goToPage(inputs.current_page - 1)">Anterior</Button>
+                    <span class="flex items-center px-4 text-sm">Página {{ inputs.current_page }} de {{ inputs.last_page }}</span>
+                    <Button variant="outline" size="sm" :disabled="inputs.current_page === inputs.last_page" @click="goToPage(inputs.current_page + 1)">Próxima</Button>
                 </div>
             </div>
         </template>
@@ -200,12 +160,12 @@ onMounted(() => fetchInputs());
     <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Delete Input</DialogTitle>
-                <DialogDescription>Are you sure you want to delete <strong>{{ deletingInput?.filaments }}</strong>? This action cannot be undone.</DialogDescription>
+                <DialogTitle>Excluir Insumo</DialogTitle>
+                <DialogDescription>Tem certeza que deseja excluir <strong>{{ deletingInput?.filaments }}</strong>? Esta ação não pode ser desfeita.</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-                <Button variant="outline" @click="showDeleteDialog = false" :disabled="deleting">Cancel</Button>
-                <Button variant="destructive" @click="executeDelete" :disabled="deleting">{{ deleting ? 'Deleting...' : 'Delete' }}</Button>
+                <Button variant="outline" @click="showDeleteDialog = false">Cancelar</Button>
+                <Button variant="destructive" @click="executeDelete">Excluir</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
