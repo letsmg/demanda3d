@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { welcome, login, register } from '@/routes';
 
 const navigation = [
-    { name: 'Home', href: welcome.url() },
-    { name: 'Login', href: login.url() },
-    { name: 'Register', href: register.url() },
+    { name: 'Início', href: welcome.url() },
+    { name: 'Entrar', href: login.url() },
+    { name: 'Cadastrar', href: register.url() },
 ];
 </script>
 
@@ -21,7 +21,7 @@ const navigation = [
             <nav class="ml-auto flex items-center gap-4">
                 <template v-for="item in navigation" :key="item.name">
                     <Button
-                        v-if="item.name === 'Login' || item.name === 'Register'"
+                        v-if="item.name === 'Entrar' || item.name === 'Cadastrar'"
                         variant="default"
                         size="sm"
                         as-child

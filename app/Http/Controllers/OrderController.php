@@ -7,20 +7,20 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     public function __construct(private OrderService $orderService)
     {
-        $this->middleware('auth:sanctum');
         $this->middleware('staff.only')->except('show', 'index');
         $this->middleware('admin.only')->only('destroy');
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Order::class);
-        $orders = $this->orderService->list();
+        $orders = $this->orderService->list((int) $request->get('per_page', 15));
 
         return response()->json($orders);
     }

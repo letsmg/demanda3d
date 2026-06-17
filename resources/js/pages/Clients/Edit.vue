@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { index as clientsIndex } from '@/routes/clients';
 import type { Client } from '@/types';
 
 const props = defineProps<{
@@ -39,7 +40,7 @@ const submit = async () => {
                 errors.value._general = data.message;
             }
         } else {
-            router.visit(route('clients.index'));
+            router.visit(clientsIndex());
         }
     } catch (error) {
         console.error('Error:', error);
@@ -57,7 +58,7 @@ const submit = async () => {
         <!-- Header -->
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="route('clients.index')">
+                <Link :href="clientsIndex()">
                     <ArrowLeft class="h-4 w-4" />
                 </Link>
             </Button>
@@ -155,7 +156,7 @@ const submit = async () => {
 
             <div class="mt-6 flex items-center justify-end gap-3">
                 <Button variant="outline" as-child>
-                    <Link :href="route('clients.index')">Cancel</Link>
+                    <Link :href="clientsIndex()">Cancel</Link>
                 </Button>
                 <Button type="submit" :disabled="loading">
                     <Save class="mr-2 h-4 w-4" />

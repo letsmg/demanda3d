@@ -7,6 +7,14 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://127.0.0.1:8000',
+                changeOrigin: true,
+            },
+        },
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
@@ -29,6 +37,7 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
+            exclude: ['api.*'],
         }),
     ],
 });

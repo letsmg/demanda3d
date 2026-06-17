@@ -7,20 +7,20 @@ use App\Http\Requests\UpdateInputRequest;
 use App\Models\Input;
 use App\Services\InputService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class InputController extends Controller
 {
     public function __construct(private InputService $inputService)
     {
-        $this->middleware('auth:sanctum');
         $this->middleware('staff.only')->except('show', 'index');
         $this->middleware('admin.only')->only('destroy');
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Input::class);
-        $inputs = $this->inputService->list();
+        $inputs = $this->inputService->list((int) $request->get('per_page', 15));
 
         return response()->json($inputs);
     }

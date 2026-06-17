@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, computed } from 'vue';
+import { create as clientsCreate, edit as clientsEdit } from '@/routes/clients';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,11 +43,22 @@ const fetchClients = async (pageNumber: number = 1, search: string = '') => {
     try {
         const params = new URLSearchParams({ page: pageNumber.toString(), per_page: '10' });
         if (search) params.append('search', search);
-        const response = await fetch(`/api/clients?${params}`);
+        const response = await fetch(`/api/clients?${params}`, {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        if (!response.ok) {
+            clients.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
+            return;
+        }
         const data = await response.json();
         clients.value = data;
     } catch (error) {
         console.error('Error fetching clients:', error);
+        clients.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
     } finally {
         loading.value = false;
     }
@@ -61,7 +73,15 @@ const executeDelete = async () => {
     if (!deletingClient.value) return;
     deleting.value = true;
     try {
-        await fetch(`/api/clients/${deletingClient.value.id}`, { method: 'DELETE' });
+        await fetch(`/api/clients/${deletingClient.value.id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+        });
         showDeleteDialog.value = false;
         deletingClient.value = null;
         fetchClients(page.value, searchQuery.value);
@@ -126,15 +146,15 @@ onMounted(() => {
         <!-- Header -->
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Clients</h1>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Clientes</h1>
                 <p class="text-sm text-muted-foreground">
-                    Manage your 3D printing clients
+                    Gerencie seus clientes de impressão 3D
                 </p>
             </div>
             <Button as-child>
-                <Link :href="route('clients.create')">
+                <Link :href="clientsCreate()">
                     <Plus class="mr-2 h-4 w-4" />
-                    New Client
+                    Novo Cliente
                 </Link>
             </Button>
         </div>
@@ -144,7 +164,7 @@ onMounted(() => {
             <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
                 v-model="searchQuery"
-                placeholder="Search by name, document, city or phone..."
+                placeholder="Buscar por nome, documento, cidade ou telefone..."
                 class="pl-10"
                 @input="onSearchInput"
             />
@@ -160,14 +180,14 @@ onMounted(() => {
         <!-- Empty State -->
         <div v-else-if="clients && clients.data.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
             <Users class="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 class="mb-2 text-lg font-semibold">No clients found</h3>
+            <h3 class="mb-2 text-lg font-semibold">Nenhum cliente encontrado</h3>
             <p class="mb-6 text-sm text-muted-foreground">
-                {{ searchQuery ? 'No clients match your search.' : 'Get started by creating your first client.' }}
+                {{ searchQuery ? 'Nenhum cliente corresponde à sua busca.' : 'Comece cadastrando seu primeiro cliente.' }}
             </p>
             <Button v-if="!searchQuery" as-child>
-                <Link :href="route('clients.create')">
+                <Link :href="clientsCreate()">
                     <Plus class="mr-2 h-4 w-4" />
-                    Create Client
+                    Criar Cliente
                 </Link>
             </Button>
         </div>
@@ -179,10 +199,10 @@ onMounted(() => {
                 <table class="w-full">
                     <thead>
                         <tr class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground">
-                            <th class="px-6 py-4">Name / Document</th>
-                            <th class="px-6 py-4">Contact</th>
-                            <th class="px-6 py-4">Location</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
+                            <th class="px-6 py-4">Nome / Documento</th>
+                            <th class="px-6 py-4">Contato</th>
+                            <th class="px-6 py-4">Localização</th>
+                            <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -201,7 +221,7 @@ onMounted(() => {
                                     {{ client.phone1 }}
                                 </div>
                                 <div v-if="client.contact1" class="text-xs text-muted-foreground mt-0.5">
-                                    Contact: {{ client.contact1 }}
+                                    Contato: {{ client.contact1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
@@ -217,7 +237,7 @@ onMounted(() => {
                                         size="sm"
                                         as-child
                                     >
-                                        <Link :href="route('clients.edit', { client: client.id })">
+                                        <Link :href="clientsEdit({ client: client.id })">
                                             <Edit class="h-3 w-3" />
                                         </Link>
                                     </Button>
@@ -275,7 +295,7 @@ onMounted(() => {
                                 class="flex-1"
                                 as-child
                             >
-                                <Link :href="route('clients.edit', { client: client.id })">
+                                <Link :href="clientsEdit({ client: client.id })">
                                     <Edit class="mr-1 h-3 w-3" />
                                     Edit
                                 </Link>
@@ -337,10 +357,10 @@ onMounted(() => {
     <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Delete Client</DialogTitle>
+                <DialogTitle>Excluir Cliente</DialogTitle>
                 <DialogDescription>
-                    Are you sure you want to delete <strong>{{ deletingClient?.name }}</strong>?
-                    This action cannot be undone. All orders associated with this client will also be deleted.
+                    Tem certeza que deseja excluir <strong>{{ deletingClient?.name }}</strong>?
+                    Esta ação não pode ser desfeita. Todos os pedidos associados a este cliente também serão excluídos.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -349,14 +369,14 @@ onMounted(() => {
                     @click="showDeleteDialog = false"
                     :disabled="deleting"
                 >
-                    Cancel
+                    Cancelar
                 </Button>
                 <Button
                     variant="destructive"
                     @click="executeDelete"
                     :disabled="deleting"
                 >
-                    {{ deleting ? 'Deleting...' : 'Delete' }}
+                    {{ deleting ? 'Excluindo...' : 'Excluir' }}
                 </Button>
             </DialogFooter>
         </DialogContent>

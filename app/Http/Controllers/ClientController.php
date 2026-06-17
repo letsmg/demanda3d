@@ -7,20 +7,20 @@ use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Services\ClientService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
     public function __construct(private ClientService $clientService)
     {
-        $this->middleware('auth:sanctum');
         $this->middleware('staff.only')->except('show', 'index');
         $this->middleware('admin.only')->only('destroy');
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Client::class);
-        $clients = $this->clientService->list();
+        $clients = $this->clientService->list((int) $request->get('per_page', 15));
 
         return response()->json($clients);
     }

@@ -15,6 +15,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Box, Plus, Search, Edit, Trash2, Calendar, DollarSign, Gauge } from '@lucide/vue';
+import { create as inputsCreate, edit as inputsEdit } from '@/routes/inputs';
 import type { Input } from '@/types';
 
 type PaginatedData = {
@@ -38,11 +39,22 @@ const fetchInputs = async (pageNumber: number = 1) => {
     loading.value = true;
     try {
         const params = new URLSearchParams({ page: pageNumber.toString(), per_page: '10' });
-        const response = await fetch(`/api/inputs?${params}`);
+        const response = await fetch(`/api/inputs?${params}`, {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        if (!response.ok) {
+            inputs.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
+            return;
+        }
         const data = await response.json();
         inputs.value = data;
     } catch (error) {
         console.error('Error fetching inputs:', error);
+        inputs.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
     } finally {
         loading.value = false;
     }
@@ -87,7 +99,7 @@ onMounted(() => fetchInputs());
                 <p class="text-sm text-muted-foreground">Manage filaments, materials and resources</p>
             </div>
             <Button as-child>
-                <Link :href="route('inputs.create')">
+                <Link :href="inputsCreate()">
                     <Plus class="mr-2 h-4 w-4" /> New Input
                 </Link>
             </Button>
@@ -104,7 +116,7 @@ onMounted(() => fetchInputs());
             <h3 class="mb-2 text-lg font-semibold">No inputs found</h3>
             <p class="mb-6 text-sm text-muted-foreground">Register your first filament or material input.</p>
             <Button as-child>
-                <Link :href="route('inputs.create')"><Plus class="mr-2 h-4 w-4" /> Create Input</Link>
+                <Link :href="inputsCreate()"><Plus class="mr-2 h-4 w-4" /> Create Input</Link>
             </Button>
         </div>
 
@@ -131,7 +143,7 @@ onMounted(() => fetchInputs());
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <Button variant="outline" size="sm" as-child>
-                                        <Link :href="route('inputs.edit', { input: input.id })"><Edit class="h-3 w-3" /></Link>
+                                        <Link :href="inputsEdit({ input: input.id })"><Edit class="h-3 w-3" /></Link>
                                     </Button>
                                     <Button variant="outline" size="sm" class="text-destructive hover:bg-destructive/10" @click="confirmDelete(input)">
                                         <Trash2 class="h-3 w-3" />
@@ -164,7 +176,7 @@ onMounted(() => fetchInputs());
                         </div>
                         <div class="mt-4 flex gap-2">
                             <Button variant="outline" size="sm" class="flex-1" as-child>
-                                <Link :href="route('inputs.edit', { input: input.id })"><Edit class="mr-1 h-3 w-3" /> Edit</Link>
+                                <Link :href="inputsEdit({ input: input.id })"><Edit class="mr-1 h-3 w-3" /> Edit</Link>
                             </Button>
                             <Button variant="outline" size="sm" class="flex-1 text-destructive hover:bg-destructive/10" @click="confirmDelete(input)">
                                 <Trash2 class="mr-1 h-3 w-3" /> Delete

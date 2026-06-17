@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { index as inputsIndex } from '@/routes/inputs';
 
 const form = ref({
     filaments: '',
@@ -42,7 +43,7 @@ const submit = async () => {
             errors.value = data.errors || {};
             if (data.message && !data.errors) errors.value._general = data.message;
         } else {
-            router.visit(route('inputs.index'));
+            router.visit(inputsIndex());
         }
     } catch (error) {
         errors.value._general = 'An unexpected error occurred.';
@@ -57,7 +58,7 @@ const submit = async () => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="route('inputs.index')"><ArrowLeft class="h-4 w-4" /></Link>
+                <Link :href="inputsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Create Input</h1>
@@ -119,7 +120,7 @@ const submit = async () => {
 
             <div class="mt-6 flex items-center justify-end gap-3">
                 <Button variant="outline" as-child>
-                    <Link :href="route('inputs.index')">Cancel</Link>
+                    <Link :href="inputsIndex()">Cancel</Link>
                 </Button>
                 <Button type="submit" :disabled="loading">
                     <Save class="mr-2 h-4 w-4" />

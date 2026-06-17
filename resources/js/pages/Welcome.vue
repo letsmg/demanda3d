@@ -22,38 +22,38 @@ const stats = computed(() => page.props.stats as {
 
 const features = [
     {
-        title: 'Client Management',
-        description: 'Register and manage your clients with complete contact information, documents, and history.',
+        title: 'Gestão de Clientes',
+        description: 'Cadastre e gerencie seus clientes com informações completas de contato, documentos e histórico.',
         icon: '👥',
         color: 'bg-blue-50 dark:bg-blue-950/30',
     },
     {
-        title: 'Order Tracking',
-        description: 'Track 3D printing orders from creation to delivery with pricing and detailed specifications.',
+        title: 'Controle de Pedidos',
+        description: 'Acompanhe pedidos de impressão 3D desde a criação até a entrega com preços e especificações.',
         icon: '📦',
         color: 'bg-green-50 dark:bg-green-950/30',
     },
     {
-        title: 'Input Control',
-        description: 'Manage filaments, energy costs, and materials inventory for precise cost calculation.',
+        title: 'Controle de Insumos',
+        description: 'Gerencie filamentos, custos de energia e materiais para cálculo preciso de custos.',
         icon: '🧵',
         color: 'bg-purple-50 dark:bg-purple-950/30',
     },
     {
-        title: 'Secure Access',
-        description: 'Role-based access control with admin, staff, and customer levels for data security.',
+        title: 'Acesso Seguro',
+        description: 'Controle de acesso baseado em funções com níveis administrativo, equipe e cliente.',
         icon: '🔒',
         color: 'bg-amber-50 dark:bg-amber-950/30',
     },
     {
-        title: 'Real-time Dashboard',
-        description: 'Visual analytics and KPIs to monitor your 3D printing business performance.',
+        title: 'Dashboard em Tempo Real',
+        description: 'Analytics visuais e KPIs para monitorar o desempenho do seu negócio de impressão 3D.',
         icon: '📊',
         color: 'bg-rose-50 dark:bg-rose-950/30',
     },
     {
-        title: 'Responsive Design',
-        description: 'Fully responsive interface optimized for desktop and mobile use.',
+        title: 'Design Responsivo',
+        description: 'Interface totalmente responsiva otimizada para desktop e dispositivos móveis.',
         icon: '📱',
         color: 'bg-cyan-50 dark:bg-cyan-950/30',
     },
@@ -61,7 +61,7 @@ const features = [
 </script>
 
 <template>
-    <Head title="Welcome">
+    <Head title="Bem-vindo">
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
@@ -72,30 +72,29 @@ const features = [
         <div class="container relative mx-auto px-4 py-20 md:px-8 md:py-32">
             <div class="mx-auto max-w-3xl text-center">
                 <Badge variant="secondary" class="mb-4 px-3 py-1 text-sm">
-                    🚀 3D Printing Management System
+                    🚀 Sistema de Gestão de Impressão 3D
                 </Badge>
                 <h1 class="mb-6 text-4xl font-bold tracking-tight md:text-6xl">
-                    Manage Your
+                    Gerencie seu
                     <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        3D Printing
+                        Negócio de Impressão 3D
                     </span>
-                    Business
                 </h1>
                 <p class="mb-8 text-lg text-muted-foreground md:text-xl">
-                    Complete solution for managing clients, orders, and materials for your 3D printing manufacturing. Streamline your workflow from order to delivery.
+                    Solução completa para gerenciar clientes, pedidos e materiais para sua manufatura de impressão 3D. Otimize seu fluxo de trabalho do pedido à entrega.
                 </p>
                 <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
                     <template v-if="auth?.user">
                         <Button size="lg" as-child>
-                            <Link :href="dashboard.url()">Go to Dashboard</Link>
+                            <Link :href="dashboard.url()">Ir para o Painel</Link>
                         </Button>
                     </template>
                     <template v-else>
                         <Button size="lg" as-child>
-                            <Link :href="register.url()">Get Started</Link>
+                            <Link :href="register.url()">Começar Agora</Link>
                         </Button>
                         <Button size="lg" variant="outline" as-child>
-                            <Link :href="login.url()">Sign In</Link>
+                            <Link :href="login.url()">Entrar</Link>
                         </Button>
                     </template>
                 </div>
@@ -109,19 +108,19 @@ const features = [
             <div class="grid grid-cols-2 gap-6 md:grid-cols-4">
                 <div class="text-center">
                     <p class="text-3xl font-bold text-primary">{{ stats.clients_count }}</p>
-                    <p class="text-sm text-muted-foreground">Total Clients</p>
+                    <p class="text-sm text-muted-foreground">Total de Clientes</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-primary">{{ stats.orders_count }}</p>
-                    <p class="text-sm text-muted-foreground">Total Orders</p>
+                    <p class="text-sm text-muted-foreground">Total de Pedidos</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-primary">{{ stats.inputs_count }}</p>
-                    <p class="text-sm text-muted-foreground">Input Types</p>
+                    <p class="text-sm text-muted-foreground">Tipos de Insumos</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-primary">R$ {{ Number(stats.monthly_revenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
-                    <p class="text-sm text-muted-foreground">Monthly Revenue</p>
+                    <p class="text-sm text-muted-foreground">Receita Mensal</p>
                 </div>
             </div>
         </div>
@@ -131,8 +130,8 @@ const features = [
     <section class="py-20">
         <div class="container mx-auto px-4 md:px-8">
             <div class="mb-12 text-center">
-                <h2 class="mb-4 text-3xl font-bold">Everything You Need</h2>
-                <p class="text-lg text-muted-foreground">Complete tools to manage your 3D printing manufacturing business</p>
+                <h2 class="mb-4 text-3xl font-bold">Tudo que Você Precisa</h2>
+                <p class="text-lg text-muted-foreground">Ferramentas completas para gerenciar seu negócio de impressão 3D</p>
             </div>
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card
@@ -155,20 +154,20 @@ const features = [
     <!-- CTA Section -->
     <section class="bg-gradient-to-r from-blue-600 to-purple-600 py-16 text-white">
         <div class="container mx-auto px-4 text-center md:px-8">
-            <h2 class="mb-4 text-3xl font-bold">Ready to Get Started?</h2>
-            <p class="mb-8 text-lg text-white/80">Join us and streamline your 3D printing manufacturing workflow</p>
+            <h2 class="mb-4 text-3xl font-bold">Pronto para Começar?</h2>
+            <p class="mb-8 text-lg text-white/80">Junte-se a nós e otimize seu fluxo de trabalho de impressão 3D</p>
             <template v-if="auth?.user">
                 <Button size="lg" variant="secondary" as-child>
-                    <Link :href="dashboard.url()">Go to Dashboard</Link>
+                    <Link :href="dashboard.url()">Ir para o Painel</Link>
                 </Button>
             </template>
             <template v-else>
                 <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
                     <Button size="lg" variant="secondary" as-child>
-                        <Link :href="login.url()">Sign In</Link>
+                        <Link :href="login.url()">Entrar</Link>
                     </Button>
                     <Button size="lg" variant="default" as-child>
-                        <Link :href="register.url()">Create Account</Link>
+                        <Link :href="register.url()">Criar Conta</Link>
                     </Button>
                 </div>
             </template>

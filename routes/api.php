@@ -5,13 +5,13 @@ use App\Http\Controllers\InputController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->name('api.')->group(function () {
     // Clients API
     Route::apiResource('clients', ClientController::class);
 
     // Orders API
     Route::apiResource('orders', OrderController::class);
-    Route::get('clients/{clientId}/orders', [OrderController::class, 'byClient']);
+    Route::get('clients/{clientId}/orders', [OrderController::class, 'byClient'])->name('api.clients.orders.byClient');
 
     // Inputs API
     Route::apiResource('inputs', InputController::class);

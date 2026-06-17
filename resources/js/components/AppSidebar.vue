@@ -15,39 +15,42 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as clientsIndex } from '@/routes/clients';
+import { index as ordersIndex } from '@/routes/orders';
+import { index as inputsIndex } from '@/routes/inputs';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Painel',
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Clients',
-        href: route('clients.index'),
+        title: 'Clientes',
+        href: clientsIndex(),
         icon: Users,
     },
     {
-        title: 'Orders',
-        href: route('orders.index'),
+        title: 'Pedidos',
+        href: ordersIndex(),
         icon: Package,
     },
     {
-        title: 'Inputs',
-        href: route('inputs.index'),
+        title: 'Insumos',
+        href: inputsIndex(),
         icon: BookOpen,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
+        title: 'Repositório',
+        href: 'https://github.com/letsmg/demanda3d',
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
+        title: 'Documentação',
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },

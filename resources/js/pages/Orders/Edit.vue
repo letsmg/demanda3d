@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { index as ordersIndex } from '@/routes/orders';
 import type { Client, Order } from '@/types';
 
 const props = defineProps<{ order: Order }>();
@@ -57,7 +58,7 @@ const submit = async () => {
             errors.value = data.errors || {};
             if (data.message && !data.errors) errors.value._general = data.message;
         } else {
-            router.visit(route('orders.index'));
+            router.visit(ordersIndex());
         }
     } catch (error) {
         errors.value._general = 'An unexpected error occurred.';
@@ -74,7 +75,7 @@ onMounted(() => fetchClients());
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="route('orders.index')"><ArrowLeft class="h-4 w-4" /></Link>
+                <Link :href="ordersIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Edit Order #{{ order.id }}</h1>
@@ -139,7 +140,7 @@ onMounted(() => fetchClients());
 
             <div class="mt-6 flex items-center justify-end gap-3">
                 <Button variant="outline" as-child>
-                    <Link :href="route('orders.index')">Cancel</Link>
+                    <Link :href="ordersIndex()">Cancel</Link>
                 </Button>
                 <Button type="submit" :disabled="loading">
                     <Save class="mr-2 h-4 w-4" />

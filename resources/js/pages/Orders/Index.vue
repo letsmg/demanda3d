@@ -15,6 +15,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Package, Plus, Search, Edit, Trash2, Calendar, DollarSign } from '@lucide/vue';
+import { create as ordersCreate, edit as ordersEdit } from '@/routes/orders';
 import type { Order, Client } from '@/types';
 
 type PaginatedData = {
@@ -42,11 +43,22 @@ const fetchOrders = async (pageNumber: number = 1) => {
             page: pageNumber.toString(),
             per_page: '10',
         });
-        const response = await fetch(`/api/orders?${params}`);
+        const response = await fetch(`/api/orders?${params}`, {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        if (!response.ok) {
+            orders.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
+            return;
+        }
         const data = await response.json();
         orders.value = data;
     } catch (error) {
         console.error('Error fetching orders:', error);
+        orders.value = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
     } finally {
         loading.value = false;
     }
@@ -93,7 +105,7 @@ onMounted(() => fetchOrders());
                 <p class="text-sm text-muted-foreground">Manage 3D printing orders</p>
             </div>
             <Button as-child>
-                <Link :href="route('orders.create')">
+                <Link :href="ordersCreate()">
                     <Plus class="mr-2 h-4 w-4" /> New Order
                 </Link>
             </Button>
@@ -115,7 +127,7 @@ onMounted(() => fetchOrders());
             <h3 class="mb-2 text-lg font-semibold">No orders found</h3>
             <p class="mb-6 text-sm text-muted-foreground">Get started by creating your first order.</p>
             <Button as-child>
-                <Link :href="route('orders.create')"><Plus class="mr-2 h-4 w-4" /> Create Order</Link>
+                <Link :href="ordersCreate()"><Plus class="mr-2 h-4 w-4" /> Create Order</Link>
             </Button>
         </div>
 
@@ -146,7 +158,7 @@ onMounted(() => fetchOrders());
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <Button variant="outline" size="sm" as-child>
-                                        <Link :href="route('orders.edit', { order: order.id })"><Edit class="h-3 w-3" /></Link>
+                                        <Link :href="ordersEdit({ order: order.id })"><Edit class="h-3 w-3" /></Link>
                                     </Button>
                                     <Button variant="outline" size="sm" class="text-destructive hover:bg-destructive/10" @click="confirmDelete(order)">
                                         <Trash2 class="h-3 w-3" />
@@ -181,7 +193,7 @@ onMounted(() => fetchOrders());
                         </div>
                         <div class="mt-4 flex gap-2">
                             <Button variant="outline" size="sm" class="flex-1" as-child>
-                                <Link :href="route('orders.edit', { order: order.id })"><Edit class="mr-1 h-3 w-3" /> Edit</Link>
+                                <Link :href="ordersEdit({ order: order.id })"><Edit class="mr-1 h-3 w-3" /> Edit</Link>
                             </Button>
                             <Button variant="outline" size="sm" class="flex-1 text-destructive hover:bg-destructive/10" @click="confirmDelete(order)">
                                 <Trash2 class="mr-1 h-3 w-3" /> Delete

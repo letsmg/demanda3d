@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { index as clientsIndex } from '@/routes/clients';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,7 +48,7 @@ const submit = async () => {
                 errors.value._general = data.message;
             }
         } else {
-            router.visit(route('clients.index'));
+            router.visit(clientsIndex());
         }
     } catch (error) {
         console.error('Error:', error);
@@ -59,20 +60,20 @@ const submit = async () => {
 </script>
 
 <template>
-    <Head title="Create Client" />
+    <Head title="Criar Cliente" />
 
     <div class="space-y-6 p-4 md:p-6">
         <!-- Header -->
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="route('clients.index')">
+                <Link :href="clientsIndex()">
                     <ArrowLeft class="h-4 w-4" />
                 </Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Create Client</h1>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Criar Cliente</h1>
                 <p class="text-sm text-muted-foreground">
-                    Register a new client for 3D printing services
+                    Cadastrar um novo cliente para serviços de impressão 3D
                 </p>
             </div>
         </div>
@@ -88,8 +89,8 @@ const submit = async () => {
         <form @submit.prevent="submit">
             <Card>
                 <CardHeader>
-                    <CardTitle>Client Information</CardTitle>
-                    <CardDescription>Fill in the client's details below</CardDescription>
+                    <CardTitle>Informações do Cliente</CardTitle>
+                    <CardDescription>Preencha os dados do cliente abaixo</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <!-- Name & Document -->
@@ -222,7 +223,7 @@ const submit = async () => {
             <!-- Actions -->
             <div class="mt-6 flex items-center justify-end gap-3">
                 <Button variant="outline" as-child>
-                    <Link :href="route('clients.index')">Cancel</Link>
+                    <Link :href="clientsIndex()">Cancel</Link>
                 </Button>
                 <Button type="submit" :disabled="loading">
                     <Save class="mr-2 h-4 w-4" />

@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
         // Create admin user
         User::factory()->admin()->create([
             'name' => 'Admin Master',
-            'email' => 'admin@demanda3d.com.br',
+            'email' => 'admin@demanda3d.com',
+            'password' => 'Mudar@123',
         ]);
 
         // Create staff user
