@@ -28,6 +28,7 @@
         <meta name="twitter:image" content="{{ config('app.url') }}/logo.jpg">
 
         {{-- Schema.org JSON-LD --}}
+        @verbatim
         <script type="application/ld+json">
         {
             "@context": "https://schema.org",
@@ -66,6 +67,7 @@
             }
         }
         </script>
+        @endverbatim
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>

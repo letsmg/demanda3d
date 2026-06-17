@@ -1,0 +1,120 @@
+name: 🚀 Deploy Demanda3D
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, bcmath, pdo_pgsql, redis
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: php artisan test
+
+      - name: Create Deploy Package
+        run: |
+          zip -r deploy.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "node_modules/*" \
+            -x "tests/*" \
+            -x ".env*" \
+            -x "storage/framework/*" \
+            -x "storage/logs/*"
+
+      - name: Configure SSH
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Atomic Deploy
+        run: |
+
+          SERVER_IP="${{ secrets.SERVER_IP }}"
+
+          scp deploy.zip ubuntu@$SERVER_IP:/tmp/demanda3d.zip
+
+          ssh ubuntu@$SERVER_IP << 'EOF'
+
+          set -e
+
+          ROOT="/var/www/demanda3d"
+          RELEASES="$ROOT/releases"
+          SHARED="$ROOT/shared"
+          CURRENT="$ROOT/current"
+
+          RELEASE=$(date +%Y%m%d%H%M%S)
+
+          NEW_RELEASE="$RELEASES/$RELEASE"
+
+          sudo mkdir -p "$RELEASES"
+          sudo mkdir -p "$SHARED/storage"
+          sudo mkdir -p "$NEW_RELEASE"
+
+          if [ ! -f "$SHARED/.env" ]; then
+            echo ".env não encontrado"
+            exit 1
+          fi
+
+          sudo unzip -oq /tmp/demanda3d.zip -d "$NEW_RELEASE"
+
+          sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+
+          sudo rm -rf "$NEW_RELEASE/storage"
+          sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
+
+          sudo rm -rf "$NEW_RELEASE/public/storage"
+          sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
+
+          cd "$NEW_RELEASE"
+
+          php artisan config:clear || true
+          php artisan route:clear || true
+          php artisan cache:clear || true
+
+          php artisan migrate --force
+
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          php artisan queue:restart || true
+
+          sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+
+          cd "$RELEASES"
+
+          ls -t | tail -n +6 | xargs -r sudo rm -rf --
+
+          rm -f /tmp/demanda3d.zip
+
+          EOF
