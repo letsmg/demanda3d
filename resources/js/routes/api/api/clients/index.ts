@@ -1,7 +1,7 @@
-import orders from './orders';
+import orders from './orders'
 
 const clients = {
     orders: Object.assign(orders, orders),
-};
+}
 
-export default clients;
+export default clients

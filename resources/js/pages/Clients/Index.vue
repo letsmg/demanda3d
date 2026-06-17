@@ -1,25 +1,5 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { create as clientsCreate, edit as clientsEdit } from '@/routes/clients';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import {
     Users,
     Plus,
@@ -31,6 +11,26 @@ import {
     ChevronLeft,
     ChevronRight,
 } from '@lucide/vue';
+import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { create as clientsCreate, edit as clientsEdit } from '@/routes/clients';
 import type { Client } from '@/types';
 
 type PaginatedClients = {
@@ -80,7 +80,10 @@ const confirmDelete = (client: Client) => {
 const deleteForm = useForm({});
 
 const executeDelete = () => {
-    if (!deletingClient.value) return;
+    if (!deletingClient.value) {
+        return;
+    }
+
     deleteForm.delete(`/clients/${deletingClient.value.id}`, {
         preserveState: true,
         onSuccess: () => {
@@ -91,14 +94,21 @@ const executeDelete = () => {
 };
 
 const formatDoc = (doc: string) => {
-    if (!doc) return '-';
-    if (doc.length === 14)
+    if (!doc) {
+        return '-';
+    }
+
+    if (doc.length === 14) {
         return doc.replace(
             /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
             '$1.$2.$3/$4-$5',
         );
-    if (doc.length === 11)
+    }
+
+    if (doc.length === 11) {
         return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+
     return doc;
 };
 </script>

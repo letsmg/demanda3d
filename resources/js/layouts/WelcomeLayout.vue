@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import UnloggedHeader from '@/components/UnloggedHeader.vue';
-import UnloggedFooter from '@/components/UnloggedFooter.vue';
 import { Toaster } from '@/components/ui/sonner';
+import UnloggedFooter from '@/components/UnloggedFooter.vue';
+import UnloggedHeader from '@/components/UnloggedHeader.vue';
 </script>
 
 <template>

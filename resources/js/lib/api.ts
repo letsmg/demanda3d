@@ -16,6 +16,7 @@ export async function apiFetch<T = unknown>(
 
     if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+
         throw { status: response.status, ...data };
     }
 

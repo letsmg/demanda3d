@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
     Users,
     ShoppingCart,
     Box,
@@ -17,10 +9,18 @@ import {
     Clock,
     DollarSign,
 } from '@lucide/vue';
+import { Badge } from '@/components/ui/badge';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import { index as clientsIndex } from '@/routes/clients';
-import { index as ordersIndex, edit as ordersEdit } from '@/routes/orders';
 import { index as inputsIndex } from '@/routes/inputs';
+import { index as ordersIndex, edit as ordersEdit } from '@/routes/orders';
 import type { Order, Client, Input } from '@/types';
 
 defineOptions({
@@ -47,7 +47,7 @@ type DashboardStats = {
     recent_inputs: Input[];
 };
 
-const props = defineProps<{
+const { stats } = defineProps<{
     stats: DashboardStats;
 }>();
 

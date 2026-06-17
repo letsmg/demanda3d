@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Box, Plus, Edit, Trash2, DollarSign, Gauge } from '@lucide/vue';
 import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
@@ -12,7 +13,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Box, Plus, Edit, Trash2, DollarSign, Gauge } from '@lucide/vue';
 import { create as inputsCreate, edit as inputsEdit } from '@/routes/inputs';
 import type { Input } from '@/types';
 
@@ -25,7 +25,7 @@ type PaginatedInputs = {
     to: number;
 };
 
-const props = defineProps<{
+const { inputs } = defineProps<{
     inputs: PaginatedInputs;
 }>();
 
@@ -47,7 +47,10 @@ const confirmDelete = (input: Input) => {
 };
 
 const executeDelete = () => {
-    if (!deletingInput.value) return;
+    if (!deletingInput.value) {
+        return;
+    }
+
     deleteForm.delete(`/inputs/${deletingInput.value.id}`, {
         preserveState: true,
         onSuccess: () => {

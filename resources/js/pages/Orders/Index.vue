@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Package, Plus, Edit, Trash2, Calendar, DollarSign } from '@lucide/vue';
+import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -31,7 +25,7 @@ type PaginatedOrders = {
     to: number;
 };
 
-const props = defineProps<{
+const { orders } = defineProps<{
     orders: PaginatedOrders;
 }>();
 
@@ -53,7 +47,10 @@ const confirmDelete = (order: Order) => {
 };
 
 const executeDelete = () => {
-    if (!deletingOrder.value) return;
+    if (!deletingOrder.value) {
+        return;
+    }
+
     deleteForm.delete(`/orders/${deletingOrder.value.id}`, {
         preserveState: true,
         onSuccess: () => {
