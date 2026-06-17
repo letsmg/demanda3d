@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /dashboard
+Disallow: /clients
+Disallow: /orders
+Disallow: /inputs
+Disallow: /settings/*
+
+Sitemap: https://demanda3d.com.br/sitemap.xml
