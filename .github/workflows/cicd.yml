@@ -27,8 +27,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install Composer Dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+      - name: Install Composer Dependencies (with dev)
+        run: composer install --no-interaction
 
       - name: Install Node Dependencies
         run: npm ci
@@ -38,6 +38,9 @@ jobs:
 
       - name: Run Tests
         run: php artisan test
+
+      - name: Optimize for Production
+        run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Create Deploy Package
         run: |
