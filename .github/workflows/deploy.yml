@@ -74,14 +74,14 @@ jobs:
           
           echo "Iniciando deploy para o ambiente: $PROJECT_NAME"
 
-          # Sincroniza o pacote zipado usando o nome dinâmico
-          scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
+          # scp com flags para ignorar chaves antigas em cache
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # Conecta via SSH sem o -t e abrindo o escopo para injetar o $PROJECT_NAME
-          ssh ubuntu@${{ secrets.SERVER_IP }} << EOF
+          # ssh com flags para ignorar chaves antigas em cache
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_IP }} << EOF
           set -e
 
-          ROOT="/var/www/$PROJECT_NAME"
+          ROOT="/var/www/\$PROJECT_NAME"
           RELEASES="\$ROOT/releases"
           SHARED="\$ROOT/shared"
           CURRENT="\$ROOT/current"
