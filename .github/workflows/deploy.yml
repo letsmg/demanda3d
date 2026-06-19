@@ -74,17 +74,24 @@ jobs:
           
           echo "Iniciando deploy para o ambiente: $PROJECT_NAME"
 
-          # scp com flags para ignorar chaves antigas em cache
+          # scp enviando o arquivo
           scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # ssh com flags para ignorar chaves antigas em cache
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_IP }} << EOF
+          # Conexão SSH passando a variável PROJECT_NAME explicitamente para dentro do escopo do servidor
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_IP }} PROJECT_NAME="$PROJECT_NAME" 'bash -s' << 'EOF'
           set -e
 
-          ROOT="/var/www/\$PROJECT_NAME"
-          RELEASES="\$ROOT/releases"
-          SHARED="\$ROOT/shared"
-          CURRENT="\$ROOT/current"
+          # Agora a variável $PROJECT_NAME estará disponível perfeitamente aqui dentro!
+          ROOT="/var/www/$PROJECT_NAME"
+          RELEASES="$ROOT/releases"
+          SHARED="$ROOT/shared"
+          CURRENT="$ROOT/current"
+          
+          echo "Verificando ambiente em: $SHARED/.env"
+          if [ ! -f "$SHARED/.env" ]; then
+              echo ".env não encontrado em $SHARED/.env"
+              exit 1
+          fi
 
           RELEASE=\$(date +%Y%m%d%H%M%S)
           NEW_RELEASE="\$RELEASES/\$RELEASE"
