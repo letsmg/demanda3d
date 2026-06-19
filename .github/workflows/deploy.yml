@@ -87,7 +87,16 @@ jobs:
           RELEASE=$(date +%Y%m%d%H%M%S)
           NEW_RELEASE="$RELEASES/$RELEASE"
 
-          sudo mkdir -p "$NEW_RELEASE"
+          # MUDANÇA: Garantir que a pasta de views e a estrutura básica existam
+          sudo mkdir -p "$NEW_RELEASE/storage/framework/views"
+          sudo chown -R www-data:www-data "$NEW_RELEASE/storage"
+          
+          # Ajuste nos comandos Artisan:
+          # Apenas limpe as views se a pasta existir, ou simplesmente pule a limpeza
+          sudo -u www-data php artisan config:clear
+          sudo -u www-data php artisan route:clear
+          sudo -u www-data php artisan cache:clear
+          sudo -u www-data php artisan view:clear || true # O '|| true' evita que o erro pare o deploy
           
           # 1. Extrair
           sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
