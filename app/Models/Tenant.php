@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,11 @@ class Tenant extends Model
         'company_name',
         'fantasy_name',
         'document',
+        'document_encrypted',
+        'document_hash',
         'phone',
+        'phone_encrypted',
+        'phone_hash',
         'address',
         'number',
         'district',
@@ -30,6 +35,8 @@ class Tenant extends Model
     {
         return [
             'active' => 'boolean',
+            'document_encrypted' => 'encrypted',
+            'phone_encrypted' => 'encrypted',
         ];
     }
 
@@ -51,5 +58,21 @@ class Tenant extends Model
     public function inputs(): HasMany
     {
         return $this->hasMany(Input::class);
+    }
+
+    /**
+     * Get the decrypted document.
+     */
+    public function getDecryptedDocument(): ?string
+    {
+        return EncryptionService::decrypt($this->document_encrypted);
+    }
+
+    /**
+     * Get the decrypted phone.
+     */
+    public function getDecryptedPhone(): ?string
+    {
+        return EncryptionService::decrypt($this->phone_encrypted);
     }
 }

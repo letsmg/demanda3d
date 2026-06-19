@@ -1,6 +1,10 @@
 export type Client = {
     id: number;
-    name: string;
+    tenant_id: number;
+    first_name: string;
+    last_name: string;
+    display_name: string | null;
+    name: string | null;
     doc: string;
     address: string;
     number: string;
@@ -13,6 +17,7 @@ export type Client = {
     contact2: string | null;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
 };
 
 export type Order = {

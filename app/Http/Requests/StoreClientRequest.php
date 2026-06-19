@@ -14,7 +14,9 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'display_name' => ['nullable', 'string', 'max:255'],
             'doc' => ['required', 'string', 'max:20', 'unique:clients,doc'],
             'address' => ['required', 'string', 'max:255'],
             'number' => ['required', 'string', 'max:20'],
@@ -22,7 +24,7 @@ class StoreClientRequest extends FormRequest
             'zipcode' => ['required', 'string', 'regex:/^\d{5}-?\d{3}$/'],
             'city' => ['required', 'string', 'max:100'],
             'phone1' => ['required', 'string', 'max:20'],
-            'phone2' => ['required', 'string', 'max:20'],
+            'phone2' => ['nullable', 'string', 'max:20'],
             'contact1' => ['nullable', 'string', 'max:100'],
             'contact2' => ['nullable', 'string', 'max:100'],
         ];
@@ -31,7 +33,8 @@ class StoreClientRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'O nome do cliente é obrigatório',
+            'first_name.required' => 'O primeiro nome do cliente é obrigatório',
+            'last_name.required' => 'O sobrenome do cliente é obrigatório',
             'doc.unique' => 'Este documento já está registrado',
             'zipcode.regex' => 'O CEP deve estar no formato 12345-678',
         ];

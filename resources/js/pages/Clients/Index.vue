@@ -53,6 +53,10 @@ const showDeleteDialog = ref(false);
 const deletingClient = ref<Client | null>(null);
 const searchTimeout = ref<ReturnType<typeof setTimeout>>();
 
+const getClientDisplayName = (client: Client): string => {
+    return client.display_name || `${client.first_name} ${client.last_name}`;
+};
+
 const onSearchInput = () => {
     clearTimeout(searchTimeout.value);
     searchTimeout.value = setTimeout(() => {
@@ -197,7 +201,7 @@ const formatDoc = (doc: string) => {
                             class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-6 py-4">
-                                <div class="font-medium">{{ client.name }}</div>
+                                <div class="font-medium">{{ getClientDisplayName(client) }}</div>
                                 <div class="text-sm text-muted-foreground">
                                     {{ formatDoc(client.doc) }}
                                 </div>
@@ -259,66 +263,64 @@ const formatDoc = (doc: string) => {
             </div>
 
             <!-- Mobile Cards -->
-            <div class="grid gap-3 md:hidden">
+            <div class="space-y-3 md:hidden">
                 <Card
                     v-for="client in clients.data"
                     :key="client.id"
-                    class="border-border/50"
+                    class="overflow-hidden"
                 >
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
                             <div>
-                                <CardTitle class="text-base">{{
-                                    client.name
-                                }}</CardTitle>
-                                <CardDescription>{{
-                                    formatDoc(client.doc)
-                                }}</CardDescription>
+                                <CardTitle class="text-base">
+                                    {{ getClientDisplayName(client) }}
+                                </CardTitle>
+                                <CardDescription>
+                                    {{ formatDoc(client.doc) }}
+                                </CardDescription>
                             </div>
-                            <Badge variant="secondary" class="shrink-0">{{
-                                client.state
-                            }}</Badge>
+                            <div class="flex gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8"
+                                    as-child
+                                >
+                                    <Link
+                                        :href="
+                                            clientsEdit({
+                                                client: client.id,
+                                            })
+                                        "
+                                    >
+                                        <Edit class="h-3 w-3" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-destructive"
+                                    @click="confirmDelete(client)"
+                                >
+                                    <Trash2 class="h-3 w-3" />
+                                </Button>
+                            </div>
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <div class="space-y-2 text-sm">
-                            <div
-                                class="flex items-center gap-2 text-muted-foreground"
-                            >
-                                <Phone class="h-3.5 w-3.5" />
-                                <span>{{ client.phone1 }}</span>
-                            </div>
-                            <div
-                                class="flex items-center gap-2 text-muted-foreground"
-                            >
-                                <MapPin class="h-3.5 w-3.5" />
-                                <span
-                                    >{{ client.city }}, {{ client.state }} -
-                                    {{ client.zipcode }}</span
-                                >
-                            </div>
+                    <CardContent class="pb-3 text-sm text-muted-foreground">
+                        <div class="flex items-center gap-1">
+                            <Phone class="h-3 w-3" />
+                            {{ client.phone1 }}
                         </div>
-                        <div class="mt-4 flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                class="flex-1"
-                                as-child
-                            >
-                                <Link
-                                    :href="clientsEdit({ client: client.id })"
-                                >
-                                    <Edit class="mr-1 h-3 w-3" /> Editar
-                                </Link>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                class="flex-1 text-destructive"
-                                @click="confirmDelete(client)"
-                            >
-                                <Trash2 class="mr-1 h-3 w-3" /> Excluir
-                            </Button>
+                        <div
+                            v-if="client.contact1"
+                            class="mt-0.5 flex items-center gap-1"
+                        >
+                            Contato: {{ client.contact1 }}
+                        </div>
+                        <div class="mt-0.5 flex items-center gap-1">
+                            <MapPin class="h-3 w-3" />
+                            {{ client.city }}, {{ client.state }}
                         </div>
                     </CardContent>
                 </Card>
@@ -326,30 +328,29 @@ const formatDoc = (doc: string) => {
 
             <!-- Pagination -->
             <div
-                v-if="clients.last_page > 1"
-                class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between"
+                class="flex flex-col items-center justify-between gap-4 sm:flex-row"
             >
                 <p class="text-sm text-muted-foreground">
                     Mostrando {{ clients.from }} a {{ clients.to }} de
                     {{ clients.total }} clientes
                 </p>
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
-                        :disabled="clients.current_page === 1"
+                        :disabled="clients.current_page <= 1"
                         @click="goToPage(clients.current_page - 1)"
                     >
                         <ChevronLeft class="h-4 w-4" />
                     </Button>
-                    <span class="flex items-center px-4 text-sm">
+                    <span class="text-sm text-muted-foreground">
                         Página {{ clients.current_page }} de
                         {{ clients.last_page }}
                     </span>
                     <Button
                         variant="outline"
                         size="sm"
-                        :disabled="clients.current_page === clients.last_page"
+                        :disabled="clients.current_page >= clients.last_page"
                         @click="goToPage(clients.current_page + 1)"
                     >
                         <ChevronRight class="h-4 w-4" />
@@ -357,27 +358,38 @@ const formatDoc = (doc: string) => {
                 </div>
             </div>
         </template>
-    </div>
 
-    <!-- Delete Dialog -->
-    <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Excluir Cliente</DialogTitle>
-                <DialogDescription>
-                    Tem certeza que deseja excluir
-                    <strong>{{ deletingClient?.name }}</strong
-                    >? Esta ação não pode ser desfeita.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-                <Button variant="outline" @click="showDeleteDialog = false"
-                    >Cancelar</Button
-                >
-                <Button variant="destructive" @click="executeDelete"
-                    >Excluir</Button
-                >
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+        <!-- Delete Confirmation Dialog -->
+        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Excluir Cliente</DialogTitle>
+                    <DialogDescription>
+                        Tem certeza que deseja excluir o cliente
+                        <strong>{{
+                            deletingClient
+                                ? getClientDisplayName(deletingClient)
+                                : ''
+                        }}</strong
+                        >? Esta ação não pode ser desfeita.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        @click="showDeleteDialog = false"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        :disabled="deleteForm.processing"
+                        @click="executeDelete"
+                    >
+                        {{ deleteForm.processing ? 'Excluindo...' : 'Excluir' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    </div>
 </template>

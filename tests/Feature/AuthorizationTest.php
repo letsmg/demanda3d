@@ -6,6 +6,7 @@ use App\Enums\UserAccessLevel;
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\EncryptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,13 +27,20 @@ class AuthorizationTest extends TestCase
         $this->customer = User::factory()->customer()->create();
     }
 
-    public function test_admin_can_create_client(): void
+    private function createTenant(User $user, string $document = '12.345.678/0001-90'): void
     {
-        $this->admin->tenant()->create([
-            'company_name' => 'Admin Company',
-            'fantasy_name' => 'Admin Fantasy',
-            'document' => '12.345.678/0001-90',
+        $documentResult = EncryptionService::encryptWithHash($document);
+        $phoneResult = EncryptionService::encryptWithHash('11999999999');
+
+        $user->tenant()->create([
+            'company_name' => 'Test Company',
+            'fantasy_name' => 'Test Fantasy',
+            'document' => $document,
+            'document_encrypted' => $documentResult['encrypted'],
+            'document_hash' => $documentResult['hash'],
             'phone' => '11999999999',
+            'phone_encrypted' => $phoneResult['encrypted'],
+            'phone_hash' => $phoneResult['hash'],
             'address' => 'Rua Test',
             'number' => '123',
             'district' => 'Centro',
@@ -40,10 +48,16 @@ class AuthorizationTest extends TestCase
             'state' => 'SP',
             'zipcode' => '01234-567',
         ]);
+    }
+
+    public function test_admin_can_create_client(): void
+    {
+        $this->createTenant($this->admin);
 
         $response = $this->actingAs($this->admin)
             ->postJson('/api/clients', [
-                'name' => 'Test Client',
+                'first_name' => 'Test',
+                'last_name' => 'Client',
                 'doc' => '12345678901',
                 'address' => 'Rua Test',
                 'number' => '123',
@@ -59,22 +73,12 @@ class AuthorizationTest extends TestCase
 
     public function test_partner_can_create_client(): void
     {
-        $this->partner->tenant()->create([
-            'company_name' => 'Partner Company',
-            'fantasy_name' => 'Partner Fantasy',
-            'document' => '98.765.432/0001-10',
-            'phone' => '11988888888',
-            'address' => 'Rua Test 2',
-            'number' => '456',
-            'district' => 'Centro',
-            'city' => 'São Paulo',
-            'state' => 'SP',
-            'zipcode' => '01234-567',
-        ]);
+        $this->createTenant($this->partner, '98.765.432/0001-10');
 
         $response = $this->actingAs($this->partner)
             ->postJson('/api/clients', [
-                'name' => 'Test Client',
+                'first_name' => 'Test',
+                'last_name' => 'Client',
                 'doc' => '12345678902',
                 'address' => 'Rua Test',
                 'number' => '123',
@@ -90,22 +94,12 @@ class AuthorizationTest extends TestCase
 
     public function test_customer_cannot_create_client(): void
     {
-        $this->customer->tenant()->create([
-            'company_name' => 'Customer Company',
-            'fantasy_name' => null,
-            'document' => '11.111.111/0001-11',
-            'phone' => '11977777777',
-            'address' => 'Rua Test 3',
-            'number' => '789',
-            'district' => 'Centro',
-            'city' => 'São Paulo',
-            'state' => 'SP',
-            'zipcode' => '01234-567',
-        ]);
+        $this->createTenant($this->customer, '11.111.111/0001-11');
 
         $response = $this->actingAs($this->customer)
             ->postJson('/api/clients', [
-                'name' => 'Test Client',
+                'first_name' => 'Test',
+                'last_name' => 'Client',
                 'doc' => '12345678901',
                 'address' => 'Rua Test',
                 'number' => '123',

@@ -15,7 +15,7 @@ class CreateAdminUser extends Command
      *
      * @var string
      */
-    protected $signature = 'user:create-admin {name} {email} {--password=}';
+    protected $signature = 'user:create-admin {first_name} {last_name} {email} {--display_name=} {--password=}';
 
     /**
      * The description of the console command.
@@ -29,8 +29,10 @@ class CreateAdminUser extends Command
      */
     public function handle(): int
     {
-        $name = $this->argument('name');
+        $firstName = $this->argument('first_name');
+        $lastName = $this->argument('last_name');
         $email = $this->argument('email');
+        $displayName = $this->option('display_name');
         $password = $this->option('password');
 
         if (! $password) {
@@ -45,7 +47,9 @@ class CreateAdminUser extends Command
         }
 
         User::create([
-            'name' => $name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'display_name' => $displayName,
             'email' => $email,
             'password' => Hash::make($password),
             'access_level' => UserAccessLevel::ADMIN,

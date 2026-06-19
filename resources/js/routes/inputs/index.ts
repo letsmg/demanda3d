@@ -222,7 +222,7 @@ store.form = storeForm
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-export const edit = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const edit = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -237,7 +237,7 @@ edit.definition = {
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-edit.url = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+edit.url = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { input: args }
     }
@@ -270,7 +270,7 @@ edit.url = (args: { input: string | number | { id: string | number } } | [input:
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-edit.get = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+edit.get = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -280,7 +280,7 @@ edit.get = (args: { input: string | number | { id: string | number } } | [input:
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-edit.head = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+edit.head = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(args, options),
     method: 'head',
 })
@@ -290,7 +290,7 @@ edit.head = (args: { input: string | number | { id: string | number } } | [input
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-const editForm = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const editForm = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: edit.url(args, options),
     method: 'get',
 })
@@ -300,7 +300,7 @@ const editForm = (args: { input: string | number | { id: string | number } } | [
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-editForm.get = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+editForm.get = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: edit.url(args, options),
     method: 'get',
 })
@@ -310,7 +310,7 @@ editForm.get = (args: { input: string | number | { id: string | number } } | [in
 * @see app/Http/Controllers/Inertia/InputController.php:42
 * @route '/inputs/{input}/edit'
 */
-editForm.head = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+editForm.head = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: edit.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -327,7 +327,7 @@ edit.form = editForm
 * @see app/Http/Controllers/Inertia/InputController.php:49
 * @route '/inputs/{input}'
 */
-export const update = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -342,7 +342,7 @@ update.definition = {
 * @see app/Http/Controllers/Inertia/InputController.php:49
 * @route '/inputs/{input}'
 */
-update.url = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { input: args }
     }
@@ -375,7 +375,7 @@ update.url = (args: { input: string | number | { id: string | number } } | [inpu
 * @see app/Http/Controllers/Inertia/InputController.php:49
 * @route '/inputs/{input}'
 */
-update.put = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -385,7 +385,7 @@ update.put = (args: { input: string | number | { id: string | number } } | [inpu
 * @see app/Http/Controllers/Inertia/InputController.php:49
 * @route '/inputs/{input}'
 */
-const updateForm = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -400,7 +400,7 @@ const updateForm = (args: { input: string | number | { id: string | number } } |
 * @see app/Http/Controllers/Inertia/InputController.php:49
 * @route '/inputs/{input}'
 */
-updateForm.put = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.put = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -417,7 +417,7 @@ update.form = updateForm
 * @see app/Http/Controllers/Inertia/InputController.php:57
 * @route '/inputs/{input}'
 */
-export const destroy = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -432,7 +432,7 @@ destroy.definition = {
 * @see app/Http/Controllers/Inertia/InputController.php:57
 * @route '/inputs/{input}'
 */
-destroy.url = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { input: args }
     }
@@ -465,7 +465,7 @@ destroy.url = (args: { input: string | number | { id: string | number } } | [inp
 * @see app/Http/Controllers/Inertia/InputController.php:57
 * @route '/inputs/{input}'
 */
-destroy.delete = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -475,7 +475,7 @@ destroy.delete = (args: { input: string | number | { id: string | number } } | [
 * @see app/Http/Controllers/Inertia/InputController.php:57
 * @route '/inputs/{input}'
 */
-const destroyForm = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -490,7 +490,7 @@ const destroyForm = (args: { input: string | number | { id: string | number } } 
 * @see app/Http/Controllers/Inertia/InputController.php:57
 * @route '/inputs/{input}'
 */
-destroyForm.delete = (args: { input: string | number | { id: string | number } } | [input: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { input: number | { id: number } } | [input: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
