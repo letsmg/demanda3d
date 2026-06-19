@@ -87,25 +87,17 @@ jobs:
           RELEASE=$(date +%Y%m%d%H%M%S)
           NEW_RELEASE="$RELEASES/$RELEASE"
 
-          # MUDANÇA: Garantir que a pasta de views e a estrutura básica existam
-          sudo mkdir -p "$NEW_RELEASE/storage/framework/views"
-          sudo chown -R www-data:www-data "$NEW_RELEASE/storage"
+          # 1. Preparar pastas
+          sudo mkdir -p "$NEW_RELEASE"
           
-          # Ajuste nos comandos Artisan:
-          # Apenas limpe as views se a pasta existir, ou simplesmente pule a limpeza
-          sudo -u www-data php artisan config:clear
-          sudo -u www-data php artisan route:clear
-          sudo -u www-data php artisan cache:clear
-          sudo -u www-data php artisan view:clear || true # O '|| true' evita que o erro pare o deploy
-          
-          # 1. Extrair
+          # 2. EXTRAÇÃO PRIMEIRO
           sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-          # 2. MUDANÇA CRÍTICA: Dar posse total ao www-data antes de qualquer comando Laravel
+          # 3. Configurar Permissões (agora que os arquivos existem)
           sudo chown -R www-data:www-data "$NEW_RELEASE"
           sudo chmod -R 775 "$NEW_RELEASE"
 
-          # 3. Configurar links simbólicos
+          # 4. Links simbólicos (substituir storage vazio do zip pelo storage compartilhado)
           sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
           
           sudo rm -rf "$NEW_RELEASE/storage"
@@ -114,18 +106,17 @@ jobs:
           sudo rm -rf "$NEW_RELEASE/public/storage"
           sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
 
-          # 4. Rodar comandos como www-data
+          # 5. Comandos Artisan (com o código já extraído e permissões dadas)
           cd "$NEW_RELEASE"
           
-          # Limpeza de cache garantida
+          # Agora o artisan encontra os arquivos e pode escrever nos caches
           sudo -u www-data php artisan config:clear
           sudo -u www-data php artisan route:clear
           sudo -u www-data php artisan cache:clear
+          sudo -u www-data php artisan view:clear || true 
 
-          # Migrations
           sudo -u www-data php artisan migrate --force
 
-          # Cache definitivo
           sudo -u www-data php artisan config:cache
           sudo -u www-data php artisan route:cache
           sudo -u www-data php artisan view:cache
