@@ -18,10 +18,10 @@ class ClientFactory extends Factory
      */
     public function definition(): array
     {
-        $firstName = fake()->firstName();
-        $lastName = fake()->lastName();
-        $doc = fake()->numerify('##.###.###/####-##');
-        $phone1 = fake()->phoneNumber();
+        $firstName = $this->faker->firstName();
+        $lastName = $this->faker->lastName();
+        $doc = $this->faker->numerify('##.###.###/####-##');
+        $phone1 = $this->faker->phoneNumber();
 
         $docResult = EncryptionService::encryptWithHash($doc);
         $phone1Result = EncryptionService::encryptWithHash($phone1);
@@ -34,16 +34,16 @@ class ClientFactory extends Factory
             'doc' => $doc,
             'doc_encrypted' => $docResult['encrypted'],
             'doc_hash' => $docResult['hash'],
-            'address' => fake()->streetAddress(),
-            'number' => fake()->buildingNumber(),
-            'state' => fake()->stateAbbr(),
-            'zipcode' => fake()->postcode(),
-            'city' => fake()->city(),
+            'address' => $this->faker->streetAddress(),
+            'number' => $this->faker->buildingNumber(),
+            'state' => $this->faker->stateAbbr(),
+            'zipcode' => $this->faker->postcode(),
+            'city' => $this->faker->city(),
             'phone1' => $phone1,
             'phone1_encrypted' => $phone1Result['encrypted'],
             'phone1_hash' => $phone1Result['hash'],
-            'phone2' => fake()->phoneNumber(),
-            'contact1' => fake()->name(),
+            'phone2' => $this->faker->phoneNumber(),
+            'contact1' => $this->faker->name(),
             'contact2' => null,
         ];
     }

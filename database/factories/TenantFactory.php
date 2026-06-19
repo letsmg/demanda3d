@@ -20,16 +20,16 @@ class TenantFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'company_name' => fake()->company(),
-            'fantasy_name' => fake()->company(),
-            'document' => fake()->numerify('##.###.###/####-##'),
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->streetAddress(),
-            'number' => fake()->buildingNumber(),
-            'district' => fake()->citySuffix(),
-            'city' => fake()->city(),
-            'state' => fake()->stateAbbr(),
-            'zipcode' => fake()->postcode(),
+            'company_name' => $this->faker->company(),
+            'fantasy_name' => $this->faker->company(),
+            'document' => $this->faker->numerify('##.###.###/####-##'),
+            'phone' => $this->faker->phoneNumber(),
+            'address' => $this->faker->streetAddress(),
+            'number' => $this->faker->buildingNumber(),
+            'district' => $this->faker->citySuffix(),
+            'city' => $this->faker->city(),
+            'state' => $this->faker->stateAbbr(),
+            'zipcode' => $this->faker->postcode(),
             'active' => true,
         ];
     }
