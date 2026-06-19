@@ -8,8 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Make name column nullable since we now use first_name/last_name/display_name
-        DB::statement('ALTER TABLE clients ALTER COLUMN name DROP NOT NULL');
+        // Make name column nullable - compatible with both PostgreSQL and SQLite
+        Schema::table('clients', function (Blueprint $table) {
+            $table->string('name', 255)->nullable()->change();
+        });
 
         Schema::table('clients', function (Blueprint $table) {
             // Split name into first_name, last_name, display_name
@@ -37,8 +39,8 @@ return new class extends Migration
         });
 
         // Migrate existing data: split name into first_name and last_name
-        DB::statement("UPDATE clients SET first_name = SPLIT_PART(name, ' ', 1), last_name = SUBSTRING(name FROM POSITION(' ' IN name) + 1) WHERE name LIKE '% %'");
-        DB::statement("UPDATE clients SET first_name = name, last_name = name WHERE name NOT LIKE '% %' OR name IS NULL");
+        // Compatible with both PostgreSQL and SQLite
+        DB::statement("UPDATE clients SET first_name = SUBSTR(name, 1, CASE WHEN INSTR(name, ' ') > 0 THEN INSTR(name, ' ') - 1 ELSE LENGTH(name) END), last_name = CASE WHEN INSTR(name, ' ') > 0 THEN SUBSTR(name, INSTR(name, ' ') + 1) ELSE name END WHERE name IS NOT NULL");
     }
 
     public function down(): void

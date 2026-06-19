@@ -17,9 +17,8 @@ return new class extends Migration
         });
 
         // Migrate existing data: split name into first_name and last_name
-        DB::statement("UPDATE users SET first_name = SPLIT_PART(name, ' ', 1), last_name = SUBSTRING(name FROM POSITION(' ' IN name) + 1) WHERE name LIKE '% %'");
-        // For single word names, set last_name same as first_name
-        DB::statement("UPDATE users SET first_name = name, last_name = name WHERE name NOT LIKE '% %' OR name IS NULL");
+        // Compatible with both PostgreSQL and SQLite
+        DB::statement("UPDATE users SET first_name = SUBSTR(name, 1, CASE WHEN INSTR(name, ' ') > 0 THEN INSTR(name, ' ') - 1 ELSE LENGTH(name) END), last_name = CASE WHEN INSTR(name, ' ') > 0 THEN SUBSTR(name, INSTR(name, ' ') + 1) ELSE name END WHERE name IS NOT NULL");
 
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('name');
@@ -32,7 +31,8 @@ return new class extends Migration
             $table->string('name')->after('email');
         });
 
-        DB::statement("UPDATE users SET name = CONCAT(first_name, ' ', last_name)");
+        // Compatible with both PostgreSQL and SQLite
+        DB::statement("UPDATE users SET name = first_name || ' ' || last_name");
 
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn(['first_name', 'last_name', 'display_name']);
