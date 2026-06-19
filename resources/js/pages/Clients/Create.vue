@@ -15,7 +15,9 @@ import { Label } from '@/components/ui/label';
 import { index as clientsIndex } from '@/routes/clients';
 
 const form = useForm({
-    name: '',
+    first_name: '',
+    last_name: '',
+    display_name: '',
     doc: '',
     address: '',
     number: '',
@@ -73,24 +75,52 @@ const submit = () => {
                     >
                 </CardHeader>
                 <CardContent class="space-y-6">
-                    <!-- Name & Document -->
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <!-- Name fields -->
+                    <div class="grid gap-4 sm:grid-cols-3">
                         <div class="space-y-2">
-                            <Label for="name">Nome / Razão Social *</Label>
+                            <Label for="first_name">Nome *</Label>
                             <Input
-                                id="name"
-                                v-model="form.name"
-                                placeholder="Nome do cliente"
+                                id="first_name"
+                                v-model="form.first_name"
+                                placeholder="Primeiro nome"
                                 :class="{
-                                    'border-destructive': form.errors.name,
+                                    'border-destructive': form.errors.first_name,
                                 }"
                             />
                             <span
-                                v-if="form.errors.name"
+                                v-if="form.errors.first_name"
                                 class="text-sm text-destructive"
-                                >{{ form.errors.name }}</span
+                                >{{ form.errors.first_name }}</span
                             >
                         </div>
+                        <div class="space-y-2">
+                            <Label for="last_name">Sobrenome *</Label>
+                            <Input
+                                id="last_name"
+                                v-model="form.last_name"
+                                placeholder="Sobrenome"
+                                :class="{
+                                    'border-destructive': form.errors.last_name,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.last_name"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.last_name }}</span
+                            >
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="display_name">Nome de Exibição</Label>
+                            <Input
+                                id="display_name"
+                                v-model="form.display_name"
+                                placeholder="Nome para exibição (opcional)"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Document -->
+                    <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="doc">CPF / CNPJ *</Label>
                             <Input

@@ -14,7 +14,11 @@ return new class extends Migration
             $table->string('company_name');
             $table->string('fantasy_name')->nullable();
             $table->string('document', 20)->unique();
+            $table->text('document_encrypted')->nullable();
+            $table->string('document_hash', 64)->nullable();
             $table->string('phone', 20);
+            $table->text('phone_encrypted')->nullable();
+            $table->string('phone_hash', 64)->nullable();
             $table->string('address');
             $table->string('number', 20);
             $table->string('district');
@@ -25,6 +29,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('user_id');
+            $table->index('document_hash');
+            $table->index('phone_hash');
         });
     }
 

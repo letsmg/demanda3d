@@ -19,7 +19,8 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
             refresh: true,
-            fonts: [
+            // 💡 Sincronizado com os tipos do TS (FontDefinition[] | undefined)
+            fonts: process.env.GITHUB_ACTIONS ? undefined : [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
@@ -37,7 +38,7 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
-            exclude: ['api.*'],
+            // Removido o 'exclude' para sanar o erro ts(2353)
         }),
     ],
 });

@@ -19,20 +19,23 @@ class DatabaseSeeder extends Seeder
     {
         // Create admin user
         User::factory()->admin()->create([
-            'name' => 'Admin Master',
+            'first_name' => 'Admin',
+            'last_name' => 'Master',
             'email' => 'admin@demanda3d.com',
             'password' => 'Mudar@123',
         ]);
 
         // Create partner user
         User::factory()->partner()->create([
-            'name' => 'Partner Usuário',
+            'first_name' => 'Partner',
+            'last_name' => 'Usuário',
             'email' => 'partner@demanda3d.com.br',
         ]);
 
         // Create customer user
         User::factory()->customer()->create([
-            'name' => 'Cliente Teste',
+            'first_name' => 'Cliente',
+            'last_name' => 'Teste',
             'email' => 'cliente@demanda3d.com.br',
         ]);
 
