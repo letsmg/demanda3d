@@ -141,4 +141,4 @@ jobs:
           rm -f "/tmp/$PROJECT_NAME.zip"
           
           echo "✅ Deploy atômico para $PROJECT_NAME finalizado com sucesso!"
-EOF
+          EOF
