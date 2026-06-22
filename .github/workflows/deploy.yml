@@ -43,10 +43,12 @@ jobs:
           zip -r deploy.zip . -x ".git/*" -x ".github/*" -x "node_modules/*" -x "tests/*" -x ".env*" -x "storage/framework/*" -x "storage/logs/*"
 
       - name: Configure SSH
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          # Adiciona o host ao known_hosts para evitar o erro de identificação
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
       - name: Sync Database (Dev Only)
         if: github.ref_name == 'dev'
