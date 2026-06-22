@@ -42,3 +42,16 @@ export type Input = {
     created_at: string;
     updated_at: string;
 };
+
+export type Product = {
+    id: number;
+    tenant_id: number;
+    name: string;
+    description: string | null;
+    price_sale: string | number;
+    discount_cash: string | number;
+    image_path: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+};
