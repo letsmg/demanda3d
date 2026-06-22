@@ -14,7 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'order_date',
     'delivery_date',
     'price',
-    'contracted_description',
+    'contracted_description_encrypted',
+    'contracted_description_hash',
 ])]
 class Order extends Model
 {

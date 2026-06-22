@@ -10,76 +10,132 @@ class ClientSeeder extends Seeder
 {
     public function run(): void
     {
-        $doc1 = '12.345.678/0001-90';
-        $doc1Result = EncryptionService::encryptWithHash($doc1);
-        $phone1 = '(11) 99999-0001';
-        $phone1Result = EncryptionService::encryptWithHash($phone1);
+        $makeEncrypted = fn ($value) => EncryptionService::encryptWithHash($value);
+
+        // Client 1
+        $firstName1 = 'Tech3D';
+        $lastName1 = 'Soluções Ltda';
+        $r1 = $makeEncrypted($firstName1);
+        $r1l = $makeEncrypted($lastName1);
+        $r1d = $makeEncrypted('12.345.678/0001-90');
+        $r1p = $makeEncrypted('(11) 99999-0001');
+        $r1p2 = $makeEncrypted('(11) 3333-0001');
+        $r1a = $makeEncrypted('Av. Paulista');
+        $r1n = $makeEncrypted('1000');
+        $r1s = $makeEncrypted('SP');
+        $r1z = $makeEncrypted('01310-100');
+        $r1c = $makeEncrypted('São Paulo');
+        $r1ct = $makeEncrypted('Carlos Silva');
 
         Client::factory()->create([
-            'first_name' => 'Tech3D',
-            'last_name' => 'Soluções Ltda',
             'display_name' => 'Tech3D Soluções Ltda',
-            'doc' => $doc1,
-            'doc_encrypted' => $doc1Result['encrypted'],
-            'doc_hash' => $doc1Result['hash'],
-            'address' => 'Av. Paulista',
-            'number' => '1000',
-            'state' => 'SP',
-            'zipcode' => '01310-100',
-            'city' => 'São Paulo',
-            'phone1' => $phone1,
-            'phone1_encrypted' => $phone1Result['encrypted'],
-            'phone1_hash' => $phone1Result['hash'],
-            'phone2' => '(11) 3333-0001',
-            'contact1' => 'Carlos Silva',
+            'doc_type' => 'CNPJ',
+            'first_name_encrypted' => $r1['encrypted'],
+            'first_name_hash' => $r1['hash'],
+            'last_name_encrypted' => $r1l['encrypted'],
+            'last_name_hash' => $r1l['hash'],
+            'doc_encrypted' => $r1d['encrypted'],
+            'doc_hash' => $r1d['hash'],
+            'address_encrypted' => $r1a['encrypted'],
+            'address_hash' => $r1a['hash'],
+            'number_encrypted' => $r1n['encrypted'],
+            'number_hash' => $r1n['hash'],
+            'state_encrypted' => $r1s['encrypted'],
+            'state_hash' => $r1s['hash'],
+            'zipcode_encrypted' => $r1z['encrypted'],
+            'zipcode_hash' => $r1z['hash'],
+            'city_encrypted' => $r1c['encrypted'],
+            'city_hash' => $r1c['hash'],
+            'phone1_encrypted' => $r1p['encrypted'],
+            'phone1_hash' => $r1p['hash'],
+            'phone2_encrypted' => $r1p2['encrypted'],
+            'phone2_hash' => $r1p2['hash'],
+            'contact1_encrypted' => $r1ct['encrypted'],
+            'contact1_hash' => $r1ct['hash'],
         ]);
 
-        $doc2 = '98.765.432/0001-10';
-        $doc2Result = EncryptionService::encryptWithHash($doc2);
-        $phone2 = '(21) 98888-0002';
-        $phone2Result = EncryptionService::encryptWithHash($phone2);
+        // Client 2
+        $firstName2 = 'Prototipagem';
+        $lastName2 = 'Rápida S.A.';
+        $r2 = $makeEncrypted($firstName2);
+        $r2l = $makeEncrypted($lastName2);
+        $r2d = $makeEncrypted('98.765.432/0001-10');
+        $r2p = $makeEncrypted('(21) 98888-0002');
+        $r2p2 = $makeEncrypted('(21) 3444-0002');
+        $r2a = $makeEncrypted('Rua da Assembleia');
+        $r2n = $makeEncrypted('500');
+        $r2s = $makeEncrypted('RJ');
+        $r2z = $makeEncrypted('20011-000');
+        $r2c = $makeEncrypted('Rio de Janeiro');
+        $r2ct1 = $makeEncrypted('Ana Oliveira');
+        $r2ct2 = $makeEncrypted('Pedro Santos');
 
         Client::factory()->create([
-            'first_name' => 'Prototipagem',
-            'last_name' => 'Rápida S.A.',
             'display_name' => 'Prototipagem Rápida S.A.',
-            'doc' => $doc2,
-            'doc_encrypted' => $doc2Result['encrypted'],
-            'doc_hash' => $doc2Result['hash'],
-            'address' => 'Rua da Assembleia',
-            'number' => '500',
-            'state' => 'RJ',
-            'zipcode' => '20011-000',
-            'city' => 'Rio de Janeiro',
-            'phone1' => $phone2,
-            'phone1_encrypted' => $phone2Result['encrypted'],
-            'phone1_hash' => $phone2Result['hash'],
-            'phone2' => '(21) 3444-0002',
-            'contact1' => 'Ana Oliveira',
-            'contact2' => 'Pedro Santos',
+            'doc_type' => 'CNPJ',
+            'first_name_encrypted' => $r2['encrypted'],
+            'first_name_hash' => $r2['hash'],
+            'last_name_encrypted' => $r2l['encrypted'],
+            'last_name_hash' => $r2l['hash'],
+            'doc_encrypted' => $r2d['encrypted'],
+            'doc_hash' => $r2d['hash'],
+            'address_encrypted' => $r2a['encrypted'],
+            'address_hash' => $r2a['hash'],
+            'number_encrypted' => $r2n['encrypted'],
+            'number_hash' => $r2n['hash'],
+            'state_encrypted' => $r2s['encrypted'],
+            'state_hash' => $r2s['hash'],
+            'zipcode_encrypted' => $r2z['encrypted'],
+            'zipcode_hash' => $r2z['hash'],
+            'city_encrypted' => $r2c['encrypted'],
+            'city_hash' => $r2c['hash'],
+            'phone1_encrypted' => $r2p['encrypted'],
+            'phone1_hash' => $r2p['hash'],
+            'phone2_encrypted' => $r2p2['encrypted'],
+            'phone2_hash' => $r2p2['hash'],
+            'contact1_encrypted' => $r2ct1['encrypted'],
+            'contact1_hash' => $r2ct1['hash'],
+            'contact2_encrypted' => $r2ct2['encrypted'],
+            'contact2_hash' => $r2ct2['hash'],
         ]);
 
-        $doc3 = '45.678.901/0001-23';
-        $doc3Result = EncryptionService::encryptWithHash($doc3);
-        $phone3 = '(48) 97777-0003';
-        $phone3Result = EncryptionService::encryptWithHash($phone3);
+        // Client 3
+        $firstName3 = 'Indústria';
+        $lastName3 = 'Criativa Maker';
+        $r3 = $makeEncrypted($firstName3);
+        $r3l = $makeEncrypted($lastName3);
+        $r3d = $makeEncrypted('45.678.901/0001-23');
+        $r3p = $makeEncrypted('(48) 97777-0003');
+        $r3a = $makeEncrypted('Rua XV de Novembro');
+        $r3n = $makeEncrypted('250');
+        $r3s = $makeEncrypted('SC');
+        $r3z = $makeEncrypted('88010-000');
+        $r3c = $makeEncrypted('Florianópolis');
+        $r3ct = $makeEncrypted('Mariana Costa');
 
         Client::factory()->create([
-            'first_name' => 'Indústria',
-            'last_name' => 'Criativa Maker',
             'display_name' => 'Indústria Criativa Maker',
-            'doc' => $doc3,
-            'doc_encrypted' => $doc3Result['encrypted'],
-            'doc_hash' => $doc3Result['hash'],
-            'address' => 'Rua XV de Novembro',
-            'number' => '250',
-            'state' => 'SC',
-            'zipcode' => '88010-000',
-            'city' => 'Florianópolis',
-            'phone1' => $phone3,
-            'phone1_encrypted' => $phone3Result['encrypted'],
-            'phone1_hash' => $phone3Result['hash'],
-            'contact1' => 'Mariana Costa',
+            'doc_type' => 'CNPJ',
+            'first_name_encrypted' => $r3['encrypted'],
+            'first_name_hash' => $r3['hash'],
+            'last_name_encrypted' => $r3l['encrypted'],
+            'last_name_hash' => $r3l['hash'],
+            'doc_encrypted' => $r3d['encrypted'],
+            'doc_hash' => $r3d['hash'],
+            'address_encrypted' => $r3a['encrypted'],
+            'address_hash' => $r3a['hash'],
+            'number_encrypted' => $r3n['encrypted'],
+            'number_hash' => $r3n['hash'],
+            'state_encrypted' => $r3s['encrypted'],
+            'state_hash' => $r3s['hash'],
+            'zipcode_encrypted' => $r3z['encrypted'],
+            'zipcode_hash' => $r3z['hash'],
+            'city_encrypted' => $r3c['encrypted'],
+            'city_hash' => $r3c['hash'],
+            'phone1_encrypted' => $r3p['encrypted'],
+            'phone1_hash' => $r3p['hash'],
+            'contact1_encrypted' => $r3ct['encrypted'],
+            'contact1_hash' => $r3ct['hash'],
         ]);
 
         Client::factory()->count(7)->create();

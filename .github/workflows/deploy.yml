@@ -94,7 +94,8 @@ jobs:
             sudo -u www-data php artisan optimize
 
             # Finalização
-            sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+            sudo rm -rf "$CURRENT"
+            sudo ln -sfn "$NEW_RELEASE" "$CURRENT"            
             sudo systemctl restart php8.5-fpm
             
             cd "$RELEASES" && ls -t | tail -n +6 | xargs -r sudo rm -rf --

@@ -4,135 +4,92 @@ Sistema SaaS para gestão operacional, financeira e produtiva de negócios de im
 
 ## Sobre o Projeto
 
-O Demanda3D está sendo desenvolvido como uma plataforma completa para empreendedores da área de impressão 3D, permitindo o controle de:
+O Demanda3D está sendo desenvolvido como uma plataforma completa para empreendedores da área de impressão 3D, permitindo o controle de clientes, fornecedores, filamentos, custos de produção, consumo de energia, perdas de material, estoque, produtos, pedidos e assinaturas recorrentes.
 
-* Clientes
-* Fornecedores
-* Filamentos
-* Custos de produção
-* Consumo de energia
-* Perdas de material
-* Estoque
-* Produtos
-* Pedidos
-* Assinaturas recorrentes
-
-O sistema segue uma arquitetura multi-tenant, permitindo que múltiplos clientes utilizem a mesma aplicação com isolamento total de dados.
+O sistema segue uma arquitetura multi-tenant com isolamento total de dados entre clientes.
 
 ---
 
-## Tecnologias Utilizadas
+## Stack Tecnológica
 
 ### Backend
-
-* Laravel
-* PostgreSQL
-* Redis
-* PHP 8+
+- **Laravel** — Framework PHP para desenvolvimento web
+- **PostgreSQL** — Banco de dados relacional
+- **Redis** — Cache e filas
+- **PHP 8.3+** — Linguagem de programação
 
 ### Frontend
-
-* Vue 3
-* TypeScript
-* Inertia.js
-* Tailwind CSS
+- **Vue 3** — Framework JavaScript progressivo
+- **TypeScript** — Tipagem estática
+- **Inertia.js** — Conector monolítico entre backend e frontend
+- **Tailwind CSS** — Estilização utilitária
 
 ### Infraestrutura
-
-* Linux
-* Docker
-* Git
-* CI/CD
+- Linux | Docker | Git | CI/CD
 
 ### Pagamentos
-
-* Stripe
-* PIX
-* Cartão de Crédito
-* Boleto Bancário
+- Stripe | PIX | Cartão de Crédito | Boleto Bancário
 
 ---
 
-## Arquitetura
+## Segurança e LGPD
 
-O projeto foi desenvolvido seguindo boas práticas de engenharia de software:
+Este projeto adota padrões rigorosos de segurança e criptografia em conformidade com a **Lei Geral de Proteção de Dados (LGPD)**:
 
-* Clean Architecture
-* SOLID
-* DRY
-* Separation of Concerns
-* Multi-Tenant Architecture
-* Service Layer Pattern
-* Form Requests
-* Policies e Authorization
+- **Estrutura de Paridade:** Todos os dados pessoais (nomes, e-mails, documentos, telefones e endereços) são armazenados com  **hash determinístico (`sha256`)** para buscas e **criptografia em repouso (`Crypt::encryptString`)** para exibição segura
+- **Senhas:** Hash Argon2id com configuração otimizada (Memory cost: 64MB, Time cost: 4, Threads: 2)
+- **Sanitização:** Entrada e saída de dados sanitizadas para prevenir XSS e SQL Injection
+- **Mass Assignment:** Proteção via `$fillable` em todos os models
+- **Rate Limiting:** Limites de requisições em endpoints críticos
+- **Multi-Tenant:** Isolamento completo por `tenant_id` com Global Scopes
 
 ---
 
-## Destaques Técnicos
+## Instalação / Setup
 
-### Multi-Tenant
+```bash
+# Clone o repositório
+git clone https://github.com/letsmg/demanda3d.git
+cd demanda3d
 
-* Banco de dados compartilhado
-* Isolamento completo entre clientes
-* Controle de acesso por tenant
+# Instale as dependências do backend
+composer install
 
-### Segurança
+# Instale as dependências do frontend
+npm install
 
-* Hashing Argon2id
-* Validações Backend e Frontend
-* Sanitização de entrada e saída
-* Controle de permissões por perfil
+# Configure o ambiente
+cp .env.example .env
+php artisan key:generate
 
-### Performance
+# Execute as migrações e seeders
+php artisan migrate --seed
 
-* PostgreSQL otimizado
-* Redis para cache
-* Eager Loading
-* Paginação em listagens
+# Compile os assets
+npm run build
 
-### Qualidade
-
-* Testes Unitários
-* Feature Tests
-* Cobertura de regras de negócio
-* Integração contínua
+# Inicie o servidor de desenvolvimento
+php artisan serve
+```
 
 ---
 
-## Perfis de Acesso
+## Licenciamento
 
-### Partner
+Este projeto está licenciado sob a **Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
 
-Acesso administrativo global da plataforma.
+**Copyright (c) 2026 Luiz Eduardo T. Silva — Todos os direitos reservados.**
 
-### Admin
+- **Uso Não Comercial:** Este software não pode ser utilizado para fins comerciais sem autorização expressa do autor.
+- **Copyleft:** Alterações e derivações devem ser distribuídas sob a mesma licença.
+- **Atribuição:** Créditos devem ser mantidos em todas as cópias e obras derivadas.
 
-Gerenciamento operacional.
-
-### Customer
-
-Acesso exclusivo aos próprios dados.
+Para mais detalhes, consulte o arquivo [LICENSE](LICENSE).
 
 ---
 
-## Objetivos do Projeto
+## Autor
 
-Além de resolver problemas reais do mercado de impressão 3D, este projeto serve como demonstração prática de competências em:
+**Luiz Eduardo T. Silva** — [luiztsilva@protonmail.com](mailto:luiztsilva@protonmail.com)
 
-* Desenvolvimento Full Stack
-* Arquitetura de Software
-* Sistemas SaaS
-* Laravel
-* Vue.js
-* PostgreSQL
-* Integrações de Pagamento
-* Multi-Tenancy
-* Engenharia de Software
-
----
-
-## Status
-
-🚧 Em desenvolvimento ativo
-
-Novas funcionalidades estão sendo implementadas continuamente com foco em escalabilidade, segurança e qualidade de código.
+© 2026 Luiz Eduardo T. Silva — hierarca.com. Todos os direitos reservados.

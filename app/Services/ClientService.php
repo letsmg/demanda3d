@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentType;
 use App\Models\Client;
 use Illuminate\Pagination\Paginator;
 
@@ -21,22 +22,38 @@ class ClientService
     {
         $data['tenant_id'] = auth()->user()->tenant->id;
 
-        // Sanitize inputs
-        $data = $this->sanitizeData($data);
+        // Build display_name if not provided
+        $data = $this->buildDisplayName($data);
+
+        // Auto-detect doc_type if not provided
+        if (isset($data['doc']) && empty($data['doc_type'])) {
+            $data['doc_type'] = DocumentType::detect($data['doc'])->value;
+        }
 
         // Encrypt sensitive fields
         $data = $this->encryptSensitiveFields($data);
+
+        // Remove plain text fields — only encrypted+hash columns exist
+        $data = $this->stripPlainTextFields($data);
 
         return Client::create($data);
     }
 
     public function update(Client $client, array $data): Client
     {
-        // Sanitize inputs
-        $data = $this->sanitizeData($data);
+        // Build display_name if not provided
+        $data = $this->buildDisplayName($data);
+
+        // Auto-detect doc_type if not provided
+        if (isset($data['doc']) && empty($data['doc_type'])) {
+            $data['doc_type'] = DocumentType::detect($data['doc'])->value;
+        }
 
         // Encrypt sensitive fields
         $data = $this->encryptSensitiveFields($data);
+
+        // Remove plain text fields — only encrypted+hash columns exist
+        $data = $this->stripPlainTextFields($data);
 
         $client->update($data);
 
@@ -53,7 +70,8 @@ class ClientService
      */
     public function findByDoc(string $doc): ?Client
     {
-        $hash = EncryptionService::hash($doc);
+        $digits = DocumentValidationService::digitsOnly($doc);
+        $hash = EncryptionService::hash($digits);
 
         if ($hash === null) {
             return null;
@@ -113,22 +131,50 @@ class ClientService
     }
 
     /**
-     * Encrypt sensitive fields and generate hashes for searching.
+     * Apply LGPD parity structure: build *_hash and *_encrypted for all sensitive fields.
      */
     private function encryptSensitiveFields(array $data): array
     {
-        // Encrypt document
+        foreach (['first_name', 'last_name'] as $field) {
+            if (isset($data[$field])) {
+                $data = EncryptionService::buildEncryptedFields($data, $field);
+            }
+        }
+
         if (isset($data['doc'])) {
             $data = EncryptionService::buildEncryptedFields($data, 'doc');
         }
 
-        // Encrypt phone numbers
-        if (isset($data['phone1'])) {
-            $data = EncryptionService::buildEncryptedFields($data, 'phone1');
+        foreach (['address', 'number', 'state', 'zipcode', 'city'] as $field) {
+            if (isset($data[$field])) {
+                $data = EncryptionService::buildEncryptedFields($data, $field);
+            }
         }
 
-        if (isset($data['phone2'])) {
-            $data = EncryptionService::buildEncryptedFields($data, 'phone2');
+        foreach (['phone1', 'phone2'] as $field) {
+            if (isset($data[$field])) {
+                $data = EncryptionService::buildEncryptedFields($data, $field);
+            }
+        }
+
+        foreach (['contact1', 'contact2'] as $field) {
+            if (isset($data[$field])) {
+                $data = EncryptionService::buildEncryptedFields($data, $field);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Remove plain text fields — only *_encrypted and *_hash columns exist in DB.
+     */
+    private function stripPlainTextFields(array $data): array
+    {
+        $plainFields = ['first_name', 'last_name', 'doc', 'address', 'number', 'state', 'zipcode', 'city', 'phone1', 'phone2', 'contact1', 'contact2'];
+
+        foreach ($plainFields as $field) {
+            unset($data[$field]);
         }
 
         return $data;

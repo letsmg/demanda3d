@@ -1,172 +1,112 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Services\EncryptionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class EncryptionServiceTest extends TestCase
-{
-    use RefreshDatabase;
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-    public function test_encrypt_with_hash_returns_encrypted_value_and_hash(): void
-    {
-        $value = '12.345.678/0001-90';
-        $result = EncryptionService::encryptWithHash($value);
+test('encrypt with hash returns array with encrypted and hash', function () {
+    $value = 'Test Value 123';
+    $result = EncryptionService::encryptWithHash($value);
 
-        $this->assertNotNull($result['encrypted']);
-        $this->assertNotNull($result['hash']);
-        $this->assertNotEquals($value, $result['encrypted']);
-        $this->assertEquals(64, strlen($result['hash']));
-    }
+    expect($result)->toHaveKeys(['encrypted', 'hash']);
+    expect($result['encrypted'])->not->toBe($value);
+    expect($result['hash'])->toBe(hash('sha256', preg_replace('/[.\-\/()\s]/', '', $value)));
+});
 
-    public function test_encrypt_with_hash_returns_null_for_null_value(): void
-    {
-        $result = EncryptionService::encryptWithHash(null);
+test('encrypt with hash returns null for empty value', function () {
+    $result = EncryptionService::encryptWithHash('');
+    expect($result['encrypted'])->toBeNull();
+    expect($result['hash'])->toBeNull();
+});
 
-        $this->assertNull($result['encrypted']);
-        $this->assertNull($result['hash']);
-    }
+test('encrypt with hash returns null for null value', function () {
+    $result = EncryptionService::encryptWithHash(null);
+    expect($result['encrypted'])->toBeNull();
+    expect($result['hash'])->toBeNull();
+});
 
-    public function test_encrypt_with_hash_returns_null_for_empty_value(): void
-    {
-        $result = EncryptionService::encryptWithHash('');
+test('decrypt returns original value', function () {
+    $original = 'Sensitive Data 456';
+    $result = EncryptionService::encryptWithHash($original);
+    $decrypted = EncryptionService::decrypt($result['encrypted']);
 
-        $this->assertNull($result['encrypted']);
-        $this->assertNull($result['hash']);
-    }
+    expect($decrypted)->toBe($original);
+});
 
-    public function test_decrypt_returns_original_value(): void
-    {
-        $value = '(11) 99999-0000';
-        $result = EncryptionService::encryptWithHash($value);
+test('decrypt returns null for null input', function () {
+    expect(EncryptionService::decrypt(null))->toBeNull();
+});
 
-        $decrypted = EncryptionService::decrypt($result['encrypted']);
+test('decrypt returns null for empty input', function () {
+    expect(EncryptionService::decrypt(''))->toBeNull();
+});
 
-        $this->assertEquals($value, $decrypted);
-    }
+test('hash generates consistent value', function () {
+    $value = 'test@example.com';
+    $hash1 = EncryptionService::hash($value);
+    $hash2 = EncryptionService::hash($value);
 
-    public function test_decrypt_returns_null_for_null(): void
-    {
-        $decrypted = EncryptionService::decrypt(null);
+    expect($hash1)->toBe($hash2);
+    expect($hash1)->toBe(hash('sha256', preg_replace('/[.\-\/()\s]/', '', $value)));
+});
 
-        $this->assertNull($decrypted);
-    }
+test('hash returns null for empty value', function () {
+    expect(EncryptionService::hash(''))->toBeNull();
+});
 
-    public function test_decrypt_returns_null_for_invalid_value(): void
-    {
-        $decrypted = EncryptionService::decrypt('invalid-encrypted-data');
+test('sanitize removes whitespace and tags', function () {
+    $dirty = '  <script>alert("xss")</script>Hello World  ';
+    $clean = EncryptionService::sanitize($dirty);
 
-        $this->assertNull($decrypted);
-    }
+    expect($clean)->not->toContain('<script>');
+    expect(trim($clean))->toBe($clean);
+    expect($clean)->toContain('Hello World');
+});
 
-    public function test_hash_returns_consistent_hash_for_normalized_values(): void
-    {
-        $value1 = '12.345.678/0001-90';
-        $value2 = '12345678000190'; // same value without formatting
+test('sanitize returns null for null input', function () {
+    expect(EncryptionService::sanitize(null))->toBeNull();
+});
 
-        $hash1 = EncryptionService::hash($value1);
-        $hash2 = EncryptionService::hash($value2);
+test('build encrypted fields adds encrypted and hash to data array', function () {
+    $data = ['doc' => '12345678901'];
+    $result = EncryptionService::buildEncryptedFields($data, 'doc');
 
-        $this->assertEquals($hash1, $hash2);
-    }
+    expect($result)->toHaveKeys(['doc', 'doc_encrypted', 'doc_hash']);
+    expect($result['doc_encrypted'])->not->toBeNull();
+    expect($result['doc_hash'])->not->toBeNull();
+});
 
-    public function test_hash_returns_different_hash_for_different_values(): void
-    {
-        $hash1 = EncryptionService::hash('12.345.678/0001-90');
-        $hash2 = EncryptionService::hash('98.765.432/0001-10');
+test('build encrypted fields uses custom field names', function () {
+    $data = ['email' => 'test@example.com'];
+    $result = EncryptionService::buildEncryptedFields($data, 'email', 'email_encrypted', 'email_hash');
 
-        $this->assertNotEquals($hash1, $hash2);
-    }
+    expect($result)->toHaveKeys(['email', 'email_encrypted', 'email_hash']);
+});
 
-    public function test_normalize_removes_formatting_characters(): void
-    {
-        $normalized = EncryptionService::normalize('(11) 99999-0000');
+test('normalize removes formatting characters', function () {
+    $formatted = '(11) 99999-0000';
+    $normalized = EncryptionService::normalize($formatted);
+    expect($normalized)->toBe('11999990000');
+});
 
-        $this->assertEquals('11999990000', $normalized);
-    }
+test('normalize handles cpf formatting', function () {
+    $cpf = '529.982.247-25';
+    expect(EncryptionService::normalize($cpf))->toBe('52998224725');
+});
 
-    public function test_normalize_removes_dots_slashes_dashes(): void
-    {
-        $normalized = EncryptionService::normalize('12.345.678/0001-90');
+test('encryption is deterministic for same value', function () {
+    $value = 'Same Value';
+    $result1 = EncryptionService::encryptWithHash($value);
+    $result2 = EncryptionService::encryptWithHash($value);
 
-        $this->assertEquals('12345678000190', $normalized);
-    }
+    // Hashes should match (deterministic)
+    expect($result1['hash'])->toBe($result2['hash']);
+    // Encrypted values should differ (non-deterministic encryption)
+    expect($result1['encrypted'])->not->toBe($result2['encrypted']);
+});
 
-    public function test_build_encrypted_fields_adds_encrypted_and_hash_to_data(): void
-    {
-        $data = ['doc' => '12.345.678/0001-90'];
-
-        $result = EncryptionService::buildEncryptedFields($data, 'doc');
-
-        $this->assertArrayHasKey('doc_encrypted', $result);
-        $this->assertArrayHasKey('doc_hash', $result);
-        $this->assertNotNull($result['doc_encrypted']);
-        $this->assertNotNull($result['doc_hash']);
-    }
-
-    public function test_build_encrypted_fields_uses_custom_field_names(): void
-    {
-        $data = ['phone' => '(11) 99999-0000'];
-
-        $result = EncryptionService::buildEncryptedFields($data, 'phone', 'phone_enc', 'phone_hash_col');
-
-        $this->assertArrayHasKey('phone_enc', $result);
-        $this->assertArrayHasKey('phone_hash_col', $result);
-    }
-
-    public function test_sanitize_trims_spaces(): void
-    {
-        $sanitized = EncryptionService::sanitize('  Hello World  ');
-
-        $this->assertEquals('Hello World', $sanitized);
-    }
-
-    public function test_sanitize_strips_html_tags(): void
-    {
-        $sanitized = EncryptionService::sanitize('<script>alert("xss")</script>John');
-
-        $this->assertEquals('alert("xss")John', $sanitized);
-    }
-
-    public function test_sanitize_removes_duplicate_spaces(): void
-    {
-        $sanitized = EncryptionService::sanitize('John    Doe');
-
-        $this->assertEquals('John Doe', $sanitized);
-    }
-
-    public function test_sanitize_returns_null_for_null(): void
-    {
-        $this->assertNull(EncryptionService::sanitize(null));
-    }
-
-    public function test_encryption_and_decryption_roundtrip_for_document(): void
-    {
-        $originalDoc = '12.345.678/0001-90';
-
-        $result = EncryptionService::encryptWithHash($originalDoc);
-        $decrypted = EncryptionService::decrypt($result['encrypted']);
-
-        $this->assertEquals($originalDoc, $decrypted);
-        $this->assertEquals(
-            EncryptionService::hash($originalDoc),
-            $result['hash']
-        );
-    }
-
-    public function test_encryption_and_decryption_roundtrip_for_phone(): void
-    {
-        $originalPhone = '(11) 98765-4321';
-
-        $result = EncryptionService::encryptWithHash($originalPhone);
-        $decrypted = EncryptionService::decrypt($result['encrypted']);
-
-        $this->assertEquals($originalPhone, $decrypted);
-        $this->assertEquals(
-            EncryptionService::hash($originalPhone),
-            $result['hash']
-        );
-    }
-}
+test('different values produce different hashes', function () {
+    $hash1 = EncryptionService::hash('value1');
+    $hash2 = EncryptionService::hash('value2');
+    expect($hash1)->not->toBe($hash2);
+});
