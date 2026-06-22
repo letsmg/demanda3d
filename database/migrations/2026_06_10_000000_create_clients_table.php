@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('display_name', 255)->nullable();
-            $table->text('email_encrypted')->nullable();
-            $table->string('email_hash', 64)->nullable();
+            $table->string('email')->nullable();
+            $table->string('password')->nullable();
             $table->string('doc_type', 4)->default('CPF');
             $table->text('first_name_encrypted')->nullable();
             $table->string('first_name_hash', 64)->nullable();

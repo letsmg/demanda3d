@@ -17,15 +17,12 @@ return new class extends Migration
             $table->text('last_name_encrypted')->nullable();
             $table->string('last_name_hash', 64)->nullable();
             $table->string('display_name', 255)->nullable();
-            $table->text('email_encrypted')->nullable();
-            $table->string('email_hash', 64)->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->unsignedTinyInteger('access_level')->default(9)->comment('0=staff,1=admin,9=customer');
             $table->index('access_level');
             $table->index('first_name_hash');
             $table->index('last_name_hash');
-            $table->index('email_hash');
             $table->rememberToken();
             $table->timestamps();
         });

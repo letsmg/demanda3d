@@ -51,11 +51,6 @@ class UserService
             $data = EncryptionService::buildEncryptedFields($data, 'last_name');
         }
 
-        // Email parity
-        if (isset($data['email'])) {
-            $data = EncryptionService::buildEncryptedFields($data, 'email');
-        }
-
         return $data;
     }
 }

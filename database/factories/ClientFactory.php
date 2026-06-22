@@ -13,6 +13,7 @@ class ClientFactory extends Factory
     {
         $firstName = $this->faker->firstName();
         $lastName = $this->faker->lastName();
+        $email = $this->faker->unique()->safeEmail();
         $doc = $this->faker->numerify('##.###.###/####-##');
         $phone1 = $this->faker->phoneNumber();
         $phone2 = $this->faker->phoneNumber();
@@ -25,6 +26,8 @@ class ClientFactory extends Factory
 
         return [
             'tenant_id' => TenantFactory::new()->create()->id,
+            'email' => $email,
+            'password' => '$2y$12$LJ3m4ys3Lk0TSwHnbfOMiOXPm1Qlq5JdYcXqKQVJ3w5GzgvZvzRiy', // password
             'display_name' => $firstName . ' ' . $lastName,
             'doc_type' => DocumentType::detect($doc)->value,
             'first_name_encrypted' => EncryptionService::encryptWithHash($firstName)['encrypted'],

@@ -15,13 +15,12 @@ class UserFactory extends Factory
 
     public function definition(): array
     {
-        $firstName = $this->faker->firstName();
-        $lastName = $this->faker->lastName();
-        $email = $this->faker->unique()->safeEmail();
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+        $email = fake()->unique()->safeEmail();
 
         $firstNameResult = EncryptionService::encryptWithHash($firstName);
         $lastNameResult = EncryptionService::encryptWithHash($lastName);
-        $emailResult = EncryptionService::encryptWithHash($email);
 
         return [
             'email' => $email,
@@ -30,8 +29,6 @@ class UserFactory extends Factory
             'first_name_hash' => $firstNameResult['hash'],
             'last_name_encrypted' => $lastNameResult['encrypted'],
             'last_name_hash' => $lastNameResult['hash'],
-            'email_encrypted' => $emailResult['encrypted'],
-            'email_hash' => $emailResult['hash'],
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'access_level' => UserAccessLevel::CUSTOMER,

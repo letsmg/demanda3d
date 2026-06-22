@@ -20,8 +20,6 @@ use Illuminate\Support\Carbon;
     'first_name_hash',
     'last_name_encrypted',
     'last_name_hash',
-    'email_encrypted',
-    'email_hash',
     'password',
     'access_level',
 ])]
@@ -85,11 +83,6 @@ class User extends Authenticatable
         return EncryptionService::decrypt($this->last_name_encrypted);
     }
 
-    public function getDecryptedEmail(): ?string
-    {
-        return EncryptionService::decrypt($this->email_encrypted);
-    }
-
     public function scopeByFirstNameHash($query, string $hash)
     {
         return $query->where('first_name_hash', $hash);
@@ -100,8 +93,4 @@ class User extends Authenticatable
         return $query->where('last_name_hash', $hash);
     }
 
-    public function scopeByEmailHash($query, string $hash)
-    {
-        return $query->where('email_hash', $hash);
-    }
 }
