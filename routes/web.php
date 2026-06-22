@@ -1,4 +1,5 @@
 <?php
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inertia\ClientController as InertiaClientController;
