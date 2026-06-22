@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inertia\ClientController as InertiaClientController;
 use App\Http\Controllers\Inertia\InputController as InertiaInputController;
 use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
+use App\Http\Controllers\Inertia\ProductController as InertiaProductController;
+use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('welcome');
@@ -42,7 +44,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('{input}/edit', [InertiaInputController::class, 'edit'])->name('edit');
         Route::put('{input}', [InertiaInputController::class, 'update'])->name('update');
         Route::delete('{input}', [InertiaInputController::class, 'destroy'])->name('destroy');
-   });
+    });
+
+    // Products Management - Full CRUD (producers only)
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [InertiaProductController::class, 'index'])->name('index');
+        Route::get('create', [InertiaProductController::class, 'create'])->name('create');
+        Route::post('/', [InertiaProductController::class, 'store'])->name('store');
+        Route::get('{product}/edit', [InertiaProductController::class, 'edit'])->name('edit');
+        Route::put('{product}', [InertiaProductController::class, 'update'])->name('update');
+        Route::delete('{product}', [InertiaProductController::class, 'destroy'])->name('destroy');
+    });
 });
+
+// Public store (vitrine) — no auth required, shows all tenants' products
+Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
 require __DIR__.'/settings.php';
