@@ -45,7 +45,6 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          # Adiciona o host ao known_hosts para evitar o erro de identificação
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -74,6 +73,7 @@ jobs:
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
+            BACKUPS="$ROOT/backups"
             RELEASE=$(date +%Y%m%d%H%M%S)
             NEW_RELEASE="$RELEASES/$RELEASE"
 
@@ -90,17 +90,28 @@ jobs:
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
             sudo chmod -R 775 "$NEW_RELEASE" "$SHARED/storage"
 
-            # Artisan
+            # Artisan & Backup
             cd "$NEW_RELEASE"
-            sudo -u www-data php artisan migrate --force
+            if [ "$PROJECT_NAME" = "demanda3d" ]; then
+                echo "📦 Fazendo backup de segurança..."
+                sudo mkdir -p "$BACKUPS"
+                sudo -u postgres pg_dump demanda_db > "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
+                echo "🚀 Executando migrações (Incremental)..."
+                sudo -u www-data php artisan migrate --force
+            else
+                echo "🧪 Ambiente DEV: Resetando banco e seedando..."
+                sudo -u www-data php artisan migrate:fresh --seed --force
+            fi
+            
             sudo -u www-data php artisan optimize
 
-            # Finalização
-            sudo rm -rf "$CURRENT"
-            sudo ln -sfn "$NEW_RELEASE" "$CURRENT"            
-            sudo systemctl restart php8.5-fpm
+            # Troca Atômica do Link (Simultânea e segura)
+            sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
+            sudo systemctl reload php8.5-fpm
             
+            # Limpeza
             cd "$RELEASES" && ls -t | tail -n +6 | xargs -r sudo rm -rf --
+            cd "$BACKUPS" && ls -t | tail -n +6 | xargs -r sudo rm -rf --
             rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído: $PROJECT_NAME"
           EOF
