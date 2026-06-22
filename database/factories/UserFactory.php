@@ -15,6 +15,9 @@ class UserFactory extends Factory
 
     public function definition(): array
     {
+        // Resolva a instância do faker explicitamente
+        $faker = \Faker\Factory::create();
+
         $firstName = fake()->firstName();
         $lastName = fake()->lastName();
         $email = fake()->unique()->safeEmail();
