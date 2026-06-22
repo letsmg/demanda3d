@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
@@ -18,16 +15,14 @@ return new class extends Migration
             $table->date('order_date');
             $table->date('delivery_date');
             $table->decimal('price', 12, 2);
-            $table->text('contracted_description');
+            $table->text('contracted_description_encrypted')->nullable();
+            $table->string('contracted_description_hash', 64)->nullable();
             $table->timestamps();
 
             $table->index('tenant_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('orders');

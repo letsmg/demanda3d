@@ -4,34 +4,34 @@ namespace Database\Factories;
 
 use App\Enums\UserAccessLevel;
 use App\Models\User;
+use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends Factory<User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        $firstName = $this->faker->firstName();
-        $lastName = $this->faker->lastName();
+        // Resolva a instância do faker explicitamente
+        $faker = \Faker\Factory::create();
+
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+        $email = fake()->unique()->safeEmail();
+
+        $firstNameResult = EncryptionService::encryptWithHash($firstName);
+        $lastNameResult = EncryptionService::encryptWithHash($lastName);
 
         return [
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $this->faker->unique()->safeEmail(),
+            'email' => $email,
+            'display_name' => $firstName . ' ' . $lastName,
+            'first_name_encrypted' => $firstNameResult['encrypted'],
+            'first_name_hash' => $firstNameResult['hash'],
+            'last_name_encrypted' => $lastNameResult['encrypted'],
+            'last_name_hash' => $lastNameResult['hash'],
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'access_level' => UserAccessLevel::CUSTOMER,
@@ -60,9 +60,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -70,8 +67,5 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
     public function withTwoFactor(): static {}
 }

@@ -4,9 +4,10 @@ namespace Database\Seeders;
 
 use App\Enums\UserAccessLevel;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Hash as HashFacade;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,26 +18,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $userService = app(UserService::class);
+
         // Create admin user
-        User::factory()->admin()->create([
+        $userService->create([
             'first_name' => 'Admin',
             'last_name' => 'Master',
+            'display_name' => 'Admin Master',
             'email' => 'admin@demanda3d.com',
-            'password' => 'Mudar@123',
+            'password' => HashFacade::make('Mudar@123'),
+            'access_level' => UserAccessLevel::ADMIN,
         ]);
 
         // Create partner user
-        User::factory()->partner()->create([
+        $userService->create([
             'first_name' => 'Partner',
             'last_name' => 'Usuário',
+            'display_name' => 'Partner Usuário',
             'email' => 'partner@demanda3d.com.br',
+            'password' => HashFacade::make('Mudar@123'),
+            'access_level' => UserAccessLevel::PARTNER,
         ]);
 
         // Create customer user
-        User::factory()->customer()->create([
+        $userService->create([
             'first_name' => 'Cliente',
             'last_name' => 'Teste',
+            'display_name' => 'Cliente Teste',
             'email' => 'cliente@demanda3d.com.br',
+            'password' => HashFacade::make('Mudar@123'),
+            'access_level' => UserAccessLevel::CUSTOMER,
         ]);
 
         // Create random users

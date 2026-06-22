@@ -5,6 +5,7 @@ export type Client = {
     last_name: string;
     display_name: string | null;
     name: string | null;
+    doc_type: string;
     doc: string;
     address: string;
     number: string;

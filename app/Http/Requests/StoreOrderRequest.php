@@ -19,6 +19,8 @@ class StoreOrderRequest extends FormRequest
             'delivery_date' => ['required', 'date', 'after_or_equal:order_date'],
             'price' => ['required', 'numeric', 'min:0.01'],
             'contracted_description' => ['required', 'string', 'min:10'],
+            'contracted_description_encrypted' => ['nullable', 'string'],
+            'contracted_description_hash' => ['nullable', 'string'],
         ];
     }
 

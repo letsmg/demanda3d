@@ -7,21 +7,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name', 100);
-            $table->string('last_name', 100);
-            $table->string('display_name', 255)->nullable();
             $table->string('email')->unique();
+            $table->text('first_name_encrypted')->nullable();
+            $table->string('first_name_hash', 64)->nullable();
+            $table->text('last_name_encrypted')->nullable();
+            $table->string('last_name_hash', 64)->nullable();
+            $table->string('display_name', 255)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->unsignedTinyInteger('access_level')->default(9)->comment('0=staff,1=admin,9=customer');
             $table->index('access_level');
+            $table->index('first_name_hash');
+            $table->index('last_name_hash');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -42,9 +43,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');

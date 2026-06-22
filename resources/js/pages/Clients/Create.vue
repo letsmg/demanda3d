@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,12 +13,20 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { index as clientsIndex } from '@/routes/clients';
 
 const form = useForm({
     first_name: '',
     last_name: '',
     display_name: '',
+    doc_type: 'CPF',
     doc: '',
     address: '',
     number: '',
@@ -29,6 +38,38 @@ const form = useForm({
     contact1: '',
     contact2: '',
 });
+
+const docType = ref(form.doc_type);
+
+// Apply mask to document based on doc_type
+const applyDocMask = (value: string, type: string): string => {
+    const digits = value.replace(/\D/g, '');
+    if (type === 'CPF') {
+        return digits
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+            .slice(0, 14);
+    } else {
+        return digits
+            .replace(/(\d{2})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1/$2')
+            .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+            .slice(0, 18);
+    }
+};
+
+watch(docType, (newType) => {
+    form.doc_type = newType;
+    // Re-apply mask on change
+    form.doc = applyDocMask(form.doc, newType);
+});
+
+const onDocInput = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    form.doc = applyDocMask(target.value, form.doc_type);
+};
 
 const submit = () => {
     form.post('/clients', {
@@ -122,11 +163,25 @@ const submit = () => {
                     <!-- Document -->
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="doc">CPF / CNPJ *</Label>
+                            <Label for="doc_type">Tipo de Documento *</Label>
+                            <Select v-model="docType">
+                                <SelectTrigger id="doc_type">
+                                    <SelectValue placeholder="Selecione o tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="CPF">CPF</SelectItem>
+                                    <SelectItem value="CNPJ">CNPJ</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="doc">Documento *</Label>
                             <Input
                                 id="doc"
-                                v-model="form.doc"
-                                placeholder="00.000.000/0000-00"
+                                :value="form.doc"
+                                @input="onDocInput"
+                                :placeholder="form.doc_type === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'"
+                                maxlength="18"
                                 :class="{
                                     'border-destructive': form.errors.doc,
                                 }"
