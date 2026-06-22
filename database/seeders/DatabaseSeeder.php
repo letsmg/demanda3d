@@ -50,14 +50,12 @@ class DatabaseSeeder extends Seeder
             'access_level' => UserAccessLevel::CUSTOMER,
         ]);
 
-        // Create random users
-        User::factory()->count(7)->create();
-
-        // Create clients, orders and inputs
+        // Create clients, orders, inputs and products
         $this->call([
             ClientSeeder::class,
             OrderSeeder::class,
             InputSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
