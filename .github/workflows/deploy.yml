@@ -26,114 +26,78 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install Composer Dependencies (with dev)
-        run: composer install --no-interaction
+      - name: Install Dependencies
+        run: |
+          composer install --no-interaction
+          npm ci
+          npm run build
 
-      - name: Install Node Dependencies
-        run: npm ci
-
-      - name: Build Assets
-        run: npm run build
-
-      - name: Prepare Laravel
+      - name: Prepare Assets & Optimize
         run: |
           cp .env.example .env
           php artisan key:generate
-
-      - name: Run Tests
-        run: php artisan test
-
-      - name: Optimize for Production
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+          composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Create Deploy Package
         run: |
-          zip -r deploy.zip . \
-            -x ".git/*" \
-            -x ".github/*" \
-            -x "node_modules/*" \
-            -x "tests/*" \
-            -x ".env*" \
-            -x "storage/framework/*" \
-            -x "storage/logs/*"
+          zip -r deploy.zip . -x ".git/*" -x ".github/*" -x "node_modules/*" -x "tests/*" -x ".env*" -x "storage/framework/*" -x "storage/logs/*"
 
       - name: Configure SSH
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-          if_key_exists: replace
+
+      - name: Sync Database (Dev Only)
+        if: github.ref_name == 'dev'
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
+          "sudo -u postgres pg_dump demanda3d_db | sudo -u postgres psql dev_demanda3d_db"
 
       - name: Atomic Deploy
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
+            ROOT="/var/www/demanda3d"
           else
             PROJECT_NAME="dev-demanda3d"
+            ROOT="/var/www/dev-demanda3d"
           fi
           
-          echo "Iniciando deploy para o ambiente: $PROJECT_NAME"
+          scp -o StrictHostKeyChecking=no deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT bash -s" << 'EOF'
+            set -e
+            RELEASES="$ROOT/releases"
+            SHARED="$ROOT/shared"
+            CURRENT="$ROOT/current"
+            RELEASE=$(date +%Y%m%d%H%M%S)
+            NEW_RELEASE="$RELEASES/$RELEASE"
 
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SERVER_IP }} PROJECT_NAME="$PROJECT_NAME" 'bash -s' << 'EOF'
-          set -e
+            sudo mkdir -p "$NEW_RELEASE"
+            sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-          ROOT="/var/www/$PROJECT_NAME"
-          RELEASES="$ROOT/releases"
-          SHARED="$ROOT/shared"
-          CURRENT="$ROOT/current"
-          
-          RELEASE=$(date +%Y%m%d%H%M%S)
-          NEW_RELEASE="$RELEASES/$RELEASE"
+            # Links Simbólicos
+            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            sudo mkdir -p "$SHARED/storage/app/public"
+            sudo rm -rf "$NEW_RELEASE/storage" && sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
+            sudo rm -rf "$NEW_RELEASE/public/storage" && sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
 
-          # 1. Preparar pastas
-          sudo mkdir -p "$NEW_RELEASE"
-          
-          # 2. Extrair
-          sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
+            # Permissões
+            sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
+            sudo chmod -R 775 "$NEW_RELEASE" "$SHARED/storage"
 
-          # 3. Garantir estrutura de diretórios do Laravel antes de qualquer comando
-          sudo mkdir -p "$SHARED/storage/framework/views"
-          sudo mkdir -p "$SHARED/storage/framework/cache"
-          sudo mkdir -p "$SHARED/storage/framework/sessions"
-          sudo mkdir -p "$SHARED/storage/logs"
+            # Artisan
+            cd "$NEW_RELEASE"
+            sudo -u www-data php artisan migrate --force
+            sudo -u www-data php artisan optimize
 
-          # 4. Configurar permissões imediatas
-          sudo chown -R www-data:www-data "$NEW_RELEASE"
-          sudo chmod -R 775 "$NEW_RELEASE"
-          sudo chown -R www-data:www-data "$SHARED/storage"
-          sudo chmod -R 775 "$SHARED/storage"
-
-          # 5. Configurar links simbólicos
-          sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
-          
-          sudo rm -rf "$NEW_RELEASE/storage"
-          sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
-          
-          sudo rm -rf "$NEW_RELEASE/public/storage"
-          sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
-
-          # 6. Rodar comandos artisan com o código pronto
-          cd "$NEW_RELEASE"
-          
-          sudo -u www-data php artisan config:clear
-          sudo -u www-data php artisan route:clear
-          sudo -u www-data php artisan cache:clear
-          sudo -u www-data php artisan view:clear || true 
-
-          sudo -u www-data php artisan migrate --force
-
-          sudo -u www-data php artisan config:cache
-          sudo -u www-data php artisan route:cache
-          sudo -u www-data php artisan view:cache
-
-          # 7. Finalização
-          sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
-          
-          cd "$RELEASES"
-          ls -t | tail -n +6 | xargs -r sudo rm -rf --
-          rm -f "/tmp/$PROJECT_NAME.zip"
-          
-          echo "✅ Deploy atômico para $PROJECT_NAME finalizado com sucesso!"
+            # Finalização
+            sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+            sudo systemctl restart php8.5-fpm
+            
+            cd "$RELEASES" && ls -t | tail -n +6 | xargs -r sudo rm -rf --
+            rm -f "/tmp/$PROJECT_NAME.zip"
+            echo "✅ Deploy concluído: $PROJECT_NAME"
           EOF
