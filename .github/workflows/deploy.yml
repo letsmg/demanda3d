@@ -52,7 +52,7 @@ jobs:
         if: github.ref_name == 'dev'
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
-          "sudo -u postgres pg_dump demanda3d_db | sudo -u postgres psql dev_demanda3d_db"
+          "sudo -u postgres pg_dump demanda_db | sudo -u postgres psql dev_demanda_db"
 
       - name: Atomic Deploy
         run: |
