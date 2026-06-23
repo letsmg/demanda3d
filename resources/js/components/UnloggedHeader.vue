@@ -20,25 +20,23 @@ const clientLinks = [
 </script>
 
 <template>
-    <header
-        class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-    >
+    <header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
         <div class="container mx-auto flex h-16 items-center px-4 md:px-8">
             <Link :href="welcome.url()" class="flex items-center gap-2">
-                <AppLogo />
+                <AppLogo class="brightness-0 invert" />
             </Link>
 
             <nav class="ml-auto flex items-center gap-2">
                 <template v-for="item in navigation" :key="item.name">
                     <Link
                         :href="item.href"
-                        class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        class="text-sm font-medium text-amber-200 transition-colors hover:text-amber-50"
                     >
                         {{ item.name }}
                     </Link>
                 </template>
 
-                <div class="mx-2 h-5 w-px bg-border/60"></div>
+                <div class="mx-2 h-5 w-px bg-amber-700/30"></div>
 
                 <!-- Client links (Sou Cliente) -->
                 <template v-for="item in clientLinks" :key="item.name">
@@ -47,7 +45,7 @@ const clientLinks = [
                         variant="outline"
                         size="sm"
                         as-child
-                        class="hidden sm:flex"
+                        class="hidden sm:flex border-amber-500 text-amber-200 hover:bg-amber-800 hover:text-amber-50"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
@@ -57,10 +55,9 @@ const clientLinks = [
                 <template v-for="item in partnerLinks" :key="item.name">
                     <Button
                         v-if="item.highlight"
-                        variant="default"
                         size="sm"
                         as-child
-                        class="hidden sm:flex"
+                        class="hidden sm:flex bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
@@ -70,7 +67,7 @@ const clientLinks = [
                 <div class="sm:hidden">
                     <Link
                         :href="login.url()"
-                        class="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        class="inline-flex items-center justify-center rounded-md p-2 text-amber-200 hover:bg-amber-800 hover:text-amber-50"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

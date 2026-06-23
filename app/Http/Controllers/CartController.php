@@ -9,45 +9,70 @@ use Illuminate\Support\Facades\Auth;
 class CartController extends Controller
 {
     /**
-     * Ensure the client is authenticated or return 401.
+     * Build the cart data array from the given client.
      */
-    private function guardClient(): ?\App\Models\Client
+    private function buildCartData(\App\Models\Client $client): array
     {
-        $client = Auth::guard('clients')->user();
-        if (! $client) {
-            abort(response()->json(['error' => 'Unauthenticated'], 401));
-        }
-        return $client;
-    }
-
-    /**
-     * Get all cart items for the authenticated client with product data.
-     */
-    public function index()
-    {
-        $client = $this->guardClient();
         $items = CartItem::with(['product' => function ($q) {
             $q->withoutGlobalScopes()->with('images');
         }])->where('client_id', $client->id)->get();
 
-        return response()->json([
+        return [
             'items' => $items->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
-                    'product' => $item->product,
+                    'product' => [
+                        'id' => $item->product->id,
+                        'name' => $item->product->name,
+                        'price_sale' => $item->product->price_sale,
+                        'image_url' => $item->product->images->first()?->url ?? null,
+                    ],
                 ];
-            }),
+            })->values(),
             'total' => $items->sum(function ($item) {
                 return (float) $item->product->price_sale * $item->quantity;
             }),
             'count' => $items->sum('quantity'),
-        ]);
+        ];
     }
 
     /**
-     * Add or update a cart item.
+     * Ensure the client is authenticated or respond appropriately.
+     */
+    private function guardClient(bool $json = false): \App\Models\Client
+    {
+        $client = Auth::guard('clients')->user();
+        if (! $client) {
+            if ($json) {
+                abort(response()->json(['error' => 'Unauthenticated'], 401));
+            }
+            abort(redirect('/login_cli'));
+        }
+        return $client;
+    }
+
+    /**
+     * GET /cart/items — JSON API for fetch calls.
+     */
+    public function index()
+    {
+        $client = $this->guardClient(true);
+        return response()->json($this->buildCartData($client));
+    }
+
+    /**
+     * GET /cart — Inertia page.
+     */
+    public function show()
+    {
+        $client = $this->guardClient(false);
+        return \Inertia\Inertia::render('Client/Cart', $this->buildCartData($client));
+    }
+
+    /**
+     * POST /cart — add item
      */
     public function store(Request $request)
     {
@@ -56,7 +81,7 @@ class CartController extends Controller
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $client = $this->guardClient();
+        $client = $this->guardClient(true);
 
         $item = CartItem::where('client_id', $client->id)
             ->where('product_id', $validated['product_id'])
@@ -72,15 +97,15 @@ class CartController extends Controller
             ]);
         }
 
-        return $this->index();
+        return response()->json($this->buildCartData($client));
     }
 
     /**
-     * Update quantity of a cart item.
+     * PUT /cart/{cartItem} — update quantity
      */
     public function update(Request $request, CartItem $cartItem)
     {
-        $client = $this->guardClient();
+        $client = $this->guardClient(true);
         if ($cartItem->client_id !== $client->id) {
             abort(403);
         }
@@ -95,32 +120,32 @@ class CartController extends Controller
             $cartItem->update(['quantity' => $validated['quantity']]);
         }
 
-        return $this->index();
+        return response()->json($this->buildCartData($client));
     }
 
     /**
-     * Remove a cart item.
+     * DELETE /cart/{cartItem} — remove item
      */
     public function destroy(CartItem $cartItem)
     {
-        $client = $this->guardClient();
+        $client = $this->guardClient(true);
         if ($cartItem->client_id !== $client->id) {
             abort(403);
         }
 
         $cartItem->delete();
 
-        return $this->index();
+        return response()->json($this->buildCartData($client));
     }
 
     /**
-     * Clear all cart items.
+     * POST /cart/clear — clear all items
      */
     public function clear()
     {
-        $client = $this->guardClient();
+        $client = $this->guardClient(true);
         CartItem::where('client_id', $client->id)->delete();
 
-        return response()->json(['items' => [], 'total' => 0, 'count' => 0]);
+        return response()->json($this->buildCartData($client));
     }
 }

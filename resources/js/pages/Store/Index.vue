@@ -3,6 +3,7 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted } from 'vue';
 import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ImageIcon } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
+import { setCartCount } from '@/stores/cartStore';
 import { Input } from '@/components/ui/input';
 import {
     Card,
@@ -75,12 +76,13 @@ const cartLoading = ref(false);
 async function fetchCart() {
     if (!authClient.value) return;
     try {
-        const res = await fetch('/cart', { credentials: 'include' });
+        const res = await fetch('/cart/items', { credentials: 'include' });
         if (res.ok) {
             const data = await res.json();
             cartItems.value = data.items || [];
             cartTotal.value = data.total || 0;
             cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
         }
     } catch {
         // ignore
@@ -105,6 +107,7 @@ async function addToCart(productId: number) {
             cartItems.value = data.items || [];
             cartTotal.value = data.total || 0;
             cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
         }
     } finally {
         cartLoading.value = false;
@@ -130,6 +133,7 @@ async function removeFromCart(cartItemId: number) {
             cartItems.value = data.items || [];
             cartTotal.value = data.total || 0;
             cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
         }
     } catch {
         // ignore
@@ -148,6 +152,7 @@ async function removeCartItem(cartItemId: number) {
             cartItems.value = data.items || [];
             cartTotal.value = data.total || 0;
             cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
         }
     } catch {
         // ignore
@@ -165,6 +170,7 @@ async function clearCart() {
             cartItems.value = [];
             cartTotal.value = 0;
             cartCount.value = 0;
+            setCartCount(0);
         }
     } catch {
         // ignore
@@ -307,27 +313,27 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
         <meta name="robots" content="noindex, nofollow" />
     </Head>
 
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-amber-50">
         <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h1 class="text-3xl font-bold tracking-tight text-gray-900">Loja de Produtos</h1>
-                <p class="mt-1 text-sm text-gray-500">
+                <h1 class="text-3xl font-bold tracking-tight text-amber-900">Loja de Produtos</h1>
+                <p class="mt-1 text-sm text-amber-600">
                     Produtos disponíveis para impressão 3D de todos os nossos produtores parceiros
                 </p>
             </div>
 
             <div class="mb-8 space-y-4">
                 <div class="relative">
-                    <Search class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <Search class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400" />
                     <Input
                         v-model="search"
                         type="text"
                         placeholder="Buscar produtos por nome ou descrição..."
-                        class="w-full pl-10 pr-10"
+                        class="w-full pl-10 pr-10 border-amber-300 bg-white! placeholder:text-amber-800! focus:border-amber-500 focus:ring-amber-500"
                     />
                     <button
                         v-if="search"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-600"
                         @click="search = ''; applyFilters()"
                     >
                         <X class="h-4 w-4" />
@@ -339,15 +345,15 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
 
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600">Preço:</label>
-                        <Input v-model="minPrice" type="number" min="0" step="0.01" placeholder="Mín" class="w-24" @change="applyFilters" />
-                        <span class="text-gray-400">-</span>
-                        <Input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="Máx" class="w-24" @change="applyFilters" />
+                        <label class="text-sm text-amber-700">Preço:</label>
+                        <Input v-model="minPrice" type="number" min="0" step="0.01" placeholder="Mín" class="w-24 border-amber-300 bg-white! placeholder:text-amber-800!" @change="applyFilters" />
+                        <span class="text-amber-600">-</span>
+                        <Input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="Máx" class="w-24 border-amber-300 bg-white! placeholder:text-amber-800!" @change="applyFilters" />
                     </div>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600">Ordenar:</label>
+                        <label class="text-sm text-amber-700">Ordenar:</label>
                         <Select :model-value="getCurrentSortValue()" @update:model-value="onSortChange">
-                            <SelectTrigger class="w-44"><SelectValue /></SelectTrigger>
+                            <SelectTrigger class="w-44 bg-white! border-amber-300 text-amber-800 placeholder:text-amber-800!"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
                                     {{ opt.label }}
@@ -355,16 +361,16 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button v-if="hasActiveFilters" variant="ghost" size="sm" class="text-gray-500" @click="clearFilters">
+                    <Button v-if="hasActiveFilters" variant="ghost" size="sm" class="text-amber-600" @click="clearFilters">
                         <X class="mr-1 h-4 w-4" />Limpar filtros
                     </Button>
                 </div>
             </div>
 
             <div v-if="products.length === 0" class="py-16 text-center">
-                <ShoppingBag class="mx-auto h-12 w-12 text-gray-400" />
-                <h3 class="mt-2 text-sm font-semibold text-gray-900">Nenhum produto encontrado</h3>
-                <p class="mt-1 text-sm text-gray-500">Tente ajustar os filtros ou buscar por outros termos.</p>
+                <ShoppingBag class="mx-auto h-12 w-12 text-amber-300" />
+                <h3 class="mt-2 text-sm font-semibold text-amber-800">Nenhum produto encontrado</h3>
+                <p class="mt-1 text-sm text-amber-600">Tente ajustar os filtros ou buscar por outros termos.</p>
                 <Button variant="outline" class="mt-4" @click="clearFilters">Limpar filtros</Button>
             </div>
 
@@ -372,7 +378,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                 <Card v-for="product in products" :key="product.id" class="flex flex-col overflow-hidden">
                     <div class="relative">
                         <div
-                            class="flex h-56 w-full cursor-pointer items-center justify-center overflow-hidden bg-gray-100"
+                            class="flex h-56 w-full cursor-pointer items-center justify-center overflow-hidden bg-amber-100"
                             @click="openGallery(product, 0)"
                         >
                             <img
@@ -382,7 +388,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                                 class="h-full w-full object-cover transition-transform hover:scale-105"
                             />
                             <div v-else class="flex h-full w-full items-center justify-center">
-                                <ImageIcon class="h-12 w-12 text-gray-300" />
+                                <ImageIcon class="h-12 w-12 text-amber-200" />
                             </div>
                         </div>
                         <div v-if="product.images && product.images.length > 1" class="absolute bottom-2 left-2 right-2 flex gap-1">
@@ -400,22 +406,22 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     <CardHeader class="pb-2">
                         <div class="flex items-start justify-between">
                             <div>
-                                <CardTitle class="text-base">{{ product.name }}</CardTitle>
-                                <p v-if="product.tenant?.display_name" class="mt-0.5 text-xs text-gray-400">
+                                <CardTitle class="text-base text-amber-900">{{ product.name }}</CardTitle>
+                                <p v-if="product.tenant?.display_name" class="mt-0.5 text-xs text-amber-400">
                                     {{ product.tenant.display_name }}
                                 </p>
                             </div>
                             <div class="flex items-center gap-1">
                                 <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-1">
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
                                         @click="removeFromCart(getCartItemId(product.id)!)"
                                     >
                                         <Minus class="h-3.5 w-3.5" />
                                     </button>
                                     <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(product.id) }}</span>
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition hover:bg-blue-200"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
                                         @click="addToCart(product.id)"
                                     >
                                         <Plus class="h-3.5 w-3.5" />
@@ -423,7 +429,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                                 </div>
                                 <button
                                     v-else
-                                    class="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-blue-50 hover:text-blue-600"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full text-amber-400 transition hover:bg-amber-50 hover:text-amber-600"
                                     @click="addToCart(product.id)"
                                     :title="authClient ? 'Adicionar ao carrinho' : 'Faça login para comprar'"
                                 >
@@ -438,8 +444,8 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
 
                     <CardContent class="flex-1 pb-2">
                         <div class="space-y-1">
-                            <p class="text-xl font-bold text-gray-900">{{ formatPrice(product.price_sale) }}</p>
-                            <p v-if="Number(product.discount_cash) > 0" class="text-xs text-green-600">
+                            <p class="text-xl font-bold text-emerald-700">{{ formatPrice(product.price_sale) }}</p>
+                            <p v-if="Number(product.discount_cash) > 0" class="text-xs text-emerald-600">
                                 À vista: {{ formatPrice(calcCashPrice(product.price_sale, product.discount_cash)) }}
                                 ({{ product.discount_cash }}% off)
                             </p>
@@ -475,8 +481,8 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             :alt="`${selectedProduct.name} - Imagem ${currentImageIndex + 1}`"
                             class="max-h-[60vh] rounded-lg object-contain"
                         />
-                        <div v-else class="flex h-64 w-full items-center justify-center bg-gray-100 rounded-lg">
-                            <ImageIcon class="h-16 w-16 text-gray-300" />
+                        <div v-else class="flex h-64 w-full items-center justify-center bg-amber-100 rounded-lg">
+                            <ImageIcon class="h-16 w-16 text-amber-300" />
                         </div>
                     </div>
                     <button
@@ -498,16 +504,16 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             v-for="(img, idx) in selectedProduct.images"
                             :key="idx"
                             class="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition"
-                            :class="idx === currentImageIndex ? 'border-blue-500' : 'border-transparent opacity-60 hover:opacity-100'"
+                            :class="idx === currentImageIndex ? 'border-amber-500' : 'border-transparent opacity-60 hover:opacity-100'"
                             @click="currentImageIndex = idx"
                         >
                             <img :src="img.url" :alt="`${selectedProduct.name} thumb ${idx + 1}`" class="h-full w-full object-cover" />
                         </button>
                     </div>
-                    <div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                    <div class="mt-4 flex items-center justify-between rounded-lg bg-amber-50 p-4">
                         <div>
-                            <p class="text-2xl font-bold text-gray-900">{{ formatPrice(selectedProduct.price_sale) }}</p>
-                            <p v-if="Number(selectedProduct.discount_cash) > 0" class="text-sm text-green-600">
+                            <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.price_sale) }}</p>
+                            <p v-if="Number(selectedProduct.discount_cash) > 0" class="text-sm text-emerald-600">
                                 À vista: {{ formatPrice(calcCashPrice(selectedProduct.price_sale, selectedProduct.discount_cash)) }}
                                 ({{ selectedProduct.discount_cash }}% off)
                             </p>
@@ -521,14 +527,14 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
         </Dialog>
 
         <!-- Cart Summary Floating Bar -->
-        <div v-if="cartCount > 0" class="fixed bottom-0 left-0 right-0 z-40 border-t bg-white shadow-lg">
+        <div v-if="cartCount > 0" class="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-200 bg-white shadow-lg">
             <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
-                    <ShoppingBag class="h-5 w-5 text-blue-600" />
-                    <span class="text-sm text-gray-600">
-                        <strong class="text-gray-900">{{ cartCount }}</strong> item(ns) no carrinho
+                    <ShoppingBag class="h-5 w-5 text-amber-500" />
+                    <span class="text-sm text-amber-600">
+                        <strong class="text-amber-900">{{ cartCount }}</strong> item(ns) no carrinho
                     </span>
-                    <span class="text-lg font-bold text-gray-900">{{ formatPrice(cartTotal) }}</span>
+                    <span class="text-lg font-bold text-amber-900">{{ formatPrice(cartTotal) }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button variant="ghost" size="sm" @click="clearCart">Limpar</Button>

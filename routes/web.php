@@ -31,14 +31,22 @@ Route::middleware(['redirect_if_authenticated'])->group(function () {
     Route::post('/register_cli', [RegisterClientController::class, 'store'])->name('register.client.store');
 });
 
-// Client cart (web routes, needs session cookies)
+// Client cart — Inertia page
+Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+
+// Client cart — JSON API
 Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::get('/items', [CartController::class, 'index'])->name('index');
     Route::post('/', [CartController::class, 'store'])->name('store');
     Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
     Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
 });
+
+// Checkout (Stripe)
+Route::post('/checkout', [App\Http\Controllers\CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/success', [App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/cancel', [App\Http\Controllers\CheckoutController::class, 'cancel'])->name('checkout.cancel');
 
 // Client profile routes (authenticated via clients guard)
 Route::get('/perfil', [ClientProfileController::class, 'profile'])->name('client.profile');

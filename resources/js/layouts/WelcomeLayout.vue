@@ -11,7 +11,7 @@ const authClient = computed(() => (page.props as any).auth_client?.user);
 </script>
 
 <template>
-    <div class="flex min-h-screen flex-col bg-background">
+    <div class="flex min-h-screen flex-col bg-amber-50">
         <ClientHeader v-if="authClient" :client="authClient" />
         <UnloggedHeader v-else />
         <main class="flex-1">

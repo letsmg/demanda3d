@@ -19,6 +19,11 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $clientUser = \Illuminate\Support\Facades\Auth::guard('clients')->user();
 
+        $cartCount = 0;
+        if ($clientUser) {
+            $cartCount = \App\Models\CartItem::where('client_id', $clientUser->id)->sum('quantity');
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -30,6 +35,7 @@ class HandleInertiaRequests extends Middleware
             'auth_client' => [
                 'user' => $clientUser ? $clientUser->toArray() : null,
             ],
+            'cartCount' => $cartCount,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

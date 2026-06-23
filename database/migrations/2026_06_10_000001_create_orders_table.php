@@ -17,9 +17,13 @@ return new class extends Migration
             $table->decimal('price', 12, 2);
             $table->text('contracted_description_encrypted')->nullable();
             $table->string('contracted_description_hash', 64)->nullable();
+            $table->string('stripe_session_id')->nullable()->unique();
+            $table->string('status')->default('pending');
             $table->timestamps();
 
             $table->index('tenant_id');
+            $table->index('client_id');
+            $table->index('stripe_session_id');
         });
     }
 

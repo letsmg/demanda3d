@@ -1,8 +1,89 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
-* @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
 * @route '/cart'
+*/
+export const show = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: show.url(options),
+    method: 'get',
+})
+
+show.definition = {
+    methods: ["get","head"],
+    url: '/cart',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+show.url = (options?: RouteQueryOptions) => {
+    return show.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+show.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: show.url(options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+show.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: show.url(options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+const showForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+showForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\CartController::show
+* @see app/Http/Controllers/CartController.php:68
+* @route '/cart'
+*/
+showForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+show.form = showForm
+
+/**
+* @see \App\Http\Controllers\CartController::index
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
@@ -11,13 +92,13 @@ export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 index.definition = {
     methods: ["get","head"],
-    url: '/cart',
+    url: '/cart/items',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 index.url = (options?: RouteQueryOptions) => {
     return index.definition.url + queryParams(options)
@@ -25,8 +106,8 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
@@ -35,8 +116,8 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(options),
@@ -45,8 +126,8 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(options),
@@ -55,8 +136,8 @@ const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(options),
@@ -65,8 +146,8 @@ indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\CartController::index
-* @see app/Http/Controllers/CartController.php:26
-* @route '/cart'
+* @see app/Http/Controllers/CartController.php:59
+* @route '/cart/items'
 */
 indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url({
@@ -82,7 +163,7 @@ index.form = indexForm
 
 /**
 * @see \App\Http\Controllers\CartController::store
-* @see app/Http/Controllers/CartController.php:52
+* @see app/Http/Controllers/CartController.php:77
 * @route '/cart'
 */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -97,7 +178,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\CartController::store
-* @see app/Http/Controllers/CartController.php:52
+* @see app/Http/Controllers/CartController.php:77
 * @route '/cart'
 */
 store.url = (options?: RouteQueryOptions) => {
@@ -106,7 +187,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\CartController::store
-* @see app/Http/Controllers/CartController.php:52
+* @see app/Http/Controllers/CartController.php:77
 * @route '/cart'
 */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -116,7 +197,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\CartController::store
-* @see app/Http/Controllers/CartController.php:52
+* @see app/Http/Controllers/CartController.php:77
 * @route '/cart'
 */
 const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -126,7 +207,7 @@ const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => 
 
 /**
 * @see \App\Http\Controllers\CartController::store
-* @see app/Http/Controllers/CartController.php:52
+* @see app/Http/Controllers/CartController.php:77
 * @route '/cart'
 */
 storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -138,7 +219,7 @@ store.form = storeForm
 
 /**
 * @see \App\Http\Controllers\CartController::update
-* @see app/Http/Controllers/CartController.php:81
+* @see app/Http/Controllers/CartController.php:106
 * @route '/cart/{cartItem}'
 */
 export const update = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -153,7 +234,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\CartController::update
-* @see app/Http/Controllers/CartController.php:81
+* @see app/Http/Controllers/CartController.php:106
 * @route '/cart/{cartItem}'
 */
 update.url = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -186,7 +267,7 @@ update.url = (args: { cartItem: number | { id: number } } | [cartItem: number | 
 
 /**
 * @see \App\Http\Controllers\CartController::update
-* @see app/Http/Controllers/CartController.php:81
+* @see app/Http/Controllers/CartController.php:106
 * @route '/cart/{cartItem}'
 */
 update.put = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -196,7 +277,7 @@ update.put = (args: { cartItem: number | { id: number } } | [cartItem: number | 
 
 /**
 * @see \App\Http\Controllers\CartController::update
-* @see app/Http/Controllers/CartController.php:81
+* @see app/Http/Controllers/CartController.php:106
 * @route '/cart/{cartItem}'
 */
 const updateForm = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -211,7 +292,7 @@ const updateForm = (args: { cartItem: number | { id: number } } | [cartItem: num
 
 /**
 * @see \App\Http\Controllers\CartController::update
-* @see app/Http/Controllers/CartController.php:81
+* @see app/Http/Controllers/CartController.php:106
 * @route '/cart/{cartItem}'
 */
 updateForm.put = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -228,7 +309,7 @@ update.form = updateForm
 
 /**
 * @see \App\Http\Controllers\CartController::destroy
-* @see app/Http/Controllers/CartController.php:104
+* @see app/Http/Controllers/CartController.php:129
 * @route '/cart/{cartItem}'
 */
 export const destroy = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -243,7 +324,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\CartController::destroy
-* @see app/Http/Controllers/CartController.php:104
+* @see app/Http/Controllers/CartController.php:129
 * @route '/cart/{cartItem}'
 */
 destroy.url = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -276,7 +357,7 @@ destroy.url = (args: { cartItem: number | { id: number } } | [cartItem: number |
 
 /**
 * @see \App\Http\Controllers\CartController::destroy
-* @see app/Http/Controllers/CartController.php:104
+* @see app/Http/Controllers/CartController.php:129
 * @route '/cart/{cartItem}'
 */
 destroy.delete = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -286,7 +367,7 @@ destroy.delete = (args: { cartItem: number | { id: number } } | [cartItem: numbe
 
 /**
 * @see \App\Http\Controllers\CartController::destroy
-* @see app/Http/Controllers/CartController.php:104
+* @see app/Http/Controllers/CartController.php:129
 * @route '/cart/{cartItem}'
 */
 const destroyForm = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -301,7 +382,7 @@ const destroyForm = (args: { cartItem: number | { id: number } } | [cartItem: nu
 
 /**
 * @see \App\Http\Controllers\CartController::destroy
-* @see app/Http/Controllers/CartController.php:104
+* @see app/Http/Controllers/CartController.php:129
 * @route '/cart/{cartItem}'
 */
 destroyForm.delete = (args: { cartItem: number | { id: number } } | [cartItem: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -318,7 +399,7 @@ destroy.form = destroyForm
 
 /**
 * @see \App\Http\Controllers\CartController::clear
-* @see app/Http/Controllers/CartController.php:119
+* @see app/Http/Controllers/CartController.php:144
 * @route '/cart/clear'
 */
 export const clear = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -333,7 +414,7 @@ clear.definition = {
 
 /**
 * @see \App\Http\Controllers\CartController::clear
-* @see app/Http/Controllers/CartController.php:119
+* @see app/Http/Controllers/CartController.php:144
 * @route '/cart/clear'
 */
 clear.url = (options?: RouteQueryOptions) => {
@@ -342,7 +423,7 @@ clear.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\CartController::clear
-* @see app/Http/Controllers/CartController.php:119
+* @see app/Http/Controllers/CartController.php:144
 * @route '/cart/clear'
 */
 clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -352,7 +433,7 @@ clear.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\CartController::clear
-* @see app/Http/Controllers/CartController.php:119
+* @see app/Http/Controllers/CartController.php:144
 * @route '/cart/clear'
 */
 const clearForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -362,7 +443,7 @@ const clearForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => 
 
 /**
 * @see \App\Http\Controllers\CartController::clear
-* @see app/Http/Controllers/CartController.php:119
+* @see app/Http/Controllers/CartController.php:144
 * @route '/cart/clear'
 */
 clearForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -373,6 +454,7 @@ clearForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => (
 clear.form = clearForm
 
 const cart = {
+    show: Object.assign(show, show),
     index: Object.assign(index, index),
     store: Object.assign(store, store),
     update: Object.assign(update, update),
