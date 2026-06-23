@@ -10,19 +10,21 @@ use Inertia\Inertia;
 
 class ClientProfileController extends Controller
 {
-    public function __construct()
+    /**
+     * Ensure the client is authenticated or redirect to login.
+     */
+    private function guardClient(): \App\Models\Client
     {
-        $this->middleware(function ($request, $next) {
-            if (! Auth::guard('clients')->check()) {
-                return redirect('/login_cli');
-            }
-            return $next($request);
-        });
+        $client = Auth::guard('clients')->user();
+        if (! $client) {
+            abort(redirect('/login_cli'));
+        }
+        return $client;
     }
 
     public function profile()
     {
-        $client = Auth::guard('clients')->user();
+        $client = $this->guardClient();
         return Inertia::render('Client/Profile', [
             'client' => $client,
         ]);
@@ -30,7 +32,7 @@ class ClientProfileController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $client = Auth::guard('clients')->user();
+        $client = $this->guardClient();
 
         $validated = $request->validate([
             'display_name' => ['required', 'string', 'max:255'],
@@ -47,7 +49,7 @@ class ClientProfileController extends Controller
 
     public function addresses()
     {
-        $client = Auth::guard('clients')->user();
+        $client = $this->guardClient();
         return Inertia::render('Client/Addresses', [
             'client' => $client,
         ]);
@@ -55,7 +57,7 @@ class ClientProfileController extends Controller
 
     public function updateAddress(Request $request)
     {
-        $client = Auth::guard('clients')->user();
+        $client = $this->guardClient();
 
         $validated = $request->validate([
             'address' => ['nullable', 'string', 'max:255'],

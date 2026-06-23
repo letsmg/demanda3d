@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 export const profile = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ profile.definition = {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 profile.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ profile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 profile.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ profile.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ profile.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 const profileForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ const profileForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =>
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 profileForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -65,7 +65,7 @@ profileForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::profile
-* @see app/Http/Controllers/ClientProfileController.php:23
+* @see app/Http/Controllers/ClientProfileController.php:25
 * @route '/perfil'
 */
 profileForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -82,7 +82,7 @@ profile.form = profileForm
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateProfile
-* @see app/Http/Controllers/ClientProfileController.php:31
+* @see app/Http/Controllers/ClientProfileController.php:33
 * @route '/perfil'
 */
 export const updateProfile = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -97,7 +97,7 @@ updateProfile.definition = {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateProfile
-* @see app/Http/Controllers/ClientProfileController.php:31
+* @see app/Http/Controllers/ClientProfileController.php:33
 * @route '/perfil'
 */
 updateProfile.url = (options?: RouteQueryOptions) => {
@@ -106,7 +106,7 @@ updateProfile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateProfile
-* @see app/Http/Controllers/ClientProfileController.php:31
+* @see app/Http/Controllers/ClientProfileController.php:33
 * @route '/perfil'
 */
 updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -116,7 +116,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateProfile
-* @see app/Http/Controllers/ClientProfileController.php:31
+* @see app/Http/Controllers/ClientProfileController.php:33
 * @route '/perfil'
 */
 const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -131,7 +131,7 @@ const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'po
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateProfile
-* @see app/Http/Controllers/ClientProfileController.php:31
+* @see app/Http/Controllers/ClientProfileController.php:33
 * @route '/perfil'
 */
 updateProfileForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -148,7 +148,7 @@ updateProfile.form = updateProfileForm
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 export const addresses = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -163,7 +163,7 @@ addresses.definition = {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 addresses.url = (options?: RouteQueryOptions) => {
@@ -172,7 +172,7 @@ addresses.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 addresses.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -182,7 +182,7 @@ addresses.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 addresses.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -192,7 +192,7 @@ addresses.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 const addressesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -202,7 +202,7 @@ const addressesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> 
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 addressesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -212,7 +212,7 @@ addressesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> =>
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::addresses
-* @see app/Http/Controllers/ClientProfileController.php:48
+* @see app/Http/Controllers/ClientProfileController.php:50
 * @route '/perfil/enderecos'
 */
 addressesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -229,7 +229,7 @@ addresses.form = addressesForm
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateAddress
-* @see app/Http/Controllers/ClientProfileController.php:56
+* @see app/Http/Controllers/ClientProfileController.php:58
 * @route '/perfil/enderecos'
 */
 export const updateAddress = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -244,7 +244,7 @@ updateAddress.definition = {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateAddress
-* @see app/Http/Controllers/ClientProfileController.php:56
+* @see app/Http/Controllers/ClientProfileController.php:58
 * @route '/perfil/enderecos'
 */
 updateAddress.url = (options?: RouteQueryOptions) => {
@@ -253,7 +253,7 @@ updateAddress.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateAddress
-* @see app/Http/Controllers/ClientProfileController.php:56
+* @see app/Http/Controllers/ClientProfileController.php:58
 * @route '/perfil/enderecos'
 */
 updateAddress.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -263,7 +263,7 @@ updateAddress.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateAddress
-* @see app/Http/Controllers/ClientProfileController.php:56
+* @see app/Http/Controllers/ClientProfileController.php:58
 * @route '/perfil/enderecos'
 */
 const updateAddressForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -278,7 +278,7 @@ const updateAddressForm = (options?: RouteQueryOptions): RouteFormDefinition<'po
 
 /**
 * @see \App\Http\Controllers\ClientProfileController::updateAddress
-* @see app/Http/Controllers/ClientProfileController.php:56
+* @see app/Http/Controllers/ClientProfileController.php:58
 * @route '/perfil/enderecos'
 */
 updateAddressForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -3,6 +3,7 @@ import OrderController from './OrderController'
 import InputController from './InputController'
 import StoreController from './StoreController'
 import Auth from './Auth'
+import CartController from './CartController'
 import ClientProfileController from './ClientProfileController'
 import DashboardController from './DashboardController'
 import Inertia from './Inertia'
@@ -14,6 +15,7 @@ const Controllers = {
     InputController: Object.assign(InputController, InputController),
     StoreController: Object.assign(StoreController, StoreController),
     Auth: Object.assign(Auth, Auth),
+    CartController: Object.assign(CartController, CartController),
     ClientProfileController: Object.assign(ClientProfileController, ClientProfileController),
     DashboardController: Object.assign(DashboardController, DashboardController),
     Inertia: Object.assign(Inertia, Inertia),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted } from 'vue';
 import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ImageIcon } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
@@ -45,8 +44,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
-const auth = computed(() => page.props.auth);
-const authClient = computed(() => (page.props as any).auth_client);
+const authClient = computed(() => (page.props as any).auth_client?.user);
 
 // Search & filter state
 const search = ref(props.filters.search || '');
@@ -57,7 +55,6 @@ const sortDir = ref(props.filters.sort_dir || 'asc');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-// Watch for search changes with debounce (minimum 3 chars)
 watch(search, (newVal) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout);
@@ -69,69 +66,129 @@ watch(search, (newVal) => {
     }
 });
 
-// Cart state (local storage to persist)
-const cart = ref<Record<number, number>>(loadCart());
+// Cart state (via backend API)
+const cartItems = ref<any[]>([]);
+const cartTotal = ref(0);
+const cartCount = ref(0);
+const cartLoading = ref(false);
 
-function loadCart(): Record<number, number> {
+async function fetchCart() {
+    if (!authClient.value) return;
     try {
-        const saved = localStorage.getItem('demanda3d_cart');
-        return saved ? JSON.parse(saved) : {};
+        const res = await fetch('/cart', { credentials: 'include' });
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartTotal.value = data.total || 0;
+            cartCount.value = data.count || 0;
+        }
     } catch {
-        return {};
+        // ignore
     }
 }
 
-function saveCart(): void {
-    localStorage.setItem('demanda3d_cart', JSON.stringify(cart.value));
-}
-
-function addToCart(productId: number): void {
-    if (!authClient.value?.user) {
+async function addToCart(productId: number) {
+    if (!authClient.value) {
         window.location.href = '/login_cli';
         return;
     }
-    if (!cart.value[productId]) {
-        cart.value[productId] = 1;
-    } else {
-        cart.value[productId]++;
+    cartLoading.value = true;
+    try {
+        const res = await fetch('/cart', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+            body: JSON.stringify({ product_id: productId, quantity: 1 }),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartTotal.value = data.total || 0;
+            cartCount.value = data.count || 0;
+        }
+    } finally {
+        cartLoading.value = false;
     }
-    saveCart();
 }
 
-function removeFromCart(productId: number): void {
-    if (cart.value[productId]) {
-        cart.value[productId]--;
-        if (cart.value[productId] <= 0) {
-            delete cart.value[productId];
+async function removeFromCart(cartItemId: number) {
+    const item = cartItems.value.find(i => i.id === cartItemId);
+    if (!item) return;
+    if (item.quantity <= 1) {
+        await removeCartItem(cartItemId);
+        return;
+    }
+    try {
+        const res = await fetch('/cart/' + cartItemId, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+            body: JSON.stringify({ quantity: item.quantity - 1 }),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartTotal.value = data.total || 0;
+            cartCount.value = data.count || 0;
         }
-        saveCart();
+    } catch {
+        // ignore
+    }
+}
+
+async function removeCartItem(cartItemId: number) {
+    try {
+        const res = await fetch('/cart/' + cartItemId, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'X-CSRF-TOKEN': csrfToken() },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartTotal.value = data.total || 0;
+            cartCount.value = data.count || 0;
+        }
+    } catch {
+        // ignore
+    }
+}
+
+async function clearCart() {
+    try {
+        const res = await fetch('/cart/clear', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-CSRF-TOKEN': csrfToken() },
+        });
+        if (res.ok) {
+            cartItems.value = [];
+            cartTotal.value = 0;
+            cartCount.value = 0;
+        }
+    } catch {
+        // ignore
     }
 }
 
 function getCartQty(productId: number): number {
-    return cart.value[productId] || 0;
+    const item = cartItems.value.find(i => i.product_id === productId);
+    return item ? item.quantity : 0;
 }
 
-function cartTotal(): number {
-    let total = 0;
-    for (const product of props.products) {
-        const qty = cart.value[product.id] || 0;
-        if (qty > 0) {
-            total += Number(product.price_sale) * qty;
-        }
-    }
-    return total;
+function getCartItemId(productId: number): number | null {
+    const item = cartItems.value.find(i => i.product_id === productId);
+    return item ? item.id : null;
 }
 
-function cartCount(): number {
-    const quantities = Object.values(cart.value) as number[];
-    return quantities.reduce((acc: number, qty: number) => acc + qty, 0);
+function csrfToken(): string {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? (meta as HTMLMetaElement).content : '';
 }
 
-function clearCart(): void {
-    cart.value = {};
-    saveCart();
-}
+onMounted(() => {
+    fetchCart();
+});
 
 // Image gallery state
 const selectedProduct = ref<any>(null);
@@ -204,7 +261,6 @@ const hasActiveFilters = computed(() => {
     );
 });
 
-// Sort options
 const sortOptions = [
     { value: 'name_asc', label: 'Nome A-Z' },
     { value: 'name_desc', label: 'Nome Z-A' },
@@ -253,7 +309,6 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
 
     <div class="min-h-screen bg-gray-50">
         <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <!-- Hero / Title -->
             <div class="mb-8">
                 <h1 class="text-3xl font-bold tracking-tight text-gray-900">Loja de Produtos</h1>
                 <p class="mt-1 text-sm text-gray-500">
@@ -261,9 +316,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                 </p>
             </div>
 
-            <!-- Search & Filters -->
             <div class="mb-8 space-y-4">
-                <!-- Search bar -->
                 <div class="relative">
                     <Search class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                     <Input
@@ -284,37 +337,17 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     Digite pelo menos 3 caracteres para buscar
                 </p>
 
-                <!-- Filter row -->
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-gray-600">Preço:</label>
-                        <Input
-                            v-model="minPrice"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Mín"
-                            class="w-24"
-                            @change="applyFilters"
-                        />
+                        <Input v-model="minPrice" type="number" min="0" step="0.01" placeholder="Mín" class="w-24" @change="applyFilters" />
                         <span class="text-gray-400">-</span>
-                        <Input
-                            v-model="maxPrice"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Máx"
-                            class="w-24"
-                            @change="applyFilters"
-                        />
+                        <Input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="Máx" class="w-24" @change="applyFilters" />
                     </div>
-
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-gray-600">Ordenar:</label>
                         <Select :model-value="getCurrentSortValue()" @update:model-value="onSortChange">
-                            <SelectTrigger class="w-44">
-                                <SelectValue />
-                            </SelectTrigger>
+                            <SelectTrigger class="w-44"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
                                     {{ opt.label }}
@@ -322,35 +355,21 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <Button
-                        v-if="hasActiveFilters"
-                        variant="ghost"
-                        size="sm"
-                        class="text-gray-500"
-                        @click="clearFilters"
-                    >
-                        <X class="mr-1 h-4 w-4" />
-                        Limpar filtros
+                    <Button v-if="hasActiveFilters" variant="ghost" size="sm" class="text-gray-500" @click="clearFilters">
+                        <X class="mr-1 h-4 w-4" />Limpar filtros
                     </Button>
                 </div>
             </div>
 
-            <!-- Product Grid -->
             <div v-if="products.length === 0" class="py-16 text-center">
                 <ShoppingBag class="mx-auto h-12 w-12 text-gray-400" />
                 <h3 class="mt-2 text-sm font-semibold text-gray-900">Nenhum produto encontrado</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    Tente ajustar os filtros ou buscar por outros termos.
-                </p>
-                <Button variant="outline" class="mt-4" @click="clearFilters">
-                    Limpar filtros
-                </Button>
+                <p class="mt-1 text-sm text-gray-500">Tente ajustar os filtros ou buscar por outros termos.</p>
+                <Button variant="outline" class="mt-4" @click="clearFilters">Limpar filtros</Button>
             </div>
 
             <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <Card v-for="product in products" :key="product.id" class="flex flex-col overflow-hidden">
-                    <!-- Image Gallery Carousel -->
                     <div class="relative">
                         <div
                             class="flex h-56 w-full cursor-pointer items-center justify-center overflow-hidden bg-gray-100"
@@ -366,23 +385,14 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                                 <ImageIcon class="h-12 w-12 text-gray-300" />
                             </div>
                         </div>
-
-                        <!-- Thumbnail strip if multiple images -->
-                        <div
-                            v-if="product.images && product.images.length > 1"
-                            class="absolute bottom-2 left-2 right-2 flex gap-1"
-                        >
+                        <div v-if="product.images && product.images.length > 1" class="absolute bottom-2 left-2 right-2 flex gap-1">
                             <button
                                 v-for="(img, idx) in product.images.slice(0, 5)"
                                 :key="idx"
                                 class="h-10 w-10 flex-shrink-0 overflow-hidden rounded border-2 border-white/80 shadow-sm transition hover:border-blue-500"
                                 @click.stop="openGallery(product, idx)"
                             >
-                                <img
-                                    :src="img.url"
-                                    :alt="`${product.name} ${idx + 1}`"
-                                    class="h-full w-full object-cover"
-                                />
+                                <img :src="img.url" :alt="`${product.name} ${idx + 1}`" class="h-full w-full object-cover" />
                             </button>
                         </div>
                     </div>
@@ -396,17 +406,14 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                                 </p>
                             </div>
                             <div class="flex items-center gap-1">
-                                <!-- Quantity controls -->
                                 <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-1">
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200"
-                                        @click="removeFromCart(product.id)"
+                                        @click="removeFromCart(getCartItemId(product.id)!)"
                                     >
                                         <Minus class="h-3.5 w-3.5" />
                                     </button>
-                                    <span class="min-w-[1.5rem] text-center text-sm font-medium">
-                                        {{ getCartQty(product.id) }}
-                                    </span>
+                                    <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(product.id) }}</span>
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition hover:bg-blue-200"
                                         @click="addToCart(product.id)"
@@ -418,7 +425,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                                     v-else
                                     class="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-blue-50 hover:text-blue-600"
                                     @click="addToCart(product.id)"
-                                    :title="authClient?.user ? 'Adicionar ao carrinho' : 'Faça login para comprar'"
+                                    :title="authClient ? 'Adicionar ao carrinho' : 'Faça login para comprar'"
                                 >
                                     <ShoppingBag class="h-5 w-5" />
                                 </button>
@@ -444,6 +451,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             class="w-full"
                             :variant="getCartQty(product.id) > 0 ? 'secondary' : 'default'"
                             @click="addToCart(product.id)"
+                            :disabled="cartLoading"
                         >
                             {{ getCartQty(product.id) > 0 ? 'Adicionar mais' : 'Adicionar' }}
                         </Button>
@@ -457,11 +465,8 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
             <DialogContent class="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>{{ selectedProduct?.name }}</DialogTitle>
-                    <DialogDescription v-if="selectedProduct?.description">
-                        {{ selectedProduct.description }}
-                    </DialogDescription>
+                    <DialogDescription v-if="selectedProduct?.description">{{ selectedProduct.description }}</DialogDescription>
                 </DialogHeader>
-
                 <div class="relative" v-if="selectedProduct">
                     <div class="flex items-center justify-center">
                         <img
@@ -474,7 +479,6 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             <ImageIcon class="h-16 w-16 text-gray-300" />
                         </div>
                     </div>
-
                     <button
                         v-if="selectedProduct.images && selectedProduct.images.length > 1"
                         class="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white"
@@ -489,11 +493,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     >
                         <ChevronDown class="h-5 w-5 -rotate-90 text-gray-600" />
                     </button>
-
-                    <div
-                        v-if="selectedProduct.images && selectedProduct.images.length > 1"
-                        class="mt-4 flex justify-center gap-2"
-                    >
+                    <div v-if="selectedProduct.images && selectedProduct.images.length > 1" class="mt-4 flex justify-center gap-2">
                         <button
                             v-for="(img, idx) in selectedProduct.images"
                             :key="idx"
@@ -501,19 +501,12 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             :class="idx === currentImageIndex ? 'border-blue-500' : 'border-transparent opacity-60 hover:opacity-100'"
                             @click="currentImageIndex = idx"
                         >
-                            <img
-                                :src="img.url"
-                                :alt="`${selectedProduct.name} thumb ${idx + 1}`"
-                                class="h-full w-full object-cover"
-                            />
+                            <img :src="img.url" :alt="`${selectedProduct.name} thumb ${idx + 1}`" class="h-full w-full object-cover" />
                         </button>
                     </div>
-
                     <div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
                         <div>
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{ formatPrice(selectedProduct.price_sale) }}
-                            </p>
+                            <p class="text-2xl font-bold text-gray-900">{{ formatPrice(selectedProduct.price_sale) }}</p>
                             <p v-if="Number(selectedProduct.discount_cash) > 0" class="text-sm text-green-600">
                                 À vista: {{ formatPrice(calcCashPrice(selectedProduct.price_sale, selectedProduct.discount_cash)) }}
                                 ({{ selectedProduct.discount_cash }}% off)
@@ -528,22 +521,17 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
         </Dialog>
 
         <!-- Cart Summary Floating Bar -->
-        <div v-if="cartCount() > 0" class="fixed bottom-0 left-0 right-0 z-40 border-t bg-white shadow-lg">
+        <div v-if="cartCount > 0" class="fixed bottom-0 left-0 right-0 z-40 border-t bg-white shadow-lg">
             <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
                     <ShoppingBag class="h-5 w-5 text-blue-600" />
                     <span class="text-sm text-gray-600">
-                        <strong class="text-gray-900">{{ cartCount() }}</strong> item(ns) no carrinho
+                        <strong class="text-gray-900">{{ cartCount }}</strong> item(ns) no carrinho
                     </span>
-                    <span class="text-lg font-bold text-gray-900">{{ formatPrice(cartTotal()) }}</span>
+                    <span class="text-lg font-bold text-gray-900">{{ formatPrice(cartTotal) }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" @click="clearCart">
-                        Limpar
-                    </Button>
-                    <Button variant="default" size="sm" as-child>
-                        <Link :href="'/login_cli'">Finalizar Pedido</Link>
-                    </Button>
+                    <Button variant="ghost" size="sm" @click="clearCart">Limpar</Button>
                 </div>
             </div>
         </div>

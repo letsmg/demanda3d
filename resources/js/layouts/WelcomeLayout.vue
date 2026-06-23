@@ -7,12 +7,12 @@ import UnloggedHeader from '@/components/UnloggedHeader.vue';
 import ClientHeader from '@/components/ClientHeader.vue';
 
 const page = usePage();
-const authClient = computed(() => (page.props as any).auth_client);
+const authClient = computed(() => (page.props as any).auth_client?.user);
 </script>
 
 <template>
     <div class="flex min-h-screen flex-col bg-background">
-        <ClientHeader v-if="authClient?.user" :client="authClient.user" />
+        <ClientHeader v-if="authClient" :client="authClient" />
         <UnloggedHeader v-else />
         <main class="flex-1">
             <slot />

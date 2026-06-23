@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 ])]
 class ProductImage extends Model
 {
+    protected $appends = ['url'];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
