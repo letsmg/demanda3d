@@ -329,7 +329,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                         v-model="search"
                         type="text"
                         placeholder="Buscar produtos por nome ou descrição..."
-                        class="w-full pl-10 pr-10 border-amber-300 bg-white! placeholder:text-amber-800! focus:border-amber-500 focus:ring-amber-500"
+                        class="w-full pl-10 pr-10 border-amber-300 bg-white! text-amber-900! placeholder:text-amber-800! focus:border-amber-500 focus:ring-amber-500"
                     />
                     <button
                         v-if="search"
@@ -346,9 +346,9 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-amber-700">Preço:</label>
-                        <Input v-model="minPrice" type="number" min="0" step="0.01" placeholder="Mín" class="w-24 border-amber-300 bg-white! placeholder:text-amber-800!" @change="applyFilters" />
+                        <Input v-model="minPrice" type="number" min="0" step="0.01" placeholder="Mín" class="w-24 border-amber-300 bg-white! text-amber-900! placeholder:text-amber-800!" @change="applyFilters" />
                         <span class="text-amber-600">-</span>
-                        <Input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="Máx" class="w-24 border-amber-300 bg-white! placeholder:text-amber-800!" @change="applyFilters" />
+                        <Input v-model="maxPrice" type="number" min="0" step="0.01" placeholder="Máx" class="w-24 border-amber-300 bg-white! text-amber-900! placeholder:text-amber-800!" @change="applyFilters" />
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-amber-700">Ordenar:</label>
