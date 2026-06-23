@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     product: Product;
@@ -28,6 +29,30 @@ const form = useForm({
     is_active: props.product.is_active,
     image: null as File | null,
 });
+
+const testFields: TestField[] = [
+    { key: 'name', value: 'Base para Notebook Articulada' },
+    { key: 'description', value: 'Base ajustável com ventilação integrada para notebooks de 13 a 17 polegadas.' },
+    { key: 'price_sale', value: '149.90' },
+    { key: 'discount_cash', value: '15' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+    form.discount_cash = '0';
+}
 
 const submit = () => {
     form.put(`/products/${props.product.id}`, {
@@ -64,6 +89,8 @@ const onFileChange = (e: Event) => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <FormTestHelper :form="form" :fields="testFields" label="Editar Produto" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>

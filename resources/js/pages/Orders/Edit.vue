@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as ordersIndex } from '@/routes/orders';
 import type { Order, Client } from '@/types';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     order: Order;
@@ -27,6 +28,29 @@ const form = useForm({
     price: props.order.price.toString(),
     contracted_description: props.order.contracted_description,
 });
+
+const testFields: TestField[] = [
+    { key: 'order_date', value: '2026-07-01' },
+    { key: 'delivery_date', value: '2026-07-15' },
+    { key: 'price', value: '350.00' },
+    { key: 'contracted_description', value: 'Impressão 3D de peças personalizadas em PLA - 20 unidades' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 const submit = () => {
     form.put(`/orders/${props.order.id}`, { preserveScroll: true });
@@ -55,6 +79,8 @@ const submit = () => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <FormTestHelper :form="form" :fields="testFields" label="Editar Pedido" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>
