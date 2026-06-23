@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\DocumentType;
 use App\Models\Client;
+use App\Models\Tenant;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -25,7 +26,7 @@ class ClientFactory extends Factory
         $contact1 = $this->faker->name();
 
         return [
-            'tenant_id' => TenantFactory::new()->create()->id,
+            'tenant_id' => Tenant::inRandomOrder()->first()?->id ?? 1,
             'email' => $email,
             'password' => '$2y$12$LJ3m4ys3Lk0TSwHnbfOMiOXPm1Qlq5JdYcXqKQVJ3w5GzgvZvzRiy', // password
             'display_name' => $firstName . ' ' . $lastName,

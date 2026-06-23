@@ -2,60 +2,45 @@ name: 🚀 Deploy Demanda3D
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.3
+      - name: 📥 Checkout
+        uses: actions/checkout@v5
 
-      - name: Setup PHP
+      - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
           extensions: mbstring, bcmath, pdo_pgsql, redis
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
 
-      - name: Install Dependencies
+      - name: 🔨 Build Assets & Deps
         run: |
-          composer install --no-interaction
+          composer install --no-dev --optimize-autoloader --no-interaction
           npm ci
           npm run build
 
-      - name: Prepare Assets & Optimize
+      - name: 🤐 Criar Pacote de Deploy
         run: |
-          cp .env.example .env
-          php artisan key:generate
-          composer install --no-dev --optimize-autoloader --no-interaction
+          zip -r deploy.zip . -x ".git/*" ".github/*" "node_modules/*" "tests/*" ".env*" "storage/framework/*" "storage/logs/*"
 
-      - name: Create Deploy Package
-        run: |
-          zip -r deploy.zip . -x ".git/*" -x ".github/*" -x "node_modules/*" -x "tests/*" -x ".env*" -x "storage/framework/*" -x "storage/logs/*"
-
-      - name: Configure SSH
+      - name: 🔑 Configure SSH
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Sync Database (Dev Only)
-        if: github.ref_name == 'dev'
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
-          "sudo -u postgres pg_dump demanda_db | sudo -u postgres psql dev_demanda_db"
-
-      - name: Atomic Deploy
+      - name: 🚀 Executar Deploy Atômico
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
@@ -64,7 +49,7 @@ jobs:
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
           fi
-          
+
           scp -o StrictHostKeyChecking=no deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
@@ -74,44 +59,44 @@ jobs:
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
             BACKUPS="$ROOT/backups"
-            RELEASE=$(date +%Y%m%d%H%M%S)
-            NEW_RELEASE="$RELEASES/$RELEASE"
+            NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)"
 
             sudo mkdir -p "$NEW_RELEASE"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # Links Simbólicos
-            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            # 1. Sincronização Inteligente (Rsync)
+            # Garante que qualquer nova pasta/arquivo no Git seja levado ao storage persistente
             sudo mkdir -p "$SHARED/storage/app/public"
-            sudo rm -rf "$NEW_RELEASE/storage" && sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
-            sudo rm -rf "$NEW_RELEASE/public/storage" && sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
+            sudo rsync -av "$NEW_RELEASE/storage/app/public/" "$SHARED/storage/app/public/"
 
-            # Permissões
-            sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
-            sudo chmod -R 775 "$NEW_RELEASE" "$SHARED/storage"
+            # 2. Links Simbólicos
+            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            sudo rm -rf "$NEW_RELEASE/storage" 
+            sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
+            sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
 
-            # Artisan & Backup
+            # 3. Permissões
+            sudo chown -R www-data:www-data "$NEW_RELEASE"
+            sudo chown -R www-data:www-data "$SHARED/storage"
+
+            # 4. Artisan, Backup e Migrações
             cd "$NEW_RELEASE"
             if [ "$PROJECT_NAME" = "demanda3d" ]; then
-                echo "📦 Fazendo backup de segurança..."
                 sudo mkdir -p "$BACKUPS"
-                sudo -u postgres pg_dump demanda_db > "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
-                echo "🚀 Executando migrações (Incremental)..."
+                sudo -u postgres pg_dump demanda_db > /tmp/backup_temp.sql
+                sudo mv /tmp/backup_temp.sql "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
                 sudo -u www-data php artisan migrate --force
             else
-                echo "🧪 Ambiente DEV: Resetando banco e seedando..."
                 sudo -u www-data php artisan migrate:fresh --seed --force
             fi
             
             sudo -u www-data php artisan optimize
 
-            # Troca Atômica do Link (Simultânea e segura)
+            # 5. Troca Atômica e Limpeza
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
-            
-            # Limpeza
-            cd "$RELEASES" && ls -t | tail -n +6 | xargs -r sudo rm -rf --
-            cd "$BACKUPS" && ls -t | tail -n +6 | xargs -r sudo rm -rf --
+            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
+            cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
             rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído: $PROJECT_NAME"
+            echo "✅ Deploy concluído com sincronização automática de ativos."
           EOF

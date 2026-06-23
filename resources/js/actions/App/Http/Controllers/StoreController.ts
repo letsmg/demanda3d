@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => (
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -65,7 +65,7 @@ indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
 
 /**
 * @see \App\Http\Controllers\StoreController::index
-* @see app/Http/Controllers/StoreController.php:17
+* @see app/Http/Controllers/StoreController.php:18
 * @route '/store'
 */
 indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

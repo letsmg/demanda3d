@@ -25,11 +25,24 @@ defineProps<{
     canResetPassword: boolean;
 }>();
 
+interface TestAccount {
+    label: string;
+    email: string;
+    role: string;
+}
+
 const email = ref('');
 const password = ref('');
 
-function fillTestCredentials() {
-    email.value = 'admin@demanda3d.com';
+const testAccounts: TestAccount[] = [
+    { label: 'Admin Master', email: 'admin@demanda3d.com', role: 'Admin' },
+    { label: 'Tech3D Soluções', email: 'tech3d@demanda3d.com.br', role: 'Partner' },
+    { label: 'Maker Lab 3D', email: 'maker@demanda3d.com.br', role: 'Partner' },
+    { label: 'Prototype Fast', email: 'prototype@demanda3d.com.br', role: 'Partner' },
+];
+
+function fillTestCredentials(acc: TestAccount) {
+    email.value = acc.email;
     password.value = 'Mudar@123';
 }
 </script>
@@ -44,15 +57,24 @@ function fillTestCredentials() {
         {{ status }}
     </div>
 
-    <!-- Test credentials link -->
-    <div v-if="!email" class="mb-4 text-center">
-        <button
-            type="button"
-            class="text-sm text-primary underline transition-colors hover:text-primary/80"
-            @click="fillTestCredentials"
-        >
-            Usar conta de teste (admin@demanda3d.com)
-        </button>
+    <!-- Test accounts -->
+    <div class="mb-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+        <p class="mb-2 text-center text-xs font-medium text-muted-foreground">
+            🧪 Contas de teste (senha: <strong>Mudar@123</strong>)
+        </p>
+        <div class="flex flex-col gap-1.5">
+            <button
+                v-for="acc in testAccounts"
+                :key="acc.email"
+                type="button"
+                class="flex items-center justify-between rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-primary/10"
+                @click="fillTestCredentials(acc)"
+            >
+                <span class="font-medium">{{ acc.label }}</span>
+                <span class="text-muted-foreground">{{ acc.email }}</span>
+                <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{{ acc.role }}</span>
+            </button>
+        </div>
     </div>
 
     <Form

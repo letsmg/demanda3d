@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { index as productsIndex } from '@/routes/products';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const form = useForm({
     name: '',
@@ -23,6 +24,30 @@ const form = useForm({
     is_active: true,
     image: null as File | null,
 });
+
+const testFields: TestField[] = [
+    { key: 'name', value: 'Suporte para Tablet Universal' },
+    { key: 'description', value: 'Suporte ajustável para tablets de 7 a 12 polegadas. Impresso em PETG de alta resistência.' },
+    { key: 'price_sale', value: '79.90' },
+    { key: 'discount_cash', value: '10' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+    form.discount_cash = '0';
+}
 
 const submit = () => {
     form.post('/products', {
@@ -59,6 +84,14 @@ const onFileChange = (e: Event) => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <FormTestHelper
+            :form="form"
+            :fields="testFields"
+            label="Produto teste"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Client;
+use App\Models\Tenant;
 use App\Services\EncryptionService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Seeder;
@@ -14,8 +15,16 @@ class ClientSeeder extends Seeder
         $makeEncr = fn ($value) => EncryptionService::encryptWithHash($value);
         $password = Hash::make('password');
 
+        $tenantIds = Tenant::pluck('id')->toArray();
+
+        if (empty($tenantIds)) {
+            $this->command->warn('Nenhum tenant encontrado para associar clientes.');
+            return;
+        }
+
         // Client 1
         Client::factory()->create([
+            'tenant_id' => $tenantIds[array_rand($tenantIds)],
             'email' => 'tech3d@demanda3d.com',
             'password' => $password,
             'display_name' => 'Tech3D Soluções Ltda',
@@ -46,6 +55,7 @@ class ClientSeeder extends Seeder
 
         // Client 2
         Client::factory()->create([
+            'tenant_id' => $tenantIds[array_rand($tenantIds)],
             'email' => 'prototipagem@demanda3d.com',
             'password' => $password,
             'display_name' => 'Prototipagem Rápida S.A.',
@@ -78,6 +88,7 @@ class ClientSeeder extends Seeder
 
         // Client 3
         Client::factory()->create([
+            'tenant_id' => $tenantIds[array_rand($tenantIds)],
             'email' => 'industria@demanda3d.com',
             'password' => $password,
             'display_name' => 'Indústria Criativa Maker',
@@ -104,6 +115,11 @@ class ClientSeeder extends Seeder
             'contact1_hash' => $makeEncr('Mariana Costa')['hash'],
         ]);
 
-        Client::factory()->count(7)->create();
+        // Create 2 more random clients linked to partner tenants
+        for ($i = 0; $i < 2; $i++) {
+            Client::factory()->create([
+                'tenant_id' => $tenantIds[array_rand($tenantIds)],
+            ]);
+        }
     }
 }

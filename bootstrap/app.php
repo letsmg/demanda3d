@@ -32,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.only' => AdminOnly::class,
             'staff.only' => StaffOnly::class,
             'partner.only' => StaffOnly::class,
+            'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'ensure.staff' => \App\Http\Middleware\EnsureStaff::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

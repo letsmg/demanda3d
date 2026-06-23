@@ -1,6 +1,10 @@
 <?php
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
+use App\Http\Controllers\Auth\LoginClientController;
+use App\Http\Controllers\Auth\RegisterClientController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inertia\ClientController as InertiaClientController;
 use App\Http\Controllers\Inertia\InputController as InertiaInputController;
@@ -12,7 +16,45 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('welcome');
 Route::inertia('/home', 'Dashboard')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Public store (loja) — shows all tenants' products
+Route::get('/store', [StoreController::class, 'index'])->name('store.index');
+
+// Client auth (customers) — separate from staff auth
+Route::post('/logout_cli', [LoginClientController::class, 'destroy'])->name('logout.client');
+
+Route::middleware(['redirect_if_authenticated'])->group(function () {
+    Route::get('/login_cli', [LoginClientController::class, 'create'])->name('login.client');
+    Route::post('/login_cli', [LoginClientController::class, 'store'])->name('login.client.store');
+
+    // Client registration
+    Route::get('/register_cli', [RegisterClientController::class, 'create'])->name('register.client');
+    Route::post('/register_cli', [RegisterClientController::class, 'store'])->name('register.client.store');
+});
+
+// Client cart — Inertia page
+Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+
+// Client cart — JSON API
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/items', [CartController::class, 'index'])->name('index');
+    Route::post('/', [CartController::class, 'store'])->name('store');
+    Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
+    Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
+    Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+// Checkout (Stripe)
+Route::post('/checkout', [App\Http\Controllers\CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/success', [App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/cancel', [App\Http\Controllers\CheckoutController::class, 'cancel'])->name('checkout.cancel');
+
+// Client profile routes (authenticated via clients guard)
+Route::get('/perfil', [ClientProfileController::class, 'profile'])->name('client.profile');
+Route::put('/perfil', [ClientProfileController::class, 'updateProfile'])->name('client.profile.update');
+Route::get('/perfil/enderecos', [ClientProfileController::class, 'addresses'])->name('client.addresses');
+Route::put('/perfil/enderecos', [ClientProfileController::class, 'updateAddress'])->name('client.addresses.update');
+
+Route::middleware(['auth', 'verified', 'ensure.staff'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -56,8 +98,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('{product}', [InertiaProductController::class, 'destroy'])->name('destroy');
     });
 });
-
-// Public store (vitrine) — no auth required, shows all tenants' products
-Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
 require __DIR__.'/settings.php';
