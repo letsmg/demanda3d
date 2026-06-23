@@ -1,18 +1,22 @@
 import ClientController from './ClientController'
 import OrderController from './OrderController'
 import InputController from './InputController'
+import StoreController from './StoreController'
+import Auth from './Auth'
+import ClientProfileController from './ClientProfileController'
 import DashboardController from './DashboardController'
 import Inertia from './Inertia'
-import StoreController from './StoreController'
 import Settings from './Settings'
 
 const Controllers = {
     ClientController: Object.assign(ClientController, ClientController),
     OrderController: Object.assign(OrderController, OrderController),
     InputController: Object.assign(InputController, InputController),
+    StoreController: Object.assign(StoreController, StoreController),
+    Auth: Object.assign(Auth, Auth),
+    ClientProfileController: Object.assign(ClientProfileController, ClientProfileController),
     DashboardController: Object.assign(DashboardController, DashboardController),
     Inertia: Object.assign(Inertia, Inertia),
-    StoreController: Object.assign(StoreController, StoreController),
     Settings: Object.assign(Settings, Settings),
 }
 

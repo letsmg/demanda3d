@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'tenant_id',
@@ -42,9 +44,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'contact2_encrypted',
     'contact2_hash',
 ])]
-class Client extends Model
+class Client extends Authenticatable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Notifiable;
 
     protected static function booted(): void
     {

@@ -2,6 +2,7 @@
 
 namespace App\Scopes;
 
+use App\Enums\UserAccessGroup;
 use App\Enums\UserAccessLevel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,8 @@ class TenantScope implements Scope
      * Apply the scope to a given Eloquent query builder.
      *
      * Automatically filters by tenant_id for Customer users.
-     * Admin and Partner users bypass the scope (can see all data).
+     * Staff (Admin, Partner, Operational) can see their own tenant data.
+     * Unauthenticated users bypass the scope.
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -24,14 +26,17 @@ class TenantScope implements Scope
             return;
         }
 
-        // Admin and Partner can see all tenants data
-        if ($user->access_level === UserAccessLevel::ADMIN || $user->access_level === UserAccessLevel::PARTNER) {
+        // Staff: filter by their own tenant
+        if ($user->access_level?->isStaff()) {
+            $tenantId = $user->tenant?->id;
+            if ($tenantId) {
+                $builder->where('tenant_id', $tenantId);
+            }
             return;
         }
 
-        // Customer can only see their own tenant data
+        // Customer: filter by their own tenant
         $tenantId = $user->tenant?->id;
-
         if ($tenantId) {
             $builder->where('tenant_id', $tenantId);
         }

@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { index as clientsIndex } from '@/routes/clients';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const form = useForm({
     first_name: '',
@@ -38,6 +39,39 @@ const form = useForm({
     contact1: '',
     contact2: '',
 });
+
+const testFields: TestField[] = [
+    { key: 'first_name', value: 'João' },
+    { key: 'last_name', value: 'Silva Santos' },
+    { key: 'display_name', value: 'João Silva Santos' },
+    { key: 'doc_type', value: 'CPF' },
+    { key: 'doc', value: '123.456.789-00' },
+    { key: 'address', value: 'Rua das Flores' },
+    { key: 'number', value: '123' },
+    { key: 'state', value: 'SP' },
+    { key: 'zipcode', value: '01310-100' },
+    { key: 'city', value: 'São Paulo' },
+    { key: 'phone1', value: '(11) 99999-0000' },
+    { key: 'phone2', value: '(11) 3333-0000' },
+    { key: 'contact1', value: 'Maria Souza' },
+    { key: 'contact2', value: 'Pedro Oliveira' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 const docType = ref(form.doc_type);
 
@@ -105,6 +139,15 @@ const submit = () => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <!-- Test Helper -->
+        <FormTestHelper
+            :form="form"
+            :fields="testFields"
+            label="Cliente teste"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <!-- Form -->
         <form @submit.prevent="submit">

@@ -9,6 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { ShoppingBag } from '@lucide/vue';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
 import { dashboard, login, register } from '@/routes';
 
@@ -118,7 +119,10 @@ const features = [
                             <Link :href="register.url()">Começar Agora</Link>
                         </Button>
                         <Button size="lg" variant="outline" as-child>
-                            <Link :href="login.url()">Entrar</Link>
+                            <Link :href="login.url()">Sou Parceiro</Link>
+                        </Button>
+                        <Button size="lg" variant="secondary" as-child>
+                            <Link :href="'/login_cli'">Sou Cliente</Link>
                         </Button>
                     </template>
                 </div>
@@ -174,6 +178,12 @@ const features = [
     <section class="py-20">
         <div class="container mx-auto px-4 md:px-8">
             <div class="mb-12 text-center">
+                <Button variant="outline" size="lg" as-child class="mb-8">
+                    <Link href="/store">
+                        <ShoppingBag class="mr-2 h-5 w-5" />
+                        Ver Loja de Produtos
+                    </Link>
+                </Button>
                 <h2 class="mb-4 text-3xl font-bold">Tudo que Você Precisa</h2>
                 <p class="text-lg text-muted-foreground">
                     Ferramentas completas para gerenciar seu negócio de
@@ -214,23 +224,35 @@ const features = [
             <p class="mb-8 text-lg text-white/80">
                 Junte-se a nós e otimize seu fluxo de trabalho de impressão 3D
             </p>
-            <template v-if="auth?.user">
-                <Button size="lg" variant="secondary" as-child>
-                    <Link :href="dashboard.url()">Ir para o Painel</Link>
+            <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Button size="lg" variant="outline" as-child>
+                    <Link href="/store">
+                        <ShoppingBag class="mr-2 h-5 w-5" />
+                        Ver Loja de Produtos
+                    </Link>
                 </Button>
-            </template>
-            <template v-else>
-                <div
-                    class="flex flex-col items-center justify-center gap-4 sm:flex-row"
-                >
+                <template v-if="auth?.user">
                     <Button size="lg" variant="secondary" as-child>
-                        <Link :href="login.url()">Entrar</Link>
+                        <Link :href="dashboard.url()">Ir para o Painel</Link>
+                    </Button>
+                </template>
+                <template v-else>
+                    <Button size="lg" variant="secondary" as-child>
+                        <Link :href="login.url()">Sou Parceiro</Link>
                     </Button>
                     <Button size="lg" variant="default" as-child>
-                        <Link :href="register.url()">Criar Conta</Link>
+                        <Link :href="'/login_cli'">Sou Cliente</Link>
                     </Button>
-                </div>
-            </template>
+                </template>
+            </div>
+            <div class="mt-6 text-center">
+                <p class="text-sm text-white/60">
+                    Já é cliente?
+                    <Link :href="'/login_cli'" class="font-medium text-white underline underline-offset-4 hover:text-white/80">
+                        Acesse sua conta para comprar na loja
+                    </Link>
+                </p>
+            </div>
         </div>
     </section>
 </template>

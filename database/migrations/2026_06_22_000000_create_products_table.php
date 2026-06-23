@@ -18,7 +18,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('price_sale', 12, 2);
             $table->decimal('discount_cash', 5, 2)->default(0)->comment('Percentage discount for cash payments');
-            $table->string('image_path', 255)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

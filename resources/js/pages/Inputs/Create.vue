@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as inputsIndex } from '@/routes/inputs';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const form = useForm({
     filaments: '',
@@ -21,6 +22,30 @@ const form = useForm({
     cost_buy: '',
     purge: '',
 });
+
+const testFields: TestField[] = [
+    { key: 'filaments', value: 'PLA 1.75mm Premium' },
+    { key: 'energy', value: '0.50' },
+    { key: 'dt_buy', value: '2026-06-15' },
+    { key: 'cost_buy', value: '89.90' },
+    { key: 'purge', value: '15.0' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 const submit = () => {
     form.post('/inputs', { preserveScroll: true });
@@ -49,6 +74,14 @@ const submit = () => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <FormTestHelper
+            :form="form"
+            :fields="testFields"
+            label="Insumo teste"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>

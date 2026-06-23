@@ -2,12 +2,20 @@
 import { Link } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import { Button } from '@/components/ui/button';
-import { welcome, login, register } from '@/routes';
+import { welcome, login } from '@/routes';
+import storeRoutes from '@/routes/store';
 
 const navigation = [
     { name: 'Início', href: welcome.url() },
-    { name: 'Entrar', href: login.url() },
-    { name: 'Cadastrar', href: register.url() },
+    { name: 'Loja', href: storeRoutes.index.url() },
+];
+
+const partnerLinks = [
+    { name: 'Sou Parceiro', href: login.url(), highlight: true },
+];
+
+const clientLinks = [
+    { name: 'Sou Cliente', href: '/login_cli', highlight: true },
 ];
 </script>
 
@@ -20,12 +28,35 @@ const navigation = [
                 <AppLogo />
             </Link>
 
-            <nav class="ml-auto flex items-center gap-4">
+            <nav class="ml-auto flex items-center gap-2">
                 <template v-for="item in navigation" :key="item.name">
+                    <Link
+                        :href="item.href"
+                        class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {{ item.name }}
+                    </Link>
+                </template>
+
+                <div class="mx-2 h-5 w-px bg-border/60"></div>
+
+                <!-- Client links (Sou Cliente) -->
+                <template v-for="item in clientLinks" :key="item.name">
                     <Button
-                        v-if="
-                            item.name === 'Entrar' || item.name === 'Cadastrar'
-                        "
+                        v-if="item.highlight"
+                        variant="outline"
+                        size="sm"
+                        as-child
+                        class="hidden sm:flex"
+                    >
+                        <Link :href="item.href">{{ item.name }}</Link>
+                    </Button>
+                </template>
+
+                <!-- Partner links (Sou Parceiro) -->
+                <template v-for="item in partnerLinks" :key="item.name">
+                    <Button
+                        v-if="item.highlight"
                         variant="default"
                         size="sm"
                         as-child
@@ -33,13 +64,6 @@ const navigation = [
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
-                    <Link
-                        v-else
-                        :href="item.href"
-                        class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        {{ item.name }}
-                    </Link>
                 </template>
 
                 <!-- Mobile menu button -->

@@ -17,7 +17,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\CreatesNewUsers::class,
+            \App\Actions\Fortify\CreateNewUser::class
+        );
     }
 
     /**
@@ -27,6 +30,10 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(function () {
             return inertia('auth/Login');
+        });
+
+        Fortify::registerView(function () {
+            return inertia('auth/Register');
         });
 
         Fortify::requestPasswordResetLinkView(function () {

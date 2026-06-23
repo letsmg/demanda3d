@@ -35,11 +35,24 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $clientUser = null;
+
+        // Also check client guard
+        if (! $user) {
+            $clientUser = \Illuminate\Support\Facades\Auth::guard('clients')->user();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? array_merge($user->toArray(), [
+                    'name' => $user->display_name ?? $user->getDisplayName(),
+                ]) : null,
+            ],
+            'auth_client' => [
+                'user' => $clientUser,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Client;
 use App\Models\Order;
-use App\Models\Tenant;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,8 +15,8 @@ class OrderFactory extends Factory
         $descResult = EncryptionService::encryptWithHash($desc);
 
         return [
-            'tenant_id' => Tenant::factory(),
-            'client_id' => Client::factory(),
+            'tenant_id' => Client::inRandomOrder()->first()?->tenant_id ?? 1,
+            'client_id' => Client::inRandomOrder()->first()?->id ?? 1,
             'order_date' => $this->faker->date(),
             'delivery_date' => $this->faker->date(),
             'price' => $this->faker->randomFloat(2, 100, 10000),
