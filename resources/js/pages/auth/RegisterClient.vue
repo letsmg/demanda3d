@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 defineOptions({
     layout: {
@@ -21,6 +22,29 @@ const form = useForm({
     password: '',
     password_confirmation: '',
 });
+
+const testFields: TestField[] = [
+    { key: 'display_name', value: 'Tech3D Soluções Ltda' },
+    { key: 'email', value: 'tech3d@demanda3d.com' },
+    { key: 'password', value: 'password' },
+    { key: 'password_confirmation', value: 'password' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 function submit() {
     form.post('/register_cli', {
@@ -43,6 +67,8 @@ function submit() {
         class="flex flex-col gap-6"
     >
         <div class="grid gap-6">
+            <FormTestHelper :form="form" :fields="testFields" label="Cadastro" @fill="handleFill" @clear="handleClear" />
+
             <div class="grid gap-2">
                 <Label for="display_name">Nome / Empresa</Label>
                 <Input

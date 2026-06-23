@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as inputsIndex } from '@/routes/inputs';
 import type { Input as InputType } from '@/types';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     input: InputType;
@@ -26,6 +27,30 @@ const form = useForm({
     cost_buy: props.input.cost_buy.toString(),
     purge: props.input.purge.toString(),
 });
+
+const testFields: TestField[] = [
+    { key: 'filaments', value: 'PETG 1.75mm Translúcido' },
+    { key: 'energy', value: '0.65' },
+    { key: 'dt_buy', value: '2026-06-20' },
+    { key: 'cost_buy', value: '99.90' },
+    { key: 'purge', value: '12.5' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 const submit = () => {
     form.put(`/inputs/${props.input.id}`, { preserveScroll: true });
@@ -54,6 +79,8 @@ const submit = () => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <FormTestHelper :form="form" :fields="testFields" label="Editar Insumo" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>

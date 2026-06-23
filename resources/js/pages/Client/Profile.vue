@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import ClientHeader from '@/components/ClientHeader.vue';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     client: any;
@@ -23,6 +24,27 @@ const form = useForm({
     display_name: props.client.display_name || '',
     email: props.client.email || '',
 });
+
+const testFields: TestField[] = [
+    { key: 'display_name', value: 'Tech3D Soluções Ltda' },
+    { key: 'email', value: 'tech3d@demanda3d.com' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 function submit() {
     form.put('/perfil', {
@@ -34,11 +56,11 @@ function submit() {
 <template>
     <Head title="Meu Perfil" />
 
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-amber-50">
         <ClientHeader :client="client" />
 
         <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-            <h1 class="mb-6 text-2xl font-bold tracking-tight text-gray-900">Meu Perfil</h1>
+            <h1 class="mb-6 text-2xl font-bold tracking-tight text-amber-900">Meu Perfil</h1>
 
             <Card>
                 <CardHeader>
@@ -47,6 +69,8 @@ function submit() {
                 </CardHeader>
                 <form @submit.prevent="submit">
                     <CardContent class="space-y-4">
+                        <FormTestHelper :form="form" :fields="testFields" label="Perfil" @fill="handleFill" @clear="handleClear" />
+
                         <div class="space-y-2">
                             <Label for="display_name">Nome / Empresa</Label>
                             <Input

@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { index as clientsIndex } from '@/routes/clients';
 import type { Client } from '@/types';
+import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     client: Client;
@@ -43,6 +44,39 @@ const form = useForm({
     contact1: props.client.contact1 || '',
     contact2: props.client.contact2 || '',
 });
+
+const testFields: TestField[] = [
+    { key: 'first_name', value: 'Maria' },
+    { key: 'last_name', value: 'Oliveira Costa' },
+    { key: 'display_name', value: 'Maria Oliveira Costa' },
+    { key: 'doc_type', value: 'CPF' },
+    { key: 'doc', value: '987.654.321-00' },
+    { key: 'address', value: 'Avenida Paulista' },
+    { key: 'number', value: '1000' },
+    { key: 'state', value: 'SP' },
+    { key: 'zipcode', value: '01310-100' },
+    { key: 'city', value: 'São Paulo' },
+    { key: 'phone1', value: '(11) 98888-7777' },
+    { key: 'phone2', value: '(11) 3333-4444' },
+    { key: 'contact1', value: 'Carlos Andrade' },
+    { key: 'contact2', value: 'Ana Beatriz' },
+];
+
+function handleFill(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = f.value;
+        }
+    }
+}
+
+function handleClear(fields: TestField[]) {
+    for (const f of fields) {
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
+    }
+}
 
 const docType = ref(form.doc_type);
 
@@ -108,6 +142,9 @@ const submit = () => {
             <AlertTitle>Erro de validação</AlertTitle>
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
+
+        <!-- Test Helper -->
+        <FormTestHelper :form="form" :fields="testFields" label="Editar Cliente" @fill="handleFill" @clear="handleClear" />
 
         <!-- Form -->
         <form @submit.prevent="submit">
