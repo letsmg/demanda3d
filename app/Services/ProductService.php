@@ -103,7 +103,7 @@ class ProductService
         // --- Build query ---
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
-            ->with(['images', 'tenant']);
+            ->with(['images', 'tenant.user']);
 
         if (!empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
