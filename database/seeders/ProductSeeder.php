@@ -89,29 +89,29 @@ class ProductSeeder extends Seeder
                     $this->command->line("    → {$existingCount} imagens já existentes, pulando download");
                     continue;
                 }
+                //comentar abaixo para nao seedar imagens
+                //Download missing images
+                for ($i = $existingCount; $i < 5; $i++) {
+                    $imageUrl = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
+                    $filename = "products/{$tenantId}/{$product->id}-{$i}.jpg";
+                    $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/4... ");
 
-                // Download missing images
-                // for ($i = $existingCount; $i < 5; $i++) {
-                //     $imageUrl = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
-                //     $filename = "products/{$tenantId}/{$product->id}-{$i}.jpg";
-                //     $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/4... ");
+                    $imageContent = @file_get_contents($imageUrl);
 
-                //     $imageContent = @file_get_contents($imageUrl);
+                    if ($imageContent !== false) {
+                        Storage::disk('public')->put($filename, $imageContent);
 
-                //     if ($imageContent !== false) {
-                //         Storage::disk('public')->put($filename, $imageContent);
-
-                //         ProductImage::create([
-                //             'product_id' => $product->id,
-                //             'path' => $filename,
-                //             'order' => $i,
-                //         ]);
-                //         $this->command->getOutput()->writeln("<fg=green>✓ OK</>");
-                //     } else {
-                //         $this->command->getOutput()->writeln("<fg=red>✗ FALHA</>");
-                //         $this->command->warn("      Não foi possível baixar imagem de {$imageUrl}");
-                //     }
-                // }
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path' => $filename,
+                            'order' => $i,
+                        ]);
+                        $this->command->getOutput()->writeln("<fg=green>✓ OK</>");
+                    } else {
+                        $this->command->getOutput()->writeln("<fg=red>✗ FALHA</>");
+                        $this->command->warn("      Não foi possível baixar imagem de {$imageUrl}");
+                    }
+                }
             }
             $this->command->info('');
         }
