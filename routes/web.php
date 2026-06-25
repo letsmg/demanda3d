@@ -11,6 +11,7 @@ use App\Http\Controllers\Inertia\InputController as InertiaInputController;
 use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
 use App\Http\Controllers\Inertia\ProductController as InertiaProductController;
 use App\Http\Controllers\Inertia\ReportController;
+use App\Http\Controllers\Inertia\SupplierController as InertiaSupplierController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
 
@@ -97,6 +98,16 @@ Route::middleware(['auth', 'verified', 'ensure.staff'])->group(function () {
         Route::get('{product}/edit', [InertiaProductController::class, 'edit'])->name('edit');
         Route::put('{product}', [InertiaProductController::class, 'update'])->name('update');
         Route::delete('{product}', [InertiaProductController::class, 'destroy'])->name('destroy');
+    });
+
+    // Suppliers Management - Full CRUD
+    Route::prefix('suppliers')->name('suppliers.')->group(function () {
+        Route::get('/', [InertiaSupplierController::class, 'index'])->name('index');
+        Route::get('create', [InertiaSupplierController::class, 'create'])->name('create');
+        Route::post('/', [InertiaSupplierController::class, 'store'])->name('store');
+        Route::get('{supplier}/edit', [InertiaSupplierController::class, 'edit'])->name('edit');
+        Route::put('{supplier}', [InertiaSupplierController::class, 'update'])->name('update');
+        Route::delete('{supplier}', [InertiaSupplierController::class, 'destroy'])->name('destroy');
     });
 
     // Reports (management + admin com canAccessFinancials)

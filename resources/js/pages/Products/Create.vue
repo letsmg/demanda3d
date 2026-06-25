@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
-import type { TestField } from '@/components/FormTestHelper.vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { index as productsIndex } from '@/routes/products';
+import { useTestData } from '@/composables/useTestData';
+
+const { randomProductName, randomProductDescription, randomPrice } = useTestData();
 
 const form = useForm({
     name: '',
@@ -25,33 +21,29 @@ const form = useForm({
     image: null as File | null,
 });
 
-const testFields: TestField[] = [
-    { key: 'name', value: 'Suporte para Tablet Universal' },
-    { key: 'description', value: 'Suporte ajustável para tablets de 7 a 12 polegadas. Impresso em PETG de alta resistência.' },
-    { key: 'sale_price', value: '79.90' },
-];
+function buildTestFields() {
+    return [
+        { key: 'name', value: randomProductName() },
+        { key: 'description', value: randomProductDescription() },
+        { key: 'sale_price', value: randomPrice() },
+    ];
+}
 
-function handleFill(fields: TestField[]) {
-    for (const f of fields) {
+function handleFill() {
+    const fresh = buildTestFields();
+    for (const f of fresh) {
         if (f.key in form) {
             (form as any)[f.key] = f.value;
         }
     }
 }
 
-function handleClear(fields: TestField[]) {
-    for (const f of fields) {
-        if (f.key in form) {
-            (form as any)[f.key] = '';
-        }
-    }
-
+function handleClear() {
+    form.reset();
 }
 
 const submit = () => {
-    form.post('/products', {
-        preserveScroll: true,
-    });
+    form.post('/products', { preserveScroll: true });
 };
 
 const onFileChange = (e: Event) => {
@@ -68,9 +60,7 @@ const onFileChange = (e: Event) => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="productsIndex()">
-                    <ArrowLeft class="h-4 w-4" />
-                </Link>
+                <Link :href="productsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Criar Produto</h1>
@@ -84,13 +74,7 @@ const onFileChange = (e: Event) => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper
-            :form="form"
-            :fields="testFields"
-            label="Produto teste"
-            @fill="handleFill"
-            @clear="handleClear"
-        />
+        <FormTestHelper :form="form" :fields="buildTestFields()" label="Produto teste" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>
@@ -119,11 +103,9 @@ const onFileChange = (e: Event) => {
                         <Textarea id="description" v-model="form.description" placeholder="Descrição do produto" rows={4} />
                     </div>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="image">Imagem do Produto</Label>
-                            <Input id="image" type="file" accept="image/*" @input="onFileChange" />
-                        </div>
+                    <div class="space-y-2">
+                        <Label for="image">Imagem do Produto</Label>
+                        <Input id="image" type="file" accept="image/*" @input="onFileChange" />
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -134,9 +116,7 @@ const onFileChange = (e: Event) => {
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child>
-                    <Link :href="productsIndex()">Cancelar</Link>
-                </Button>
+                <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
                 <Button type="submit" :disabled="form.processing">
                     <Save class="mr-2 h-4 w-4" />
                     {{ form.processing ? 'Salvando...' : 'Salvar Produto' }}

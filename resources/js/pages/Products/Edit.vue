@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
+import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import { useTestData } from '@/composables/useTestData';
 
-const props = defineProps<{
-    product: Product;
-}>();
+const { randomProductName, randomProductDescription, randomPrice } = useTestData();
+
+const props = defineProps<{ product: Product }>();
 
 const form = useForm({
     name: props.product.name,
@@ -29,32 +24,29 @@ const form = useForm({
     image: null as File | null,
 });
 
-const testFields: TestField[] = [
-    { key: 'name', value: 'Base para Notebook Articulada' },
-    { key: 'description', value: 'Base ajustável com ventilação integrada para notebooks de 13 a 17 polegadas.' },
-    { key: 'sale_price', value: '149.90' },
-];
+function buildTestFields() {
+    return [
+        { key: 'name', value: randomProductName() },
+        { key: 'description', value: randomProductDescription() },
+        { key: 'sale_price', value: randomPrice() },
+    ];
+}
 
-function handleFill(fields: TestField[]) {
-    for (const f of fields) {
+function handleFill() {
+    const fresh = buildTestFields();
+    for (const f of fresh) {
         if (f.key in form) {
             (form as any)[f.key] = f.value;
         }
     }
 }
 
-function handleClear(fields: TestField[]) {
-    for (const f of fields) {
-        if (f.key in form) {
-            (form as any)[f.key] = '';
-        }
-    }
+function handleClear() {
+    form.reset();
 }
 
 const submit = () => {
-    form.put(`/products/${props.product.id}`, {
-        preserveScroll: true,
-    });
+    form.put(`/products/${props.product.id}`, { preserveScroll: true });
 };
 
 const onFileChange = (e: Event) => {
@@ -67,13 +59,10 @@ const onFileChange = (e: Event) => {
 
 <template>
     <Head title="Editar Produto" />
-
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="productsIndex()">
-                    <ArrowLeft class="h-4 w-4" />
-                </Link>
+                <Link :href="productsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Editar Produto</h1>
@@ -87,57 +76,41 @@ const onFileChange = (e: Event) => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper :form="form" :fields="testFields" label="Editar Produto" @fill="handleFill" @clear="handleClear" />
+        <FormTestHelper :form="form" :fields="buildTestFields()" label="Editar Produto" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>
-                <CardHeader>
-                    <CardTitle>Informações do Produto</CardTitle>
-                    <CardDescription>Edite os dados do produto</CardDescription>
-                </CardHeader>
+                <CardHeader><CardTitle>Informações do Produto</CardTitle><CardDescription>Edite os dados do produto</CardDescription></CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="name">Nome * (deve ser único)</Label>
-                            <Input id="name" v-model="form.name" placeholder="Nome do produto"
-                                :class="{ 'border-destructive': form.errors.name }" />
+                            <Label for="name">Nome *</Label>
+                            <Input id="name" v-model="form.name" placeholder="Nome" :class="{ 'border-destructive': form.errors.name }" />
                             <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
                         </div>
                         <div class="space-y-2">
                             <Label for="sale_price">Preço de Venda *</Label>
-                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.sale_price }" />
+                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00" :class="{ 'border-destructive': form.errors.sale_price }" />
                             <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
                         </div>
                     </div>
-
                     <div class="space-y-2">
                         <Label for="description">Descrição</Label>
-                        <Textarea id="description" v-model="form.description" placeholder="Descrição do produto" rows={4} />
+                        <Textarea id="description" v-model="form.description" placeholder="Descrição" rows={4} />
                     </div>
-
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="image">Imagem do Produto</Label>
-                            <Input id="image" type="file" accept="image/*" @input="onFileChange" />
-                        </div>
+                    <div class="space-y-2">
+                        <Label for="image">Imagem do Produto</Label>
+                        <Input id="image" type="file" accept="image/*" @input="onFileChange" />
                     </div>
-
                     <div class="flex items-center gap-2">
-                        <Label for="is_active">Produto ativo na vitrine?</Label>
+                        <Label for="is_active">Produto ativo?</Label>
                         <input id="is_active" type="checkbox" v-model="form.is_active" class="h-4 w-4" />
                     </div>
                 </CardContent>
             </Card>
-
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child>
-                    <Link :href="productsIndex()">Cancelar</Link>
-                </Button>
-                <Button type="submit" :disabled="form.processing">
-                    <Save class="mr-2 h-4 w-4" />
-                    {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
-                </Button>
+                <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
+                <Button type="submit" :disabled="form.processing"><Save class="mr-2 h-4 w-4" />{{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}</Button>
             </div>
         </form>
     </div>
