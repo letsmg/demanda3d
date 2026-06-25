@@ -9,11 +9,11 @@
 # =============================================
 set -e
 
-MASTER_HOST="${MASTER_HOST:-postgres-demanda3d}"
+MASTER_HOST="${MASTER_HOST:-demanda-psql}"
 MASTER_PORT=5432
 REPL_USER="${REPL_USER:-demanda_user}"
 export PGPASSWORD="${REPL_PASSWORD:?REPL_PASSWORD must be set in .env.docker}"
-SLOT_NAME="${REPL_SLOT:-demanda3d_replica_slot}"
+SLOT_NAME="${REPL_SLOT:-demanda_replica_slot}"
 
 echo "=== [Replica Init] Waiting for master to be ready..."
 until pg_isready -h "$MASTER_HOST" -p "$MASTER_PORT" -U "$REPL_USER" -d demanda_db; do
@@ -45,7 +45,7 @@ touch "$PGDATA/standby.signal"
 # but ensure it's correct with our settings
 if [ ! -f "$PGDATA/postgresql.auto.conf" ]; then
     cat > "$PGDATA/postgresql.auto.conf" << EOFREPL
-primary_conninfo = 'host=${MASTER_HOST} port=${MASTER_PORT} user=${REPL_USER} password=${PGPASSWORD} application_name=demanda3d_replica'
+primary_conninfo = 'host=${MASTER_HOST} port=${MASTER_PORT} user=${REPL_USER} password=${PGPASSWORD} application_name=demanda_replica'
 primary_slot_name = '${SLOT_NAME}'
 EOFREPL
 fi

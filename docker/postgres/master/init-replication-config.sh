@@ -22,7 +22,7 @@ ALTER SYSTEM SET wal_log_hints = on;
 
 -- Sync replication (relaxed to 'on' for compatibility; can be tightened later)
 ALTER SYSTEM SET synchronous_commit = 'on';
--- ALTER SYSTEM SET synchronous_standby_names = 'demanda3d_replica';
+-- ALTER SYSTEM SET synchronous_standby_names = 'demanda_replica';
 
 -- Performance
 ALTER SYSTEM SET shared_buffers = '256MB';
