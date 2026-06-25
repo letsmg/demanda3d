@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted } from 'vue';
-import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ImageIcon } from '@lucide/vue';
+import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ImageIcon, Star } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { setCartCount } from '@/stores/cartStore';
 import { Input } from '@/components/ui/input';
@@ -445,6 +445,15 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     <CardContent class="flex-1 pb-2">
                         <div class="space-y-1">
                             <p class="text-xl font-bold text-emerald-700">{{ formatPrice(product.sale_price) }}</p>
+                            <p class="text-xs text-amber-600">
+                                {{ product.tenant?.user?.display_name || product.tenant?.user?.first_name_encrypted || 'Vendedor' }}
+                            </p>
+                            <div v-if="product.tenant?.rating_count > 0" class="flex items-center gap-1">
+                                <Star class="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                <span class="text-xs font-medium text-amber-700">{{ product.tenant.rating_average }}</span>
+                                <span class="text-xs text-amber-400">({{ product.tenant.rating_count }})</span>
+                            </div>
+                            <p v-else class="text-xs text-amber-400">sem histórico de vendas</p>
                         </div>
                     </CardContent>
 
@@ -509,6 +518,15 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     <div class="mt-4 flex items-center justify-between rounded-lg bg-amber-50 p-4">
                         <div>
                             <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.sale_price) }}</p>
+                            <p class="text-sm text-amber-600">
+                                {{ selectedProduct.tenant?.user?.display_name || selectedProduct.tenant?.user?.first_name_encrypted || 'Vendedor' }}
+                            </p>
+                            <div v-if="selectedProduct.tenant?.rating_count > 0" class="flex items-center gap-1 mt-1">
+                                <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+                                <span class="text-sm font-medium text-amber-700">{{ selectedProduct.tenant.rating_average }}</span>
+                                <span class="text-sm text-amber-400">({{ selectedProduct.tenant.rating_count }} avaliações)</span>
+                            </div>
+                            <p v-else class="text-sm text-amber-400 mt-1">sem histórico de vendas</p>
                         </div>
                         <Button @click="addToCart(selectedProduct.id)">
                             {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}

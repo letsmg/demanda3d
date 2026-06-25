@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Review;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,12 +34,21 @@ class Tenant extends Model
         'state',
         'zipcode',
         'active',
+        'rating_average',
+        'rating_count',
     ];
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
 
     protected function casts(): array
     {
         return [
             'active' => 'boolean',
+            'rating_average' => 'decimal:2',
+            'rating_count' => 'integer',
             'document_encrypted' => 'encrypted',
             'phone_encrypted' => 'encrypted',
         ];

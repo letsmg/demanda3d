@@ -30,6 +30,8 @@ return new class extends Migration
             $table->string('state', 2);
             $table->string('zipcode', 10);
             $table->boolean('active')->default(true);
+            $table->decimal('rating_average', 3, 2)->default(0)->comment('Nota média consolidada (ex: 4.85)');
+            $table->integer('rating_count')->default(0)->comment('Total de avaliações recebidas');
             $table->timestamps();
 
             $table->index('user_id');
