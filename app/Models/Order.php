@@ -11,7 +11,13 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'client_id',
+        'order_date',
+        'delivery_date',
+        'price',
+        'contracted_description_encrypted',
+        'contracted_description_hash',
         'stripe_session_id',
         'amount_total',
         'currency',

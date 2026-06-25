@@ -101,7 +101,7 @@ const onFileChange = (e: Event) => {
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="name">Nome *</Label>
+                            <Label for="name">Nome * (deve ser único)</Label>
                             <Input id="name" v-model="form.name" placeholder="Nome do produto"
                                 :class="{ 'border-destructive': form.errors.name }" />
                             <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>

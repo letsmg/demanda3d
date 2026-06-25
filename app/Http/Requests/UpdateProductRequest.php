@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreProductRequest extends FormRequest
+class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -19,9 +19,11 @@ class StoreProductRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('products', 'name')->where(function ($query) {
-                    return $query->where('tenant_id', auth()->user()->tenant_id);
-                }),
+                Rule::unique('products', 'name')
+                    ->where(function ($query) {
+                        return $query->where('tenant_id', auth()->user()->tenant_id);
+                    })
+                    ->ignore($this->route('product')),
             ],
             'description' => ['nullable', 'string'],
             'price_sale' => ['required', 'numeric', 'min:0.01'],
@@ -35,6 +37,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name.required' => 'O nome do produto é obrigatório.',
+            'name.unique' => 'Já existe um produto com este nome.',
             'price_sale.required' => 'O preço de venda é obrigatório.',
             'price_sale.min' => 'O preço deve ser maior que zero.',
             'image.image' => 'O arquivo deve ser uma imagem.',

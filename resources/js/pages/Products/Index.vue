@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Pencil, Trash2 } from '@lucide/vue';
+import { Plus, Pencil, Trash2, Search } from '@lucide/vue';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
     Card,
     CardContent,
@@ -10,20 +10,35 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { ref, watch } from 'vue';
+import { Input } from '@/components/ui/input';
 
-const props = defineProps<{
+defineProps<{
     products: any;
 }>();
 
 const search = ref('');
+let searchTimeout: ReturnType<typeof setTimeout>;
 
-watch(search, (value) => {
-    router.get('/products', { search: value }, {
-        preserveState: true,
-        replace: true,
-    });
-});
+const doSearch = (value: string) => {
+    if (value.length >= 3) {
+        router.get('/products', { search: value }, {
+            preserveState: true,
+            replace: true,
+        });
+    } else if (value.length === 0) {
+        router.get('/products', {}, {
+            preserveState: true,
+            replace: true,
+        });
+    }
+};
+
+const onSearchInput = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        doSearch(search.value);
+    }, 300);
+};
 
 const deleteProduct = (id: number) => {
     if (confirm('Tem certeza que deseja excluir este produto?')) {
@@ -64,11 +79,13 @@ const formatPrice = (value: string | number) => {
                 <CardDescription>{{ products.meta?.total || products.data?.length || 0 }} produtos cadastrados</CardDescription>
             </CardHeader>
             <CardContent>
-                <div class="mb-4">
+                <div class="relative mb-4 max-w-sm">
+                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         v-model="search"
-                        placeholder="Buscar produtos..."
-                        class="max-w-sm"
+                        placeholder="Buscar produtos (mín. 3 letras)..."
+                        class="pl-10"
+                        @input="onSearchInput"
                     />
                 </div>
 
@@ -84,7 +101,7 @@ const formatPrice = (value: string | number) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="product in products.data" :key="product.id" class="border-b hover:bg-muted/50">
+                            <tr v-for="product in (Array.isArray(products) ? products : products.data)" :key="product.id" class="border-b hover:bg-muted/50">
                                 <td class="py-3 px-4 font-medium">{{ product.name }}</td>
                                 <td class="py-3 px-4">{{ formatPrice(product.price_sale) }}</td>
                                 <td class="py-3 px-4">{{ product.discount_cash }}%</td>
@@ -104,7 +121,7 @@ const formatPrice = (value: string | number) => {
                                     </Button>
                                 </td>
                             </tr>
-                            <tr v-if="!products.data?.length">
+                            <tr v-if="!(Array.isArray(products) ? products : products.data)?.length">
                                 <td colspan="5" class="py-8 text-center text-muted-foreground">
                                     Nenhum produto encontrado.
                                 </td>

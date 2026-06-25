@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
+use App\Services\DashboardSearchService;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,13 +14,18 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function __construct(private ProductService $productService) {}
+    public function __construct(
+        private ProductService $productService,
+        private DashboardSearchService $searchService,
+    ) {}
 
     public function index(Request $request): Response
     {
-        $products = Product::orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 10))
-            ->withQueryString();
+        $search = $request->get('search');
+
+        $products = ($search && strlen($search) >= 3 && auth()->user()->tenant_id)
+            ? $this->searchService->search('products', $search, (string) auth()->user()->tenant_id)
+            : Product::orderBy('created_at', 'desc')->paginate($request->get('per_page', 10))->withQueryString();
 
         return Inertia::render('Products/Index', [
             'products' => $products,
@@ -45,7 +52,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(StoreProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
         $this->productService->update($product, $request->validated());
 

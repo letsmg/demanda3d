@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('tenant_id');
+            $table->unique(['tenant_id', 'name']);
         });
     }
 

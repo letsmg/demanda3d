@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInputRequest;
 use App\Http\Requests\UpdateInputRequest;
 use App\Models\Input;
+use App\Services\DashboardSearchService;
 use App\Services\InputService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,13 +14,22 @@ use Inertia\Response;
 
 class InputController extends Controller
 {
-    public function __construct(private InputService $inputService) {}
+    public function __construct(
+        private InputService $inputService,
+        private DashboardSearchService $searchService,
+    ) {}
 
     public function index(Request $request): Response
     {
-        $inputs = Input::orderBy('dt_buy', 'desc')
-            ->paginate($request->get('per_page', 10))
-            ->withQueryString();
+        $search = $request->get('search');
+
+        if ($search && strlen($search) >= 3 && auth()->user()->tenant_id) {
+            $inputs = $this->searchService->search('inputs', $search, (string) auth()->user()->tenant_id);
+        } else {
+            $inputs = Input::orderBy('dt_buy', 'desc')
+                ->paginate($request->get('per_page', 10))
+                ->withQueryString();
+        }
 
         return Inertia::render('Inputs/Index', [
             'inputs' => $inputs,

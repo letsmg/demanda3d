@@ -59,13 +59,23 @@ const getClientDisplayName = (client: Client): string => {
 
 const onSearchInput = () => {
     clearTimeout(searchTimeout.value);
+
+    if (searchQuery.value.length === 0) {
+        router.get('/clients', {}, { preserveState: true, replace: true });
+        return;
+    }
+
+    if (searchQuery.value.length < 3) {
+        return;
+    }
+
     searchTimeout.value = setTimeout(() => {
         router.get(
             '/clients',
             { search: searchQuery.value || undefined, page: 1 },
             { preserveState: true, replace: true },
         );
-    }, 400);
+    }, 300);
 };
 
 const goToPage = (pageNumber: number) => {
@@ -147,12 +157,12 @@ const formatDoc = (doc: string) => {
             <Search
                 class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             />
-            <Input
-                v-model="searchQuery"
-                placeholder="Buscar por nome, documento, cidade ou telefone..."
-                class="pl-10"
-                @input="onSearchInput"
-            />
+                <Input
+                    v-model="searchQuery"
+                    placeholder="Buscar por nome do cliente (mín. 3 letras)..."
+                    class="pl-10"
+                    @input="onSearchInput"
+                />
         </div>
 
         <!-- Empty State -->

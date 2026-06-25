@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Box, Plus, Edit, Trash2, DollarSign, Gauge } from '@lucide/vue';
+import { Box, Plus, Edit, Trash2, DollarSign, Gauge, Search } from '@lucide/vue';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { create as inputsCreate, edit as inputsEdit } from '@/routes/inputs';
-import type { Input } from '@/types';
+import type { Input as InputType } from '@/types';
 
 type PaginatedInputs = {
-    data: Input[];
+    data: InputType[];
     current_page: number;
     last_page: number;
     total: number;
@@ -29,19 +30,41 @@ const { inputs } = defineProps<{
     inputs: PaginatedInputs;
 }>();
 
+const searchQuery = ref('');
 const showDeleteDialog = ref(false);
-const deletingInput = ref<Input | null>(null);
+const deletingInput = ref<InputType | null>(null);
 const deleteForm = useForm({});
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+const onSearchInput = () => {
+    clearTimeout(searchTimeout);
+
+    if (searchQuery.value.length === 0) {
+        router.get('/inputs', {}, { preserveState: true, replace: true });
+        return;
+    }
+
+    if (searchQuery.value.length < 3) {
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        router.get('/inputs', { search: searchQuery.value }, {
+            preserveState: true,
+            replace: true,
+        });
+    }, 300);
+};
 
 const goToPage = (pageNumber: number) => {
     router.get(
         '/inputs',
-        { page: pageNumber },
+        { page: pageNumber, search: searchQuery.value || undefined },
         { preserveState: true, replace: true },
     );
 };
 
-const confirmDelete = (input: Input) => {
+const confirmDelete = (input: InputType) => {
     deletingInput.value = input;
     showDeleteDialog.value = true;
 };
@@ -92,6 +115,16 @@ const formatDate = (dateStr: string) =>
                     ><Plus class="mr-2 h-4 w-4" /> Novo Insumo</Link
                 >
             </Button>
+        </div>
+
+        <div class="relative">
+            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+                v-model="searchQuery"
+                placeholder="Buscar por filamento (mín. 3 letras)..."
+                class="pl-10"
+                @input="onSearchInput"
+            />
         </div>
 
         <div
