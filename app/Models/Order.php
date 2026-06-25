@@ -13,6 +13,7 @@ class Order extends Model
     protected $fillable = [
         'tenant_id',
         'client_id',
+        'product_id',
         'order_date',
         'delivery_date',
         'price',
@@ -27,5 +28,10 @@ class Order extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

@@ -22,6 +22,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('tenant_id');
+            $table->index('filaments');
+            $table->index('dt_buy');
         });
     }
 

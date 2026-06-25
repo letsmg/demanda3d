@@ -6,12 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Orders dependem de: tenants, clients, products.
+     * Timestamp 2026_06_23_000001 garante execução após products (2026_06_22_000000)
+     * e antes de carts (2026_06_23_000000? ajustado para 000001).
+     */
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->date('order_date');
             $table->date('delivery_date');
             $table->decimal('price', 12, 2);
@@ -21,9 +27,12 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->timestamps();
 
-            $table->index('tenant_id');
-            $table->index('client_id');
-            $table->index('stripe_session_id');
+            // Índices para busca por tenant + cliente e tenant + produto
+            $table->index(['tenant_id', 'client_id']);
+            $table->index(['tenant_id', 'product_id']);
+            $table->index('order_date');
+            $table->index('delivery_date');
+            $table->index('status');
         });
     }
 
