@@ -26,8 +26,6 @@ Homestead.json
 
 /public/build
 /storage/pail
-.env.backup
-.env.production
 .phpactor.json
 auth.json
 .clinerules
@@ -60,3 +58,5 @@ storage/debugbar/
 
 # Docker environment docker-compose overrides
 .env.docker
+/resources/js/actions/
+/resources/js/routes/
