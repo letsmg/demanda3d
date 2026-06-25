@@ -8,12 +8,12 @@
 # =============================================
 set -e
 
-MASTER_HOST="${MASTER_HOST:-demanda-psql}"
+MASTER_HOST="${MASTER_HOST:-demanda-psql-dev}"
 MASTER_PORT="${MASTER_PORT:-5432}"
 REPL_USER="${REPL_USER:-demanda_user}"
 export PGPASSWORD="${REPL_PASSWORD:?REPL_PASSWORD must be set in .env.docker}"
-SLOT_NAME="${REPL_SLOT:-demanda_replica_slot}"
-APP_NAME="${REPL_APP_NAME:-demanda_replica}"
+SLOT_NAME="${REPL_SLOT:-demanda_replica_slot_dev}"
+APP_NAME="${REPL_APP_NAME:-demanda_replica_dev}"
 
 echo "=== [Replica Init] Waiting for master to be ready (host=$MASTER_HOST:$MASTER_PORT)..."
 until pg_isready -h "$MASTER_HOST" -p "$MASTER_PORT" -U "$REPL_USER" -d demanda_db; do

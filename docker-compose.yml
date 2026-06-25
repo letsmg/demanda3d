@@ -2,95 +2,92 @@ services:
   # =============================================
   # PostgreSQL Master (Primary) - porta 5432
   # =============================================
-  demanda-psql:
-    image: postgres:18.4-alpine
-    container_name: demanda-psql
+  demanda-psql-dev:
+    build:
+      context: ./docker/psql
+      dockerfile: Dockerfile
+    image: demanda-psql-dev:latest
+    container_name: demanda-psql-dev
     restart: unless-stopped
+    env_file:
+      - .env.docker
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-demanda_db}
-      POSTGRES_USER: ${POSTGRES_USER:-demanda_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.docker}
       POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
     ports:
       - "5432:5432"
     volumes:
-      - demanda_psql_data:/var/lib/postgresql
-      - ./docker/postgres/master/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
-      - ./docker/postgres/master/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
-    env_file:
-      - .env.docker
+      - demanda_psql_dev_data:/var/lib/postgresql
+      - ./docker/psql/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
+      - ./docker/psql/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demanda_user} -d ${POSTGRES_DB:-demanda_db}"]
+      test: ["CMD-SHELL", "pg_isready -U demanda_user -d demanda_db"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - demanda-net
+      - demanda-net-dev
 
   # =============================================
   # PostgreSQL Slave (Replica) - porta 5433
   # =============================================
-  demanda-psql-rep:
-    image: postgres:18.4-alpine
-    container_name: demanda-psql-rep
+  demanda-psql-rep-dev:
+    build:
+      context: ./docker/psql
+      dockerfile: Dockerfile
+    image: demanda-psql-rep-dev:latest
+    container_name: demanda-psql-rep-dev
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-demanda_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.docker}
-      MASTER_HOST: ${MASTER_HOST:-demanda-psql}
-      MASTER_PORT: "${MASTER_PORT:-5432}"
-      REPL_USER: ${REPL_USER:-demanda_user}
-      REPL_PASSWORD: ${REPL_PASSWORD:?REPL_PASSWORD must be set in .env.docker}
-      REPL_SLOT: ${REPL_SLOT:-demanda_replica_slot}
-      REPL_APP_NAME: ${REPL_APP_NAME:-demanda_replica}
+    env_file:
+      - .env.docker
     ports:
       - "5433:5432"
     volumes:
-      - demanda_psql_rep_data:/var/lib/postgresql
-      - ./docker/postgres/slave/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
-    env_file:
-      - .env.docker
+      - demanda_psql_rep_dev_data:/var/lib/postgresql
+      - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
     depends_on:
-      demanda-psql:
+      demanda-psql-dev:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demanda_user}"]
+      test: ["CMD-SHELL", "pg_isready -U demanda_user"]
       interval: 10s
       timeout: 5s
       retries: 20
       start_period: 60s
     networks:
-      - demanda-net
+      - demanda-net-dev
 
   # =============================================
   # Redis - Cache de busca do Marketplace
   # =============================================
-  demanda-redis:
-    image: redis:8.0-alpine
-    container_name: demanda-redis
+  demanda-redis-dev:
+    build:
+      context: ./docker/redis
+      dockerfile: Dockerfile
+    image: demanda-redis-dev:latest
+    container_name: demanda-redis-dev
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6380:6379"
     volumes:
-      - demanda_redis_data:/data
+      - demanda_redis_dev_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - demanda-net
+      - demanda-net-dev
 
 volumes:
-  demanda_psql_data:
-    name: demanda_psql_data
-  demanda_psql_rep_data:
-    name: demanda_psql_rep_data
-  demanda_redis_data:
-    name: demanda_redis_data
+  demanda_psql_dev_data:
+    name: demanda_psql_dev_data
+  demanda_psql_rep_dev_data:
+    name: demanda_psql_rep_dev_data
+  demanda_redis_dev_data:
+    name: demanda_redis_dev_data
 
 networks:
-  demanda-net:
-    name: demanda-net
+  demanda-net-dev:
+    name: demanda-net-dev
     driver: bridge
