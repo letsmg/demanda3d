@@ -1,3 +1,6 @@
+# [Português](#português) | [English](#english)
+
+<a id="português"></a>
 # Demanda3D
 
 Sistema SaaS para gestão operacional, financeira e produtiva de negócios de impressão 3D.
@@ -8,14 +11,22 @@ O Demanda3D está sendo desenvolvido como uma plataforma completa para empreende
 
 O sistema segue uma arquitetura multi-tenant com isolamento total de dados entre clientes.
 
+## Arquitetura e Infraestrutura
+
+Para assegurar performance e prontidão para escala horizontal, o sistema utiliza **Kubernetes** para orquestração de containers, garantindo resiliência e alta disponibilidade.
+
+### Persistência e Performance
+* **PostgreSQL:** Banco de dados relacional com estratégia de replicação de dados, preparado para suportar crescimento horizontal e alta demanda de escrita/leitura.
+* **Redis:** Camada de alta performance utilizada para cache e gerenciamento de filas em tarefas recorrentes de pesquisa de dados, otimizando o tempo de resposta.
+
 ---
 
 ## Stack Tecnológica
 
 ### Backend
 - **Laravel** — Framework PHP para desenvolvimento web
-- **PostgreSQL** — Banco de dados relacional
-- **Redis** — Cache e filas
+- **PostgreSQL** — Banco de dados relacional com replicação
+- **Redis** — Cache e filas para processamento recorrente
 - **PHP 8.3+** — Linguagem de programação
 
 ### Frontend
@@ -25,7 +36,7 @@ O sistema segue uma arquitetura multi-tenant com isolamento total de dados entre
 - **Tailwind CSS** — Estilização utilitária
 
 ### Infraestrutura
-- Linux | Docker | Git | CI/CD
+- **Kubernetes** | **Docker** | **Linux** | **Git** | **CI/CD**
 
 ### Pagamentos
 - Stripe | PIX | Cartão de Crédito | Boleto Bancário
@@ -49,7 +60,7 @@ Este projeto adota padrões rigorosos de segurança e criptografia em conformida
 
 ```bash
 # Clone o repositório
-git clone https://github.com/letsmg/demanda3d.git
+git clone [https://github.com/letsmg/demanda3d.git](https://github.com/letsmg/demanda3d.git)
 cd demanda3d
 
 # Instale as dependências do backend
@@ -70,26 +81,3 @@ npm run build
 
 # Inicie o servidor de desenvolvimento
 php artisan serve
-```
-
----
-
-## Licenciamento
-
-Este projeto está licenciado sob a **Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
-
-**Copyright (c) 2026 Luiz Eduardo T. Silva — Todos os direitos reservados.**
-
-- **Uso Não Comercial:** Este software não pode ser utilizado para fins comerciais sem autorização expressa do autor.
-- **Copyleft:** Alterações e derivações devem ser distribuídas sob a mesma licença.
-- **Atribuição:** Créditos devem ser mantidos em todas as cópias e obras derivadas.
-
-Para mais detalhes, consulte o arquivo [LICENSE](LICENSE).
-
----
-
-## Autor
-
-**Luiz Eduardo T. Silva** — [luiztsilva@protonmail.com](mailto:luiztsilva@protonmail.com)
-
-© 2026 Luiz Eduardo T. Silva — hierarca.com. Todos os direitos reservados.

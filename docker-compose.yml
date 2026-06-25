@@ -1,0 +1,96 @@
+services:
+  # =============================================
+  # PostgreSQL Master (Primary) - porta 5432
+  # =============================================
+  postgres-demanda3d:
+    image: postgres:18.4-alpine
+    container_name: postgres-demanda3d
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-demanda_db}
+      POSTGRES_USER: ${POSTGRES_USER:-demanda_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.docker}
+      POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_demanda3d_data:/var/lib/postgresql
+      - ./docker/postgres/master/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
+      - ./docker/postgres/master/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
+    env_file:
+      - .env.docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demanda_user} -d ${POSTGRES_DB:-demanda_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - demanda3d-net
+
+  # =============================================
+  # PostgreSQL Slave (Replica) - porta 5433
+  # =============================================
+  postgres-demanda3d-replica:
+    image: postgres:18.4-alpine
+    container_name: postgres-demanda3d-replica
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-demanda_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.docker}
+      MASTER_HOST: ${MASTER_HOST:-postgres-demanda3d}
+      MASTER_PORT: "${MASTER_PORT:-5432}"
+      REPL_USER: ${REPL_USER:-demanda_user}
+      REPL_PASSWORD: ${REPL_PASSWORD:?REPL_PASSWORD must be set in .env.docker}
+      REPL_SLOT: ${REPL_SLOT:-demanda3d_replica_slot}
+      REPL_APP_NAME: ${REPL_APP_NAME:-demanda3d_replica}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_demanda3d_replica_data:/var/lib/postgresql
+      - ./docker/postgres/slave/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres-demanda3d:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demanda_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      - demanda3d-net
+
+  # =============================================
+  # Redis - Cache de busca do Marketplace
+  # =============================================
+  redis-demanda3d:
+    image: redis:8.0-alpine
+    container_name: redis-demanda3d
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_demanda3d_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - demanda3d-net
+
+volumes:
+  postgres_demanda3d_data:
+    name: postgres_demanda3d_data
+  postgres_demanda3d_replica_data:
+    name: postgres_demanda3d_replica_data
+  redis_demanda3d_data:
+    name: redis_demanda3d_data
+
+networks:
+  demanda3d-net:
+    name: demanda3d-net
+    driver: bridge

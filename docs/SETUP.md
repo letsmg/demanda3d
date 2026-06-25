@@ -23,18 +23,18 @@ php artisan key:generate
 
 ### 3. Configurar Banco de Dados PostgreSQL
 ```bash
-# No PostgreSQL
-CREATE USER interview_user WITH PASSWORD '6xMmV^vFWjsvJuZ';
+# No PostgreSQL (substitua <senha> por uma senha real)
+CREATE USER interview_user WITH PASSWORD '<senha>';
 CREATE DATABASE interview_db OWNER interview_user;
 GRANT ALL PRIVILEGES ON DATABASE interview_db TO interview_user;
 
-# No .env (já configurado)
+# No .env
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=interview_db
 DB_USERNAME=interview_user
-DB_PASSWORD=6xMmV^vFWjsvJuZ
+DB_PASSWORD=<senha>
 ```
 
 ### 4. Executar Migrations
