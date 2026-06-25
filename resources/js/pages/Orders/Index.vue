@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Package, Plus, Edit, Trash2, Calendar, DollarSign } from '@lucide/vue';
+import { Package, Plus, Edit, Trash2, Calendar, DollarSign, Search } from '@lucide/vue';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { create as ordersCreate, edit as ordersEdit } from '@/routes/orders';
 import type { Order, Client } from '@/types';
 
@@ -29,14 +30,36 @@ const { orders } = defineProps<{
     orders: PaginatedOrders;
 }>();
 
+const searchQuery = ref('');
 const showDeleteDialog = ref(false);
 const deletingOrder = ref<Order | null>(null);
 const deleteForm = useForm({});
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+const onSearchInput = () => {
+    clearTimeout(searchTimeout);
+
+    if (searchQuery.value.length === 0) {
+        router.get('/orders', {}, { preserveState: true, replace: true });
+        return;
+    }
+
+    if (searchQuery.value.length < 3) {
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        router.get('/orders', { search: searchQuery.value }, {
+            preserveState: true,
+            replace: true,
+        });
+    }, 300);
+};
 
 const goToPage = (pageNumber: number) => {
     router.get(
         '/orders',
-        { page: pageNumber },
+        { page: pageNumber, search: searchQuery.value || undefined },
         { preserveState: true, replace: true },
     );
 };
@@ -94,6 +117,16 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
             </Button>
         </div>
 
+        <div class="relative">
+            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+                v-model="searchQuery"
+                placeholder="Buscar por cliente ou status (mín. 3 letras)..."
+                class="pl-10"
+                @input="onSearchInput"
+            />
+        </div>
+
         <div
             v-if="orders.data.length === 0"
             class="flex flex-col items-center justify-center py-16 text-center"
@@ -134,6 +167,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                             <td class="px-6 py-4 font-medium">
                                 {{
                                     order.client?.name ||
+                                    order.client_display_name ||
                                     `Cliente #${order.client_id}`
                                 }}
                             </td>
@@ -202,6 +236,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                         <div class="flex items-start justify-between">
                             <CardTitle class="text-base">{{
                                 order.client?.name ||
+                                order.client_display_name ||
                                 `Cliente #${order.client_id}`
                             }}</CardTitle>
                             <Badge

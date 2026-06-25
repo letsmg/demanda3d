@@ -14,14 +14,17 @@ return new class extends Migration
         Schema::create('inputs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('filaments');
-            $table->decimal('energy', 12, 2);
-            $table->date('dt_buy');
-            $table->decimal('cost_buy', 12, 2);
-            $table->decimal('purge', 12, 2)->default(0);
+            $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->string('description');
+            $table->string('brand');
+            $table->date('purchase_date');
+            $table->integer('quantity')->comment('Gramas ou unidades');
+            $table->decimal('shipping_cost', 12, 2)->comment('Valor do frete rateado');
+            $table->decimal('cost_value', 12, 2)->comment('Valor pago no insumo');
             $table->timestamps();
 
             $table->index('tenant_id');
+            $table->index('supplier_id');
         });
     }
 

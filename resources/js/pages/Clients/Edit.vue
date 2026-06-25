@@ -45,12 +45,36 @@ const form = useForm({
     contact2: props.client.contact2 || '',
 });
 
+function generateValidCpf(): string {
+    const digits: number[] = [];
+    for (let i = 0; i < 9; i++) {
+        digits.push(Math.floor(Math.random() * 10));
+    }
+
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += digits[i] * (10 - i);
+    }
+    const d1 = sum % 11;
+    digits.push(d1 < 2 ? 0 : 11 - d1);
+
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+        sum += digits[i] * (11 - i);
+    }
+    const d2 = sum % 11;
+    digits.push(d2 < 2 ? 0 : 11 - d2);
+
+    const raw = digits.join('');
+    return `${raw.slice(0, 3)}.${raw.slice(3, 6)}.${raw.slice(6, 9)}-${raw.slice(9, 11)}`;
+}
+
 const testFields: TestField[] = [
     { key: 'first_name', value: 'Maria' },
     { key: 'last_name', value: 'Oliveira Costa' },
     { key: 'display_name', value: 'Maria Oliveira Costa' },
     { key: 'doc_type', value: 'CPF' },
-    { key: 'doc', value: '987.654.321-00' },
+    { key: 'doc', value: generateValidCpf() },
     { key: 'address', value: 'Avenida Paulista' },
     { key: 'number', value: '1000' },
     { key: 'state', value: 'SP' },
@@ -63,9 +87,12 @@ const testFields: TestField[] = [
 ];
 
 function handleFill(fields: TestField[]) {
+    // Generate a fresh CPF each time "Preencher Teste" is clicked
+    const freshCpf = generateValidCpf();
+
     for (const f of fields) {
         if (f.key in form) {
-            (form as any)[f.key] = f.value;
+            (form as any)[f.key] = f.key === 'doc' ? freshCpf : f.value;
         }
     }
 }

@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'tenant_id',
-    'filaments',
-    'energy',
-    'dt_buy',
-    'cost_buy',
-    'purge',
+    'supplier_id',
+    'description',
+    'brand',
+    'purchase_date',
+    'quantity',
+    'shipping_cost',
+    'cost_value',
 ])]
 class Input extends Model
 {
@@ -28,15 +30,19 @@ class Input extends Model
     protected function casts(): array
     {
         return [
-            'energy' => 'decimal:2',
-            'dt_buy' => 'date',
-            'cost_buy' => 'decimal:2',
-            'purge' => 'decimal:2',
+            'purchase_date' => 'date',
+            'shipping_cost' => 'decimal:2',
+            'cost_value' => 'decimal:2',
         ];
     }
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

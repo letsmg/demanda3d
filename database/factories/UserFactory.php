@@ -46,10 +46,17 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function partner(): static
+    public function management(): static
     {
         return $this->state(fn (array $attributes) => [
-            'access_level' => UserAccessLevel::PARTNER,
+            'access_level' => UserAccessLevel::MANAGEMENT,
+        ]);
+    }
+
+    public function operational(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'access_level' => UserAccessLevel::OPERATIONAL,
         ]);
     }
 

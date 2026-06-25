@@ -18,9 +18,9 @@ enum UserAccessGroup: string
     public static function fromAccessLevel(UserAccessLevel $level): self
     {
         return match ($level) {
-            UserAccessLevel::ADMIN,
-            UserAccessLevel::PARTNER,
-            UserAccessLevel::OPERATIONAL => self::STAFF,
+            UserAccessLevel::OPERATIONAL,
+            UserAccessLevel::MANAGEMENT,
+            UserAccessLevel::ADMIN => self::STAFF,
             UserAccessLevel::CUSTOMER => self::CUSTOMER,
         };
     }

@@ -15,16 +15,19 @@ class ClientSeeder extends Seeder
         $makeEncr = fn ($value) => EncryptionService::encryptWithHash($value);
         $password = Hash::make('password');
 
-        $tenantIds = Tenant::pluck('id')->toArray();
+        $tenants = Tenant::all();
 
-        if (empty($tenantIds)) {
+        if ($tenants->isEmpty()) {
             $this->command->warn('Nenhum tenant encontrado para associar clientes.');
             return;
         }
 
-        // Client 1
+        // Distribuir clientes fixos entre o primeiro tenant
+        $firstTenant = $tenants->first();
+
+        // Client 1 - CNPJ
         Client::factory()->create([
-            'tenant_id' => $tenantIds[array_rand($tenantIds)],
+            'tenant_id' => $firstTenant->id,
             'email' => 'tech3d@demanda3d.com',
             'password' => $password,
             'display_name' => 'Tech3D Soluções Ltda',
@@ -53,9 +56,9 @@ class ClientSeeder extends Seeder
             'contact1_hash' => $makeEncr('Carlos Silva')['hash'],
         ]);
 
-        // Client 2
+        // Client 2 - CNPJ
         Client::factory()->create([
-            'tenant_id' => $tenantIds[array_rand($tenantIds)],
+            'tenant_id' => $firstTenant->id,
             'email' => 'prototipagem@demanda3d.com',
             'password' => $password,
             'display_name' => 'Prototipagem Rápida S.A.',
@@ -86,9 +89,9 @@ class ClientSeeder extends Seeder
             'contact2_hash' => $makeEncr('Pedro Santos')['hash'],
         ]);
 
-        // Client 3
+        // Client 3 - CNPJ
         Client::factory()->create([
-            'tenant_id' => $tenantIds[array_rand($tenantIds)],
+            'tenant_id' => $firstTenant->id,
             'email' => 'industria@demanda3d.com',
             'password' => $password,
             'display_name' => 'Indústria Criativa Maker',
@@ -115,11 +118,14 @@ class ClientSeeder extends Seeder
             'contact1_hash' => $makeEncr('Mariana Costa')['hash'],
         ]);
 
-        // Create 2 more random clients linked to partner tenants
-        for ($i = 0; $i < 2; $i++) {
-            Client::factory()->create([
-                'tenant_id' => $tenantIds[array_rand($tenantIds)],
+        // Distribuir 2 clientes aleatórios para cada tenant (incluindo o primeiro já usado)
+        foreach ($tenants as $tenant) {
+            Client::factory()->count(2)->create([
+                'tenant_id' => $tenant->id,
             ]);
         }
+
+        $total = Client::count();
+        $this->command->info("✓ {$total} clientes criados com sucesso (distribuídos entre todos os tenants).");
     }
 }

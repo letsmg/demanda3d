@@ -26,13 +26,13 @@ class CartController extends Controller
                     'product' => [
                         'id' => $item->product->id,
                         'name' => $item->product->name,
-                        'price_sale' => $item->product->price_sale,
+                        'sale_price' => $item->product->sale_price,
                         'image_url' => $item->product->images->first()?->url ?? null,
                     ],
                 ];
             })->values(),
             'total' => $items->sum(function ($item) {
-                return (float) $item->product->price_sale * $item->quantity;
+                return (float) $item->product->sale_price * $item->quantity;
             }),
             'count' => $items->sum('quantity'),
         ];

@@ -15,7 +15,7 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
-    $this->partner = User::factory()->partner()->create();
+    $this->management = User::factory()->management()->create();
     $this->customer = User::factory()->customer()->create();
 });
 
@@ -64,10 +64,10 @@ test('admin can create client', function () {
     $response->assertStatus(201);
 });
 
-test('partner can create client', function () {
-    createTenant($this->partner, '98.765.432/0001-10');
+test('management can create client', function () {
+    createTenant($this->management, '98.765.432/0001-10');
 
-    $response = actingAs($this->partner)->postJson('/api/clients', [
+    $response = actingAs($this->management)->postJson('/api/clients', [
         'first_name' => 'Test',
         'last_name' => 'Client',
         'doc' => '529.982.247-25',
@@ -110,10 +110,10 @@ test('admin can delete client', function () {
     $response->assertStatus(200);
 });
 
-test('partner cannot delete client', function () {
+test('management cannot delete client', function () {
     $client = Client::factory()->create();
 
-    $response = actingAs($this->partner)->deleteJson("/api/clients/{$client->id}");
+    $response = actingAs($this->management)->deleteJson("/api/clients/{$client->id}");
 
     $response->assertStatus(403);
 });

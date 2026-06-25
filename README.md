@@ -1,95 +1,77 @@
-# Demanda3D
+# [Português](#português) | [English](#english)
 
-Sistema SaaS para gestão operacional, financeira e produtiva de negócios de impressão 3D.
+<a id="português"></a>
+# 🚀 Demanda3D
+*Sistema SaaS especializado na gestão operacional, financeira e produtiva para negócios de impressão 3D.*
 
-## Sobre o Projeto
-
-O Demanda3D está sendo desenvolvido como uma plataforma completa para empreendedores da área de impressão 3D, permitindo o controle de clientes, fornecedores, filamentos, custos de produção, consumo de energia, perdas de material, estoque, produtos, pedidos e assinaturas recorrentes.
-
-O sistema segue uma arquitetura multi-tenant com isolamento total de dados entre clientes.
-
----
-
-## Stack Tecnológica
-
-### Backend
-- **Laravel** — Framework PHP para desenvolvimento web
-- **PostgreSQL** — Banco de dados relacional
-- **Redis** — Cache e filas
-- **PHP 8.3+** — Linguagem de programação
-
-### Frontend
-- **Vue 3** — Framework JavaScript progressivo
-- **TypeScript** — Tipagem estática
-- **Inertia.js** — Conector monolítico entre backend e frontend
-- **Tailwind CSS** — Estilização utilitária
-
-### Infraestrutura
-- Linux | Docker | Git | CI/CD
-
-### Pagamentos
-- Stripe | PIX | Cartão de Crédito | Boleto Bancário
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat&logo=php)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel)](https://laravel.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)](https://postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)](https://docker.com)
 
 ---
 
-## Segurança e LGPD
+## 🎯 Sobre o Projeto
+O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta a ponta de negócios de impressão 3D. O sistema gerencia desde o controle de insumos e custos de produção até assinaturas recorrentes e entrega final, utilizando uma arquitetura **multi-tenant** com isolamento estrito de dados.
 
-Este projeto adota padrões rigorosos de segurança e criptografia em conformidade com a **Lei Geral de Proteção de Dados (LGPD)**:
+## 🏗️ Diferenciais de Engenharia
+* **Infraestrutura Escalável:** Projetado com containers Docker e preparado para orquestração via Kubernetes.
+* **Alta Disponibilidade:** Estratégia de replicação PostgreSQL (Master/Replica) para garantir resiliência e performance em leitura.
+* **Segurança por Design:** Conformidade com LGPD através de criptografia em repouso (`AES-256`) e hashing de senhas com `Argon2id`.
+* **Performance:** Camada de cache e filas distribuídas via Redis.
 
-- **Estrutura de Paridade:** Todos os dados pessoais (nomes, e-mails, documentos, telefones e endereços) são armazenados com  **hash determinístico (`sha256`)** para buscas e **criptografia em repouso (`Crypt::encryptString`)** para exibição segura
-- **Senhas:** Hash Argon2id com configuração otimizada (Memory cost: 64MB, Time cost: 4, Threads: 2)
-- **Sanitização:** Entrada e saída de dados sanitizadas para prevenir XSS e SQL Injection
-- **Mass Assignment:** Proteção via `$fillable` em todos os models
-- **Rate Limiting:** Limites de requisições em endpoints críticos
-- **Multi-Tenant:** Isolamento completo por `tenant_id` com Global Scopes
+## 🛠️ Stack Tecnológica
 
----
-
-## Instalação / Setup
-
-```bash
-# Clone o repositório
-git clone https://github.com/letsmg/demanda3d.git
-cd demanda3d
-
-# Instale as dependências do backend
-composer install
-
-# Instale as dependências do frontend
-npm install
-
-# Configure o ambiente
-cp .env.example .env
-php artisan key:generate
-
-# Execute as migrações e seeders
-php artisan migrate --seed
-
-# Compile os assets
-npm run build
-
-# Inicie o servidor de desenvolvimento
-php artisan serve
-```
+| Camada | Tecnologias |
+| :--- | :--- |
+| **Backend** | Laravel 11, PHP 8.3, PostgreSQL, Redis |
+| **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
+| **DevOps** | Docker, Kubernetes, CI/CD Pipeline |
+| **Payments** | Stripe API, Pix, Crédito/Débito |
 
 ---
 
-## Licenciamento
-
-Este projeto está licenciado sob a **Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
-
-**Copyright (c) 2026 Luiz Eduardo T. Silva — Todos os direitos reservados.**
-
-- **Uso Não Comercial:** Este software não pode ser utilizado para fins comerciais sem autorização expressa do autor.
-- **Copyleft:** Alterações e derivações devem ser distribuídas sob a mesma licença.
-- **Atribuição:** Créditos devem ser mantidos em todas as cópias e obras derivadas.
-
-Para mais detalhes, consulte o arquivo [LICENSE](LICENSE).
+## 🚀 Setup e Instalação
+O projeto conta com um guia detalhado de infraestrutura.
+> 📖 **[Clique aqui para acessar o Guia de Setup Detalhado (docs/SETUP.md)](docs/SETUP.md)**
 
 ---
 
-## Autor
+<a id="english"></a>
+# 🚀 Demanda3D (English Version)
+*SaaS platform specialized in operational, financial, and production management for 3D printing businesses.*
 
-**Luiz Eduardo T. Silva** — [luiztsilva@protonmail.com](mailto:luiztsilva@protonmail.com)
+## 🎯 About the Project
+Demanda3D is a robust SaaS platform built for end-to-end management of 3D printing businesses. The system handles everything from raw material inventory and production costs to recurring subscriptions and final delivery, utilizing a **multi-tenant** architecture with strict data isolation.
 
-© 2026 Luiz Eduardo T. Silva — hierarca.com. Todos os direitos reservados.
+## 🏗️ Engineering Highlights
+* **Scalable Infrastructure:** Designed with Docker containers and ready for Kubernetes orchestration.
+* **High Availability:** PostgreSQL Master/Replica replication strategy to ensure resilience and read performance.
+* **Security by Design:** Compliance with data protection standards through encryption-at-rest (`AES-256`) and `Argon2id` password hashing.
+* **Performance:** High-performance caching and distributed queues via Redis.
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | Laravel 11, PHP 8.3, PostgreSQL, Redis |
+| **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
+| **DevOps** | Docker, Kubernetes, CI/CD Pipeline |
+| **Payments** | Stripe API, Pix, Credit/Debit Cards |
+
+## 🚀 Setup and Installation
+The project includes a detailed infrastructure guide.
+> 📖 **[Click here to access the Detailed Setup Guide (docs/SETUP.md)](docs/SETUP.md)**
+
+---
+
+## 📝 Roadmap
+- [ ] Advanced Rate Limiting for API endpoints.
+- [ ] Audit Logs for critical actions.
+- [ ] 2FA support for administrative accounts.
+
+---
+
+## ✒️ Author
+**Luiz** — Fullstack PHP/Laravel Developer.
+[LinkedIn](https://linkedin.com/in/seu-perfil) | [Portfolio](https://www.hierarca.com)

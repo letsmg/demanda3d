@@ -1,189 +1,58 @@
-# 🔐 Segurança - Guia de Implementação
+DESENVOLVIMENTO & INFRAESTRUTURA
+Este documento detalha o ambiente de desenvolvimento, a arquitetura técnica e os procedimentos operacionais para o projeto Demanda3D.
 
-## Argon2id Hash Configuration
+1. QUICK START
+Passo 1: composer install && npm install
+Passo 2: cp .env.example .env
+Passo 3: php artisan key:generate
+Passo 4: docker compose up -d
+Passo 5: php artisan migrate
 
-### O que é Argon2id?
-Argon2id é um algoritmo de hashing de senha vencedor do Password Hashing Competition (2015). É resistente a ataques GPU, ASIC e side-channel.
+2. ARQUITETURA DE INFRAESTRUTURA
+O projeto utiliza um ambiente conteinerizado para garantir isolamento:
 
-### Configuração Atual (Production Ready)
-```php
-ARGON2ID_MEMORY=65536  // 64MB - Alto nível de proteção contra ataques GPU
-ARGON2ID_TIME=4        // Minimum iterations (aumentar para 5 em operações críticas)
-ARGON2ID_THREADS=4     // Paralelismo para melhorar performance sem sacrificar segurança
-```
+Database: PostgreSQL 16 (Master/Replica).
 
-### Proteção contra Ataques
+Replicacao: Streaming Replication (Master para Escrita/Leitura, Replica para Leitura).
 
-#### 1. Ataques de Força Bruta
-- **Memory Cost (65536)**: Força o atacante a alocar 64MB por tentativa, impedindo paralelização eficiente
-- **Time Cost (4)**: Cada hash leva tempo computacional significativo
-- **Threads (4)**: Aproveita múltiplos núcleos, tornando ataques paralelos mais custosos
+Seguranca: Comunicacao entre servicos via rede interna Docker.
 
-#### 2. Ataques GPU/ASIC
-- Argon2id é específicamente designado para resistir a ataques com hardware especializado
-- Não pode ser acelerado significativamente em GPUs como MD5 ou SHA1
+Cache: Redis (persistencia de estado).
 
-#### 3. Side-Channel Attacks
-- Hash verification é feita com `Hash::check()` que compara de forma segura (timing-safe)
-- Uso de `Hash::needsRehash()` para migração gradual de parâmetros
+3. SEGURANCA EM NIVEL DE APLICACAO
+O sistema foi desenhado seguindo principios de Security by Design:
 
-### Variações Seguras por Caso de Uso
+Hashing: Argon2id (configuracao otimizada).
 
-#### Registros (Menos frequentes - máxima segurança)
-```php
-// .env
-PASSWORD_STRETCHING=true
-```
-Aumenta para time_cost=5, memory_cost=131072 (128MB)
+Autorizacao: Sistema baseado em Policies (granular) e Middlewares.
 
-#### Login (Frequente - balanço segurança/performance)
-Usa configuração padrão (time_cost=4, memory_cost=65536)
+Integridade: Validacao de dados rigorosa via FormRequest.
 
-#### Senhas Críticas (Admin, alteração)
-Use `PasswordHashService::hash($password, stretched: true)`
+4. ORGANIZACAO DO PROJETO
+app/
+├── Http/      # Controllers, Middlewares e FormRequests
+├── Policies/  # Autorizacao (Client/Order)
+├── Services/  # Logica de negocio
+├── Enums/     # Contratos de niveis de acesso
+└── Models/    # Eloquent Models
 
----
+5. TESTES AUTOMATIZADOS
+Para rodar a suite completa:
+php artisan test
 
-## Access Control com ENUM
+Para rodar com relatorio de cobertura:
+php artisan test --coverage
 
-### Níveis de Acesso (UserAccessLevel)
-```php
-enum UserAccessLevel: int {
-    case STAFF = 0;      // Funcionário com acesso limitado
-    case ADMIN = 1;      // Administrador com acesso total
-    case CUSTOMER = 9;   // Cliente externo (acesso muito limitado)
-}
-```
+6. TROUBLESHOOTING
+SQLSTATE[42P01]: Rode "php artisan migrate".
 
-### Políticas de Autorização (Policies)
+403 Forbidden: Verifique se o access_level atende a Policy.
 
-#### ClientPolicy
-```
-viewAny:   ADMIN, STAFF
-view:      ADMIN, STAFF
-create:    ADMIN, STAFF
-update:    ADMIN, STAFF
-delete:    ADMIN only
-forceDelete: ADMIN only
-```
+Lentidao Argon2id: Ajuste ARGON2ID_MEMORY no seu .env local.
 
-#### OrderPolicy
-Mesma estrutura que ClientPolicy
+7. ROADMAP
+[ ] Rate limiting em endpoints de API.
 
-### Middlewares
+[ ] Logging de auditoria para acoes sensiveis.
 
-#### AdminOnly
-- Bloqueia qualquer coisa que não seja ADMIN
-- Retorna 403 Forbidden
-
-#### StaffOnly
-- Permite ADMIN e STAFF
-- Bloqueia CUSTOMER e usuários não autenticados
-
-#### CheckAccessLevel
-- Verifica um ou mais níveis específicos
-- Uso: `Route::middleware('access.level:' . UserAccessLevel::ADMIN->value)`
-
----
-
-## Como Usar
-
-### Criar Usuários com Access Levels
-
-#### Admin
-```bash
-php artisan user:create-admin "John Admin" "john@admin.com" --password=securepass
-```
-
-#### Staff
-```bash
-php artisan user:create-staff "Jane Staff" "jane@staff.com"
-```
-
-#### Customer (Via formulário/API)
-```php
-User::create([
-    'name' => 'Customer Name',
-    'email' => 'customer@example.com',
-    'password' => Hash::make('password'),
-    'access_level' => UserAccessLevel::CUSTOMER,
-]);
-```
-
-### Verificar Access Level no Controller
-
-```php
-// Controller
-if ($user->isAdmin()) {
-    // Admin actions
-}
-
-if ($user->isStaff()) {
-    // Staff actions
-}
-
-// Ou com Policies
-$this->authorize('create', Client::class);
-```
-
-### Verificar em Request
-
-```php
-// FormRequest
-public function authorize(): bool {
-    return $this->user()->isAdmin() || $this->user()->isStaff();
-}
-```
-
----
-
-## Testes de Segurança
-
-Execute os testes de autorização:
-```bash
-php artisan test tests/Feature/AuthorizationTest.php
-```
-
-O teste valida:
-- ✅ ADMIN pode CRUD completo
-- ✅ STAFF pode Create/Read/Update
-- ✅ CUSTOMER é bloqueado
-- ✅ Hash Argon2id funciona corretamente
-
----
-
-## Variáveis Sensíveis
-
-Jamais commitar:
-- `.env` com credenciais reais
-- Senhas hardcoded
-- Tokens de API
-
-Use `.env.example` como template.
-
----
-
-## Monitoramento e Auditoria
-
-### Para Produção
-1. **Rate Limiting**: Adicionar em endpoints críticos (login, password reset)
-2. **Audit Logs**: Registrar todas as ações de ADMIN/STAFF
-3. **2FA**: Considerar para accounts ADMIN
-4. **Password Rotation**: Forçar mudança periódica (90 dias para ADMIN)
-5. **Session Management**: Limpar sessions inativas
-
-### Exemplo Rate Limiting
-```php
-Route::middleware(['throttle:60,1'])->group(function () {
-    Route::post('/api/clients', [ClientController::class, 'store']);
-});
-```
-
----
-
-## Referências
-
-- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
-- [Argon2 Official](https://github.com/P-H-C/phc-winner-argon2)
-- [Laravel Authentication](https://laravel.com/docs/authentication)
-- [Laravel Authorization](https://laravel.com/docs/authorization)
+[ ] Implementacao de 2FA para contas administrativas.

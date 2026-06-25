@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('display_name', 255)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->unsignedTinyInteger('access_level')->default(9)->comment('0=staff,1=admin,9=customer');
+            $table->unsignedTinyInteger('access_level')->default(5)->comment('0=operational,1=management,5=customer,10=admin');
             $table->index('access_level');
             $table->index('first_name_hash');
             $table->index('last_name_hash');

@@ -18,10 +18,10 @@ class StoreController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->validate([
-            'search' => 'nullable|string|max:255',
+            'search' => 'nullable|string|min:3|max:255',
             'min_price' => 'nullable|numeric|min:0',
             'max_price' => 'nullable|numeric|min:0',
-            'sort' => 'nullable|in:name,price_sale,created_at',
+            'sort' => 'nullable|in:name,sale_price,created_at',
             'sort_dir' => 'nullable|in:asc,desc',
         ]);
 

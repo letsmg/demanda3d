@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ProductService
@@ -22,17 +23,17 @@ class ProductService
         }
 
         if (!empty($filters['min_price'])) {
-            $query->where('price_sale', '>=', $filters['min_price']);
+            $query->where('sale_price', '>=', $filters['min_price']);
         }
 
         if (!empty($filters['max_price'])) {
-            $query->where('price_sale', '<=', $filters['max_price']);
+            $query->where('sale_price', '<=', $filters['max_price']);
         }
 
         $sortField = $filters['sort'] ?? 'name';
         $sortDir = $filters['sort_dir'] ?? 'asc';
 
-        $allowedSorts = ['name', 'price_sale', 'created_at'];
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }
@@ -79,35 +80,59 @@ class ProductService
      */
     public function listActiveForStore(array $filters = [])
     {
+        $searchTerm = $filters['search'] ?? '';
+        $minPrice = $filters['min_price'] ?? null;
+        $maxPrice = $filters['max_price'] ?? null;
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+
+        // --- Cache strategy for search-only queries (no price/sort filters) ---
+        $useCache = !empty($searchTerm) && strlen($searchTerm) >= 3
+                    && empty($minPrice) && empty($maxPrice)
+                    && $sortField === 'name' && $sortDir === 'asc';
+
+        if ($useCache) {
+            $cacheKey = 'store:search:' . hash('sha256', strtolower(trim($searchTerm)));
+            $cached = Cache::get($cacheKey);
+
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        // --- Build query ---
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
             ->with(['images', 'tenant']);
 
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('description', 'ilike', "%{$search}%");
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', "%{$searchTerm}%")
+                  ->orWhere('description', 'ilike', "%{$searchTerm}%");
             });
         }
 
-        if (!empty($filters['min_price'])) {
-            $query->where('price_sale', '>=', (float) $filters['min_price']);
+        if (!empty($minPrice)) {
+            $query->where('sale_price', '>=', (float) $minPrice);
         }
 
-        if (!empty($filters['max_price'])) {
-            $query->where('price_sale', '<=', (float) $filters['max_price']);
+        if (!empty($maxPrice)) {
+            $query->where('sale_price', '<=', (float) $maxPrice);
         }
 
-        $sortField = $filters['sort'] ?? 'name';
-        $sortDir = $filters['sort_dir'] ?? 'asc';
-
-        $allowedSorts = ['name', 'price_sale', 'created_at'];
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }
 
-        return $query->get();
+        $results = $query->get();
+
+        // --- Store in cache for future searches ---
+        if ($useCache && isset($cacheKey)) {
+            Cache::put($cacheKey, $results, now()->addMinutes(10));
+        }
+
+        return $results;
     }
 
     /**

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,13 +16,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { index as productsIndex } from '@/routes/products';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
 
 const form = useForm({
     name: '',
     description: '',
-    price_sale: '',
-    discount_cash: '0',
+    sale_price: '',
     is_active: true,
     image: null as File | null,
 });
@@ -28,8 +28,7 @@ const form = useForm({
 const testFields: TestField[] = [
     { key: 'name', value: 'Suporte para Tablet Universal' },
     { key: 'description', value: 'Suporte ajustável para tablets de 7 a 12 polegadas. Impresso em PETG de alta resistência.' },
-    { key: 'price_sale', value: '79.90' },
-    { key: 'discount_cash', value: '10' },
+    { key: 'sale_price', value: '79.90' },
 ];
 
 function handleFill(fields: TestField[]) {
@@ -46,7 +45,7 @@ function handleClear(fields: TestField[]) {
             (form as any)[f.key] = '';
         }
     }
-    form.discount_cash = '0';
+
 }
 
 const submit = () => {
@@ -102,16 +101,16 @@ const onFileChange = (e: Event) => {
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="name">Nome *</Label>
+                            <Label for="name">Nome * (deve ser único)</Label>
                             <Input id="name" v-model="form.name" placeholder="Nome do produto"
                                 :class="{ 'border-destructive': form.errors.name }" />
                             <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
                         </div>
                         <div class="space-y-2">
-                            <Label for="price_sale">Preço de Venda *</Label>
-                            <Input id="price_sale" v-model="form.price_sale" type="number" step="0.01" placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.price_sale }" />
-                            <span v-if="form.errors.price_sale" class="text-sm text-destructive">{{ form.errors.price_sale }}</span>
+                            <Label for="sale_price">Preço de Venda *</Label>
+                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00"
+                                :class="{ 'border-destructive': form.errors.sale_price }" />
+                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
                         </div>
                     </div>
 
@@ -121,10 +120,6 @@ const onFileChange = (e: Event) => {
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="discount_cash">Desconto à Vista (%)</Label>
-                            <Input id="discount_cash" v-model="form.discount_cash" type="number" step="0.01" min="0" max="100" placeholder="0" />
-                        </div>
                         <div class="space-y-2">
                             <Label for="image">Imagem do Produto</Label>
                             <Input id="image" type="file" accept="image/*" @input="onFileChange" />

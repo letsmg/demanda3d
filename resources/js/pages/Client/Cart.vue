@@ -17,7 +17,7 @@ const props = defineProps<{
         product: {
             id: number;
             name: string;
-            price_sale: string;
+            sale_price: string;
             image_url: string | null;
         };
     }>;
@@ -172,7 +172,7 @@ function formatPrice(value: string | number): string {
                                     {{ item.product.name }}
                                 </h3>
                                 <p class="mt-1 text-lg font-bold text-emerald-600">
-                                    {{ formatPrice(item.product.price_sale) }}
+                                    {{ formatPrice(item.product.sale_price) }}
                                 </p>
                             </div>
 
@@ -203,7 +203,7 @@ function formatPrice(value: string | number): string {
                         <!-- Item Row Footer -->
                         <div class="mt-3 flex items-center justify-between border-t border-amber-200 pt-3">
                             <span class="text-sm font-medium text-amber-700">
-                                Subtotal: {{ formatPrice(Number(item.product.price_sale) * item.quantity) }}
+                                Subtotal: {{ formatPrice(Number(item.product.sale_price) * item.quantity) }}
                             </span>
                             <Button
                                 variant="ghost"

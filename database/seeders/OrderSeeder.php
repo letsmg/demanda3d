@@ -2,7 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Client;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\Tenant;
 use App\Services\EncryptionService;
 use Illuminate\Database\Seeder;
 
@@ -12,60 +15,69 @@ class OrderSeeder extends Seeder
     {
         $encrypt = fn ($v) => EncryptionService::encryptWithHash($v);
 
-        $d1 = $encrypt('Produção de 50 peças de engrenagens em PLA para protótipo industrial.');
-        $d2 = $encrypt('Impressão de suportes personalizados para equipamentos de laboratório em ABS.');
-        $d3 = $encrypt('Lote de 100 peças de acabamento automotivo em PETG, com tolerância de 0.1mm.');
-        $d4 = $encrypt('Produção de 30 modelos arquitetônicos em escala 1:100 para apresentação comercial.');
-        $d5 = $encrypt('Impressão de 20 peças estruturais em Nylon para teste de resistência mecânica.');
+        $tenants = Tenant::all();
 
-        // Orders for first client (Tech3D)
-        Order::factory()->count(3)->create([
-            'client_id' => 1,
-            'order_date' => now()->subMonths(5),
-            'delivery_date' => now()->subMonths(4),
-            'price' => 2500.00,
-            'contracted_description_encrypted' => $d1['encrypted'],
-            'contracted_description_hash' => $d1['hash'],
-        ]);
+        if ($tenants->isEmpty()) {
+            $this->command->warn('⚠ Nenhum tenant encontrado. Execute UserSeeder primeiro.');
+            return;
+        }
 
-        Order::factory()->create([
-            'client_id' => 1,
-            'order_date' => now()->subMonths(2),
-            'delivery_date' => now()->subMonth(),
-            'price' => 1800.50,
-            'contracted_description_encrypted' => $d2['encrypted'],
-            'contracted_description_hash' => $d2['hash'],
-        ]);
+        $descriptions = [
+            $encrypt('Produção de 50 peças de engrenagens em PLA para protótipo industrial.'),
+            $encrypt('Impressão de suportes personalizados para equipamentos de laboratório em ABS.'),
+            $encrypt('Lote de 100 peças de acabamento automotivo em PETG, com tolerância de 0.1mm.'),
+            $encrypt('Produção de 30 modelos arquitetônicos em escala 1:100 para apresentação comercial.'),
+            $encrypt('Impressão de 20 peças estruturais em Nylon para teste de resistência mecânica.'),
+        ];
 
-        Order::factory()->create([
-            'client_id' => 1,
-            'order_date' => now()->subDays(15),
-            'delivery_date' => now()->addDays(15),
-            'price' => 4200.00,
-            'contracted_description_encrypted' => $d3['encrypted'],
-            'contracted_description_hash' => $d3['hash'],
-        ]);
+        $totalOrders = 0;
 
-        // Orders for second client
-        Order::factory()->create([
-            'client_id' => 2,
-            'order_date' => now()->subMonths(3),
-            'delivery_date' => now()->subMonths(2),
-            'price' => 5800.75,
-            'contracted_description_encrypted' => $d4['encrypted'],
-            'contracted_description_hash' => $d4['hash'],
-        ]);
+        foreach ($tenants as $tenant) {
+            $tenantId = $tenant->id;
 
-        Order::factory()->create([
-            'client_id' => 2,
-            'order_date' => now()->subDays(5),
-            'delivery_date' => now()->addMonth(),
-            'price' => 3200.00,
-            'contracted_description_encrypted' => $d5['encrypted'],
-            'contracted_description_hash' => $d5['hash'],
-        ]);
+            $clients = Client::where('tenant_id', $tenantId)->get();
 
-        // Random orders
-        Order::factory()->count(15)->create();
+            if ($clients->isEmpty()) {
+                $this->command->warn("  ⚠ Tenant #{$tenantId}: sem clients — orders não criadas.");
+                continue;
+            }
+
+            // Produtos deste tenant (ProductSeeder garante que todo tenant tem produtos)
+            $products = Product::withoutGlobalScopes()
+                ->where('tenant_id', $tenantId)
+                ->get();
+
+            if ($products->isEmpty()) {
+                $this->command->warn("  ⚠ Tenant #{$tenantId}: sem products — orders não criadas.");
+                continue;
+            }
+
+            foreach ($clients as $client) {
+                $numOrders = min(random_int(1, 3), count($descriptions));
+
+                for ($i = 0; $i < $numOrders; $i++) {
+                    $desc = $descriptions[array_rand($descriptions)];
+                    $product = $products->random();
+
+                    Order::create([
+                        'tenant_id' => $tenantId,
+                        'client_id' => $client->id,
+                        'product_id' => $product->id,
+                        'order_date' => now()->subDays(random_int(5, 180)),
+                        'delivery_date' => now()->addDays(random_int(7, 60)),
+                        'price' => round(random_int(150, 800) + (random_int(0, 99) / 100), 2),
+                        'contracted_description_encrypted' => $desc['encrypted'],
+                        'contracted_description_hash' => $desc['hash'],
+                        'status' => collect(['pending', 'in_progress', 'delivered'])->random(),
+                    ]);
+
+                    $totalOrders++;
+                }
+            }
+
+            $this->command->info("  ✓ Tenant #{$tenantId}: {$clients->count()} client(s) × {$products->count()} product(s) — orders criadas.");
+        }
+
+        $this->command->info("✓ Total: {$totalOrders} pedidos criados com sucesso.");
     }
 }

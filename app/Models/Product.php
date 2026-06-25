@@ -13,8 +13,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'tenant_id',
     'name',
     'description',
-    'price_sale',
-    'discount_cash',
+    'height',
+    'width',
+    'approximate_weight',
+    'waste_weight',
+    'material_type',
+    'print_time',
+    'pieces_produced',
+    'maintenance_fee',
+    'painting_time',
+    'painting_material',
+    'painting_cost',
+    'extras_cost',
+    'approximate_cost',
+    'sale_price',
     'is_active',
 ])]
 class Product extends Model
@@ -29,8 +41,11 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price_sale' => 'decimal:2',
-            'discount_cash' => 'decimal:2',
+            'maintenance_fee' => 'decimal:2',
+            'painting_cost' => 'decimal:2',
+            'extras_cost' => 'decimal:2',
+            'approximate_cost' => 'decimal:2',
+            'sale_price' => 'decimal:2',
         ];
     }
 

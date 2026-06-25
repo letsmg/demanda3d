@@ -7,22 +7,34 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Services\ClientService;
+use App\Services\DashboardSearchService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ClientController extends Controller
 {
-    public function __construct(private ClientService $clientService) {}
+    public function __construct(
+        private ClientService $clientService,
+        private DashboardSearchService $searchService,
+    ) {}
 
     public function index(Request $request): Response
     {
-        $clients = Client::orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 10))
-            ->withQueryString();
+        $search = $request->get('search');
+
+        if ($search && strlen($search) >= 3 && auth()->user()->tenant_id) {
+            $results = $this->searchService->search('clients', $search, (string) auth()->user()->tenant_id);
+            $clients = collect($results);
+        } else {
+            $clients = Client::orderBy('created_at', 'desc')
+                ->paginate($request->get('per_page', 10))
+                ->withQueryString();
+        }
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
+            'filters' => ['search' => $search],
         ]);
     }
 
