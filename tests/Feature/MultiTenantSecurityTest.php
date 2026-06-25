@@ -122,18 +122,18 @@ test('admin can update clients from any tenant', function () {
     $response->assertStatus(200);
 });
 
-test('partner can update clients from any tenant', function () {
+test('management can update clients from any tenant', function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
-    $partner = User::factory()->partner()->create();
-    $partner->tenant()->create([
-        'company_name_encrypted' => $makeEncr('Partner Company')['encrypted'],
-        'company_name_hash' => $makeEncr('Partner Company')['hash'],
+    $management = User::factory()->management()->create();
+    $management->tenant()->create([
+        'company_name_encrypted' => $makeEncr('Management Company')['encrypted'],
+        'company_name_hash' => $makeEncr('Management Company')['hash'],
         'document_encrypted' => $makeEncr('22.222.222/0001-22')['encrypted'],
         'document_hash' => $makeEncr('22.222.222/0001-22')['hash'],
         'phone_encrypted' => $makeEncr('21988888888')['encrypted'],
         'phone_hash' => $makeEncr('21988888888')['hash'],
-        'address_encrypted' => $makeEncr('Rua Partner')['encrypted'],
-        'address_hash' => $makeEncr('Rua Partner')['hash'],
+        'address_encrypted' => $makeEncr('Rua Management')['encrypted'],
+        'address_hash' => $makeEncr('Rua Management')['hash'],
         'number_encrypted' => $makeEncr('2')['encrypted'],
         'number_hash' => $makeEncr('2')['hash'],
         'city_encrypted' => $makeEncr('Rio de Janeiro')['encrypted'],
@@ -146,8 +146,8 @@ test('partner can update clients from any tenant', function () {
         'display_name' => 'Original Client',
     ]);
 
-    $response = actingAs($partner)->putJson("/api/clients/{$clientA->id}", [
-        'first_name' => 'Updated', 'last_name' => 'ByPartner', 'doc' => '529.982.247-25',
+    $response = actingAs($management)->putJson("/api/clients/{$clientA->id}", [
+        'first_name' => 'Updated', 'last_name' => 'ByManagement', 'doc' => '529.982.247-25',
         'address' => 'Rua Updated', 'number' => '999', 'state' => 'SP',
         'zipcode' => '12345-678', 'city' => 'São Paulo', 'phone1' => '1133333333',
     ]);

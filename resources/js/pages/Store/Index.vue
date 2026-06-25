@@ -270,8 +270,8 @@ const hasActiveFilters = computed(() => {
 const sortOptions = [
     { value: 'name_asc', label: 'Nome A-Z' },
     { value: 'name_desc', label: 'Nome Z-A' },
-    { value: 'price_sale_asc', label: 'Menor Preço' },
-    { value: 'price_sale_desc', label: 'Maior Preço' },
+    { value: 'sale_price_asc', label: 'Menor Preço' },
+    { value: 'sale_price_desc', label: 'Maior Preço' },
     { value: 'created_at_desc', label: 'Mais Recentes' },
     { value: 'created_at_asc', label: 'Mais Antigos' },
 ];
@@ -444,11 +444,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
 
                     <CardContent class="flex-1 pb-2">
                         <div class="space-y-1">
-                            <p class="text-xl font-bold text-emerald-700">{{ formatPrice(product.price_sale) }}</p>
-                            <p v-if="Number(product.discount_cash) > 0" class="text-xs text-emerald-600">
-                                À vista: {{ formatPrice(calcCashPrice(product.price_sale, product.discount_cash)) }}
-                                ({{ product.discount_cash }}% off)
-                            </p>
+                            <p class="text-xl font-bold text-emerald-700">{{ formatPrice(product.sale_price) }}</p>
                         </div>
                     </CardContent>
 
@@ -512,11 +508,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     </div>
                     <div class="mt-4 flex items-center justify-between rounded-lg bg-amber-50 p-4">
                         <div>
-                            <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.price_sale) }}</p>
-                            <p v-if="Number(selectedProduct.discount_cash) > 0" class="text-sm text-emerald-600">
-                                À vista: {{ formatPrice(calcCashPrice(selectedProduct.price_sale, selectedProduct.discount_cash)) }}
-                                ({{ selectedProduct.discount_cash }}% off)
-                            </p>
+                            <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.sale_price) }}</p>
                         </div>
                         <Button @click="addToCart(selectedProduct.id)">
                             {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}

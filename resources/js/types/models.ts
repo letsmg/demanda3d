@@ -34,11 +34,14 @@ export type Order = {
 
 export type Input = {
     id: number;
-    filaments: string;
-    energy: string | number;
-    dt_buy: string;
-    cost_buy: string | number;
-    purge: string | number;
+    tenant_id: number;
+    supplier_id: number;
+    description: string;
+    brand: string;
+    purchase_date: string;
+    quantity: number;
+    shipping_cost: string | number;
+    cost_value: string | number;
     created_at: string;
     updated_at: string;
 };
@@ -48,9 +51,7 @@ export type Product = {
     tenant_id: number;
     name: string;
     description: string | null;
-    price_sale: string | number;
-    discount_cash: string | number;
-    image_path: string | null;
+    sale_price: string | number;
     is_active: boolean;
     created_at: string;
     updated_at: string;

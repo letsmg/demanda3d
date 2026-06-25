@@ -95,7 +95,6 @@ const formatPrice = (value: string | number) => {
                             <tr class="border-b">
                                 <th class="py-3 px-4 font-medium">Nome</th>
                                 <th class="py-3 px-4 font-medium">Preço</th>
-                                <th class="py-3 px-4 font-medium">Desconto</th>
                                 <th class="py-3 px-4 font-medium">Ativo</th>
                                 <th class="py-3 px-4 font-medium text-right">Ações</th>
                             </tr>
@@ -103,8 +102,7 @@ const formatPrice = (value: string | number) => {
                         <tbody>
                             <tr v-for="product in (Array.isArray(products) ? products : products.data)" :key="product.id" class="border-b hover:bg-muted/50">
                                 <td class="py-3 px-4 font-medium">{{ product.name }}</td>
-                                <td class="py-3 px-4">{{ formatPrice(product.price_sale) }}</td>
-                                <td class="py-3 px-4">{{ product.discount_cash }}%</td>
+                                <td class="py-3 px-4">{{ formatPrice(product.sale_price) }}</td>
                                 <td class="py-3 px-4">
                                     <span :class="product.is_active ? 'text-green-600' : 'text-red-500'">
                                         {{ product.is_active ? 'Sim' : 'Não' }}
@@ -121,8 +119,8 @@ const formatPrice = (value: string | number) => {
                                     </Button>
                                 </td>
                             </tr>
-                            <tr v-if="!(Array.isArray(products) ? products : products.data)?.length">
-                                <td colspan="5" class="py-8 text-center text-muted-foreground">
+                             <tr v-if="!(Array.isArray(products) ? products : products.data)?.length">
+                                <td colspan="4" class="py-8 text-center text-muted-foreground">
                                     Nenhum produto encontrado.
                                 </td>
                             </tr>

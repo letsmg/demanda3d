@@ -24,8 +24,7 @@ const props = defineProps<{
 const form = useForm({
     name: props.product.name,
     description: props.product.description || '',
-    price_sale: props.product.price_sale,
-    discount_cash: props.product.discount_cash,
+    sale_price: props.product.sale_price,
     is_active: props.product.is_active,
     image: null as File | null,
 });
@@ -33,8 +32,7 @@ const form = useForm({
 const testFields: TestField[] = [
     { key: 'name', value: 'Base para Notebook Articulada' },
     { key: 'description', value: 'Base ajustável com ventilação integrada para notebooks de 13 a 17 polegadas.' },
-    { key: 'price_sale', value: '149.90' },
-    { key: 'discount_cash', value: '15' },
+    { key: 'sale_price', value: '149.90' },
 ];
 
 function handleFill(fields: TestField[]) {
@@ -51,7 +49,6 @@ function handleClear(fields: TestField[]) {
             (form as any)[f.key] = '';
         }
     }
-    form.discount_cash = '0';
 }
 
 const submit = () => {
@@ -107,10 +104,10 @@ const onFileChange = (e: Event) => {
                             <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
                         </div>
                         <div class="space-y-2">
-                            <Label for="price_sale">Preço de Venda *</Label>
-                            <Input id="price_sale" v-model="form.price_sale" type="number" step="0.01" placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.price_sale }" />
-                            <span v-if="form.errors.price_sale" class="text-sm text-destructive">{{ form.errors.price_sale }}</span>
+                            <Label for="sale_price">Preço de Venda *</Label>
+                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00"
+                                :class="{ 'border-destructive': form.errors.sale_price }" />
+                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
                         </div>
                     </div>
 
@@ -120,10 +117,6 @@ const onFileChange = (e: Event) => {
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="discount_cash">Desconto à Vista (%)</Label>
-                            <Input id="discount_cash" v-model="form.discount_cash" type="number" step="0.01" min="0" max="100" placeholder="0" />
-                        </div>
                         <div class="space-y-2">
                             <Label for="image">Imagem do Produto</Label>
                             <Input id="image" type="file" accept="image/*" @input="onFileChange" />

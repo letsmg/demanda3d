@@ -33,7 +33,7 @@ class CheckoutController extends Controller
         Stripe::setApiKey(config('services.stripe.secret'));
 
         $lineItems = $cartItems->map(function ($item) {
-            $unitAmount = (int) round((float) $item->product->price_sale * 100);
+            $unitAmount = (int) round((float) $item->product->sale_price * 100);
             return [
                 'price_data' => [
                     'currency' => 'brl',

@@ -20,8 +20,7 @@ import { index as productsIndex } from '@/routes/products';
 const form = useForm({
     name: '',
     description: '',
-    price_sale: '',
-    discount_cash: '0',
+    sale_price: '',
     is_active: true,
     image: null as File | null,
 });
@@ -29,8 +28,7 @@ const form = useForm({
 const testFields: TestField[] = [
     { key: 'name', value: 'Suporte para Tablet Universal' },
     { key: 'description', value: 'Suporte ajustável para tablets de 7 a 12 polegadas. Impresso em PETG de alta resistência.' },
-    { key: 'price_sale', value: '79.90' },
-    { key: 'discount_cash', value: '10' },
+    { key: 'sale_price', value: '79.90' },
 ];
 
 function handleFill(fields: TestField[]) {
@@ -48,7 +46,6 @@ function handleClear(fields: TestField[]) {
         }
     }
 
-    form.discount_cash = '0';
 }
 
 const submit = () => {
@@ -110,10 +107,10 @@ const onFileChange = (e: Event) => {
                             <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
                         </div>
                         <div class="space-y-2">
-                            <Label for="price_sale">Preço de Venda *</Label>
-                            <Input id="price_sale" v-model="form.price_sale" type="number" step="0.01" placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.price_sale }" />
-                            <span v-if="form.errors.price_sale" class="text-sm text-destructive">{{ form.errors.price_sale }}</span>
+                            <Label for="sale_price">Preço de Venda *</Label>
+                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00"
+                                :class="{ 'border-destructive': form.errors.sale_price }" />
+                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
                         </div>
                     </div>
 
@@ -123,10 +120,6 @@ const onFileChange = (e: Event) => {
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="discount_cash">Desconto à Vista (%)</Label>
-                            <Input id="discount_cash" v-model="form.discount_cash" type="number" step="0.01" min="0" max="100" placeholder="0" />
-                        </div>
                         <div class="space-y-2">
                             <Label for="image">Imagem do Produto</Label>
                             <Input id="image" type="file" accept="image/*" @input="onFileChange" />

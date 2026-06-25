@@ -23,17 +23,17 @@ class ProductService
         }
 
         if (!empty($filters['min_price'])) {
-            $query->where('price_sale', '>=', $filters['min_price']);
+            $query->where('sale_price', '>=', $filters['min_price']);
         }
 
         if (!empty($filters['max_price'])) {
-            $query->where('price_sale', '<=', $filters['max_price']);
+            $query->where('sale_price', '<=', $filters['max_price']);
         }
 
         $sortField = $filters['sort'] ?? 'name';
         $sortDir = $filters['sort_dir'] ?? 'asc';
 
-        $allowedSorts = ['name', 'price_sale', 'created_at'];
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }
@@ -113,14 +113,14 @@ class ProductService
         }
 
         if (!empty($minPrice)) {
-            $query->where('price_sale', '>=', (float) $minPrice);
+            $query->where('sale_price', '>=', (float) $minPrice);
         }
 
         if (!empty($maxPrice)) {
-            $query->where('price_sale', '<=', (float) $maxPrice);
+            $query->where('sale_price', '<=', (float) $maxPrice);
         }
 
-        $allowedSorts = ['name', 'price_sale', 'created_at'];
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }

@@ -109,9 +109,10 @@ class DashboardSearchService
         return DB::connection('pgsql')->table('inputs')
             ->where('tenant_id', $tenantId)
             ->where(function ($q) use ($term) {
-                $q->where('filaments', 'ilike', "%{$term}%");
+                $q->where('description', 'ilike', "%{$term}%")
+                   ->orWhere('brand', 'ilike', "%{$term}%");
             })
-            ->orderBy('dt_buy', 'desc')
+            ->orderBy('purchase_date', 'desc')
             ->limit(50)
             ->get()
             ->toArray();

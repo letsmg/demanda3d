@@ -9,7 +9,7 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isAdmin() || $this->user()->isPartner();
+        return $this->user()->isStaff();
     }
 
     public function rules(): array
@@ -26,8 +26,7 @@ class UpdateProductRequest extends FormRequest
                     ->ignore($this->route('product')),
             ],
             'description' => ['nullable', 'string'],
-            'price_sale' => ['required', 'numeric', 'min:0.01'],
-            'discount_cash' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sale_price' => ['required', 'numeric', 'min:0.01'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
         ];
@@ -38,8 +37,8 @@ class UpdateProductRequest extends FormRequest
         return [
             'name.required' => 'O nome do produto é obrigatório.',
             'name.unique' => 'Já existe um produto com este nome.',
-            'price_sale.required' => 'O preço de venda é obrigatório.',
-            'price_sale.min' => 'O preço deve ser maior que zero.',
+            'sale_price.required' => 'O preço de venda é obrigatório.',
+            'sale_price.min' => 'O preço deve ser maior que zero.',
             'image.image' => 'O arquivo deve ser uma imagem.',
             'image.max' => 'A imagem deve ter no máximo 2MB.',
         ];
