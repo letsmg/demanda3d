@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Input;
+use App\Models\Supplier;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,15 +19,18 @@ class InputFactory extends Factory
      */
     public function definition(): array
     {
-        $filamentTypes = ['PLA', 'ABS', 'PETG', 'TPU', 'Nylon', 'Polycarbonate', 'PVA', 'HIPS'];
+        $materials = ['PLA', 'ABS', 'PETG', 'TPU', 'Nylon', 'Polycarbonate', 'PVA', 'HIPS', 'Resina UV', 'Resina Standard'];
+        $brands = ['3DLab', 'eSun', 'Creality', 'SUNLU', 'Polymaker', 'FiloPrint', 'Anycubic', 'Elegoo'];
 
         return [
             'tenant_id' => Tenant::inRandomOrder()->first()?->id ?? 1,
-            'filaments' => fake()->randomElement($filamentTypes) . ' ' . fake()->randomFloat(1, 1.75, 2.85) . 'mm',
-            'energy' => fake()->randomFloat(2, 100, 2000),
-            'dt_buy' => fake()->dateTimeBetween('-3 months', 'now'),
-            'cost_buy' => fake()->randomFloat(2, 50, 500),
-            'purge' => fake()->randomFloat(2, 0, 50),
+            'supplier_id' => Supplier::inRandomOrder()->first()?->id ?? 1,
+            'description' => fake()->randomElement($materials) . ' ' . fake()->randomFloat(1, 1.75, 2.85) . 'mm ' . fake()->randomElement(['1kg', '500g', '250g']),
+            'brand' => fake()->randomElement($brands),
+            'purchase_date' => fake()->dateTimeBetween('-3 months', 'now'),
+            'quantity' => fake()->numberBetween(500, 5000),
+            'shipping_cost' => fake()->randomFloat(2, 10, 50),
+            'cost_value' => fake()->randomFloat(2, 50, 500),
         ];
     }
 }

@@ -2,8 +2,9 @@
 
 return [
     'user_access_level' => [
-        'staff' => 0,
-        'admin' => 1,
-        'customer' => 9,
+        'operational' => 0,
+        'management' => 1,
+        'customer' => 5,
+        'admin' => 10,
     ],
 ];

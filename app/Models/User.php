@@ -47,14 +47,29 @@ class User extends Authenticatable
         return $this->access_level === UserAccessLevel::ADMIN;
     }
 
-    public function isPartner(): bool
+    public function isManagement(): bool
     {
-        return $this->access_level === UserAccessLevel::PARTNER;
+        return $this->access_level === UserAccessLevel::MANAGEMENT;
+    }
+
+    public function isOperational(): bool
+    {
+        return $this->access_level === UserAccessLevel::OPERATIONAL;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->access_level->isStaff();
     }
 
     public function isCustomer(): bool
     {
         return $this->access_level === UserAccessLevel::CUSTOMER;
+    }
+
+    public function canAccessFinancials(): bool
+    {
+        return $this->access_level->canAccessFinancials();
     }
 
     public function getDisplayName(): string

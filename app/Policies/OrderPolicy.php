@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\UserAccessLevel;
 use App\Models\Order;
 use App\Models\User;
 
@@ -13,7 +12,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::PARTNER]);
+        return $user->isStaff();
     }
 
     /**
@@ -21,7 +20,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::PARTNER]);
+        return $user->isStaff();
     }
 
     /**
@@ -29,7 +28,7 @@ class OrderPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::PARTNER]);
+        return $user->isStaff();
     }
 
     /**
@@ -37,7 +36,7 @@ class OrderPolicy
      */
     public function update(User $user, Order $order): bool
     {
-        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::PARTNER]);
+        return $user->isStaff();
     }
 
     /**

@@ -16,8 +16,20 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name', 255);
             $table->text('description')->nullable();
-            $table->decimal('price_sale', 12, 2);
-            $table->decimal('discount_cash', 5, 2)->default(0)->comment('Percentage discount for cash payments');
+            $table->integer('height')->comment('Altura em mm');
+            $table->integer('width')->comment('Largura em mm');
+            $table->integer('approximate_weight')->comment('Peso final da peça em gramas');
+            $table->integer('waste_weight')->comment('Peso da purga/suportes/perdas em gramas');
+            $table->string('material_type')->comment('Tipo: filament ou resin');
+            $table->integer('print_time')->comment('Tempo de impressão em minutos');
+            $table->integer('pieces_produced')->comment('Quantidade de peças rendidas na fornada');
+            $table->decimal('maintenance_fee', 12, 2)->comment('Taxa de desgaste da máquina');
+            $table->integer('painting_time')->nullable()->comment('Tempo de pintura em minutos (opcional)');
+            $table->string('painting_material')->nullable()->comment('Materiais usados na pintura');
+            $table->decimal('painting_cost', 12, 2)->nullable()->comment('Custo dos materiais de pintura (opcional)');
+            $table->decimal('extras_cost', 12, 2)->comment('Custo de embalagem, LEDs, argolas, etc');
+            $table->decimal('approximate_cost', 12, 2)->comment('Custo total calculado');
+            $table->decimal('sale_price', 12, 2)->comment('Valor final de venda');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

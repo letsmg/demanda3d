@@ -51,7 +51,7 @@ class CreateNewUser implements CreatesNewUsers
             'last_name_encrypted' => $lastNameData['encrypted'],
             'last_name_hash' => $lastNameData['hash'],
             'password' => Hash::make($input['password']),
-            'access_level' => UserAccessLevel::PARTNER,
+            'access_level' => UserAccessLevel::MANAGEMENT,
         ]);
     }
 }

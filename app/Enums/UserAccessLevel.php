@@ -4,28 +4,28 @@ namespace App\Enums;
 
 enum UserAccessLevel: int
 {
-    case PARTNER = 0;
-    case ADMIN = 1;
-    case OPERATIONAL = 5;
-    case CUSTOMER = 9;
+    case OPERATIONAL = 0;
+    case MANAGEMENT = 1;
+    case CUSTOMER = 5;
+    case ADMIN = 10;
 
     public function label(): string
     {
-        return match($this) {
-            self::PARTNER => 'Partner',
-            self::ADMIN => 'Administrator',
+        return match ($this) {
             self::OPERATIONAL => 'Operational',
+            self::MANAGEMENT => 'Management',
             self::CUSTOMER => 'Customer',
+            self::ADMIN => 'Administrator',
         };
     }
 
     public function description(): string
     {
-        return match($this) {
-            self::PARTNER => 'Sócio com acesso total ao SaaS',
-            self::ADMIN => 'Administrador com acesso total',
+        return match ($this) {
             self::OPERATIONAL => 'Operacional com acesso limitado',
+            self::MANAGEMENT => 'Gestor com acesso a relatórios e finanças',
             self::CUSTOMER => 'Cliente com acesso apenas aos próprios dados',
+            self::ADMIN => 'Administrador com acesso total ao SaaS',
         };
     }
 
@@ -34,9 +34,9 @@ enum UserAccessLevel: int
         return $this === self::ADMIN;
     }
 
-    public function isPartner(): bool
+    public function isManagement(): bool
     {
-        return $this === self::PARTNER;
+        return $this === self::MANAGEMENT;
     }
 
     public function isOperational(): bool
@@ -51,7 +51,17 @@ enum UserAccessLevel: int
 
     public function isStaff(): bool
     {
-        return in_array($this, [self::ADMIN, self::PARTNER, self::OPERATIONAL], true);
+        return in_array($this, [self::OPERATIONAL, self::MANAGEMENT, self::ADMIN], true);
+    }
+
+    public function canAccessFinancials(): bool
+    {
+        return in_array($this, [self::MANAGEMENT, self::ADMIN], true);
+    }
+
+    public function canManageTenant(): bool
+    {
+        return in_array($this, [self::MANAGEMENT, self::ADMIN], true);
     }
 
     public function group(): UserAccessGroup
