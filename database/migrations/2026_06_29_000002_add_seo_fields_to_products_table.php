@@ -19,7 +19,7 @@ return new class extends Migration
 
         // Índices aplicados separadamente para compatibilidade com SQLite
         Schema::table('products', function (Blueprint $table) {
-            $table->unique('slug');
+            $table->unique(['tenant_id', 'slug']);
             $table->index('slug');
         });
     }
@@ -27,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
+            $table->dropUnique(['tenant_id', 'slug']);
             $table->dropIndex(['slug']);
             $table->dropColumn(['slug', 'meta_title', 'meta_description', 'canonical_url', 'og_image']);
         });

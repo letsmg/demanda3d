@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserAccessLevel;
 use App\Models\Message;
 use App\Models\Thread;
 use App\Models\User;
@@ -21,7 +22,7 @@ class MessageSeeder extends Seeder
 
         $this->command->info('=== Criando mensagens ===');
 
-        $staffUsers = User::where('access_level', [0, 1, 10])->get();
+        $staffUsers = User::whereIn('access_level', UserAccessLevel::staffValues())->get();
         $encrypt = fn ($v) => Crypt::encryptString($v);
 
         $clientMessages = [

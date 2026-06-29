@@ -36,7 +36,8 @@ jobs:
       - name: 🔑 Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          # Ajuste para evitar bloqueio por alteração de chave
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
@@ -45,16 +46,25 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
+            CONTAINER_NAME="demanda-psql-prod"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
+            CONTAINER_NAME="demanda-psql-dev"
           fi
 
-          scp -o StrictHostKeyChecking=no deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
+          scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT bash -s" << 'EOF'
+          ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME bash -s" << 'EOF'
             set -e
+            
+            # 1. Validação do Container
+            if ! docker ps --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}$"; then
+              echo "❌ ERRO: Container '$CONTAINER_NAME' não está rodando. Deploy abortado."
+              exit 1
+            fi
+
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
@@ -64,39 +74,40 @@ jobs:
             sudo mkdir -p "$NEW_RELEASE"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 1. Sincronização Inteligente (Rsync)
-            # Garante que qualquer nova pasta/arquivo no Git seja levado ao storage persistente
+            # 2. Estrutura e Links
             sudo mkdir -p "$SHARED/storage/app/public"
-            sudo rsync -av "$NEW_RELEASE/storage/app/public/" "$SHARED/storage/app/public/"
-
-            # 2. Links Simbólicos
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
-            sudo rm -rf "$NEW_RELEASE/storage" 
+            [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
 
-            # 3. Permissões
-            sudo chown -R www-data:www-data "$NEW_RELEASE"
-            sudo chown -R www-data:www-data "$SHARED/storage"
+            sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
 
-            # 4. Artisan, Backup e Migrações
+            # 3. Operações de Banco
             cd "$NEW_RELEASE"
+            echo "🔧 Configurando banco de dados..."
+            docker exec -u postgres "$CONTAINER_NAME" psql -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;"
+            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL ON SCHEMA public TO demanda_user;"
+
+            sudo mkdir -p "$BACKUPS"
+            docker exec -u postgres "$CONTAINER_NAME" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
+            sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
+
+            # 4. Migrações e Finalização
             if [ "$PROJECT_NAME" = "demanda3d" ]; then
-                sudo mkdir -p "$BACKUPS"
-                sudo -u postgres pg_dump demanda_db > /tmp/backup_temp.sql
-                sudo mv /tmp/backup_temp.sql "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
-                sudo -u www-data php artisan migrate --force
+              sudo -u www-data php artisan migrate --force
             else
-                sudo -u www-data php artisan migrate:fresh --seed --force
+              sudo -u www-data php artisan migrate:fresh --seed --force
             fi
             
             sudo -u www-data php artisan optimize
-
-            # 5. Troca Atômica e Limpeza
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
+            
+            # Limpeza
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
             cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
             rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído com sincronização automática de ativos."
+            echo "✅ Deploy concluído com sucesso para $PROJECT_NAME"
           EOF

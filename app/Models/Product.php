@@ -128,7 +128,7 @@ class Product extends Model
         $counter = 1;
 
         while (true) {
-            $query = static::where('slug', $slug);
+            $query = static::withoutGlobalScopes()->where('slug', $slug);
             if ($tenantId) {
                 $query->where('tenant_id', $tenantId);
             }
