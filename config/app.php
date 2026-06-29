@@ -82,7 +82,7 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'pt_BR'),
 
     /*
     |--------------------------------------------------------------------------
@@ -121,6 +121,19 @@ return [
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SEO Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuração de fallback para meta tags quando o produto não possui
+    | seus próprios dados de SEO definidos.
+    |
+    */
+    'seo' => [
+        'default_description' => env('SEO_DEFAULT_DESCRIPTION', 'Marketplace de impressão 3D sob demanda.'),
     ],
 
 ];

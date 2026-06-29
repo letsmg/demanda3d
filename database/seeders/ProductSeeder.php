@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Categoria;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
@@ -26,6 +28,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Suporte para smartphone ABS',
                 'description' => 'Suporte universal para smartphone, compatível com modelos de 4 a 7 polegadas. Fabricado em ABS de alta resistência.',
+                'categorias' => ['escritorio', 'utilitarios'],
                 'height' => 80,
                 'width' => 60,
                 'approximate_weight' => 45,
@@ -44,6 +47,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Porta-chaves personalizado PLA',
                 'description' => 'Porta-chaves impresso em PLA com design personalizável. Ideal para brindes corporativos.',
+                'categorias' => ['decorativo', 'utilitarios', 'personagens'],
                 'height' => 50,
                 'width' => 30,
                 'approximate_weight' => 15,
@@ -62,6 +66,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Organizador de mesa PETG',
                 'description' => 'Organizador modular para mesa de escritório. Compartimentos para canetas, clips e post-its.',
+                'categorias' => ['escritorio', 'utilitarios'],
                 'height' => 120,
                 'width' => 180,
                 'approximate_weight' => 200,
@@ -80,6 +85,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Vaso decorativo geométrico PLA',
                 'description' => 'Vaso com design geométrico moderno para decoração. Disponível em diversas cores.',
+                'categorias' => ['decorativo', 'cozinha'],
                 'height' => 150,
                 'width' => 100,
                 'approximate_weight' => 120,
@@ -98,6 +104,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Engrenagem para protótipo funcional',
                 'description' => 'Engrenagem industrial em Nylon reforçado para prototipagem rápida. Alta precisão dimensional.',
+                'categorias' => ['automotivo', 'utilitarios'],
                 'height' => 40,
                 'width' => 40,
                 'approximate_weight' => 25,
@@ -131,6 +138,7 @@ class ProductSeeder extends Seeder
                     $product = Product::withoutGlobalScopes()->create([
                         'tenant_id' => $tenantId,
                         'name' => $productData['name'],
+                        'slug' => Product::generateUniqueSlug($productData['name'], $tenantId),
                         'description' => $productData['description'],
                         'height' => $productData['height'],
                         'width' => $productData['width'],
@@ -147,8 +155,19 @@ class ProductSeeder extends Seeder
                         'approximate_cost' => $productData['approximate_cost'],
                         'sale_price' => $productData['sale_price'],
                         'is_active' => true,
+                        'moderation_status' => 'approved',
                     ]);
-                    $this->command->line("    ✓ Produto criado: {$product->name}");
+
+                    // Vincular categorias ao produto (ex: 'escritorio', 'decorativo', 'utilitarios')
+                    $categoriaSlugs = $productData['categorias'] ?? [];
+                    if (!empty($categoriaSlugs)) {
+                        $categoriaIds = Categoria::whereIn('slug', $categoriaSlugs)->pluck('id')->toArray();
+                        if (!empty($categoriaIds)) {
+                            $product->categorias()->sync($categoriaIds);
+                        }
+                    }
+
+                    $this->command->line("    ✓ Produto criado: {$product->name} (slug: {$product->slug})");
                 } else {
                     $this->command->line("    → Produto já existe: {$product->name}");
                 }

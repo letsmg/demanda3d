@@ -1,0 +1,84 @@
+services:
+  # =============================================
+  # PostgreSQL Master (Primary) - porta 5432
+  # =============================================
+  demanda-psql-prod:
+    image: postgres:18.4-alpine
+    container_name: demanda-psql-prod
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
+    ports:
+      - "5434:5432"
+    volumes:
+      - demanda_psql_prod_data:/var/lib/postgresql
+      - ./docker/psql/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
+      - ./docker/psql/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demanda_user -d demanda_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - demanda-net-prod
+
+  # =============================================
+  # PostgreSQL Slave (Replica) - porta 5433
+  # =============================================
+  demanda-psql-rep-prod:
+    image: postgres:18.4-alpine
+    container_name: demanda-psql-rep-prod
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "5435:5432"
+    volumes:
+      - demanda_psql_rep_prod_data:/var/lib/postgresql
+      - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
+    depends_on:
+      demanda-psql-prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demanda_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      - demanda-net-prod
+
+  # =============================================
+  # Redis - Cache de busca do Marketplace
+  # =============================================
+  demanda-redis-prod:
+    image: redis:8.0-alpine
+    container_name: demanda-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - demanda_redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - demanda-net-prod
+
+volumes:
+  demanda_psql_prod_data:
+    name: demanda_psql_prod_data
+  demanda_psql_rep_prod_data:
+    name: demanda_psql_rep_prod_data
+  demanda_redis_prod_data:
+    name: demanda_redis_prod_data
+
+networks:
+  demanda-net-prod:
+    name: demanda-net-prod
+    driver: bridge

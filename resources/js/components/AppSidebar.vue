@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BarChart3, BookOpen, FolderGit2, LayoutGrid, Users, Package, ShoppingBag } from '@lucide/vue';
+import { BarChart3, BookOpen, FolderGit2, LayoutGrid, Truck, Users, Package, ShoppingBag } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -20,6 +20,7 @@ import { index as inputsIndex } from '@/routes/inputs';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
 import { index as reportsIndex } from '@/routes/reports';
+import { index as suppliersIndex } from '@/routes/suppliers';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -37,6 +38,11 @@ const mainNavItems: NavItem[] = [
         title: 'Pedidos',
         href: ordersIndex(),
         icon: Package,
+    },
+    {
+        title: 'Fornecedores',
+        href: suppliersIndex(),
+        icon: Truck,
     },
     {
         title: 'Insumos',

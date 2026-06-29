@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted } from 'vue';
-import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ImageIcon, Star } from '@lucide/vue';
+import { ShoppingBag, Search, X, Plus, Minus, ChevronDown, ExternalLink, ImageIcon, Star } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { setCartCount } from '@/stores/cartStore';
 import { Input } from '@/components/ui/input';
@@ -376,21 +376,21 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
 
             <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <Card v-for="product in products" :key="product.id" class="flex flex-col overflow-hidden">
-                    <div class="relative">
-                        <div
-                            class="flex h-56 w-full cursor-pointer items-center justify-center overflow-hidden bg-amber-100"
-                            @click="openGallery(product, 0)"
-                        >
-                            <img
-                                v-if="getImageUrl(product, 0)"
-                                :src="getImageUrl(product, 0)"
-                                :alt="product.name"
-                                class="h-full w-full object-cover transition-transform hover:scale-105"
-                            />
-                            <div v-else class="flex h-full w-full items-center justify-center">
-                                <ImageIcon class="h-12 w-12 text-amber-200" />
-                            </div>
+                    <div
+                        class="relative flex h-56 w-full cursor-pointer items-center justify-center overflow-hidden bg-amber-100"
+                        @click="openGallery(product, 0)"
+                    >
+                        <img
+                            v-if="getImageUrl(product, 0)"
+                            :src="getImageUrl(product, 0)"
+                            :alt="product.name"
+                            class="h-full w-full object-cover transition-transform hover:scale-105"
+                        />
+                        <div v-else class="flex h-full w-full items-center justify-center">
+                            <ImageIcon class="h-12 w-12 text-amber-200" />
                         </div>
+                    </div>
+                    <div class="relative">
                         <div v-if="product.images && product.images.length > 1" class="absolute bottom-2 left-2 right-2 flex gap-1">
                             <button
                                 v-for="(img, idx) in product.images.slice(0, 5)"
@@ -515,22 +515,32 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                             <img :src="img.url" :alt="`${selectedProduct.name} thumb ${idx + 1}`" class="h-full w-full object-cover" />
                         </button>
                     </div>
-                    <div class="mt-4 flex items-center justify-between rounded-lg bg-amber-50 p-4">
-                        <div>
-                            <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.sale_price) }}</p>
-                            <p class="text-sm text-amber-600">
-                                {{ selectedProduct.tenant?.user?.display_name || selectedProduct.tenant?.user?.first_name_encrypted || 'Vendedor' }}
-                            </p>
-                            <div v-if="selectedProduct.tenant?.rating_count > 0" class="flex items-center gap-1 mt-1">
-                                <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
-                                <span class="text-sm font-medium text-amber-700">{{ selectedProduct.tenant.rating_average }}</span>
-                                <span class="text-sm text-amber-400">({{ selectedProduct.tenant.rating_count }} avaliações)</span>
+                    <div class="mt-4 rounded-lg bg-amber-50 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.sale_price) }}</p>
+                                <p class="text-sm text-amber-600">
+                                    {{ selectedProduct.tenant?.user?.display_name || selectedProduct.tenant?.user?.first_name_encrypted || 'Vendedor' }}
+                                </p>
+                                <div v-if="selectedProduct.tenant?.rating_count > 0" class="flex items-center gap-1 mt-1">
+                                    <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+                                    <span class="text-sm font-medium text-amber-700">{{ selectedProduct.tenant.rating_average }}</span>
+                                    <span class="text-sm text-amber-400">({{ selectedProduct.tenant.rating_count }} avaliações)</span>
+                                </div>
+                                <p v-else class="text-sm text-amber-400 mt-1">sem histórico de vendas</p>
                             </div>
-                            <p v-else class="text-sm text-amber-400 mt-1">sem histórico de vendas</p>
+                            <Button @click="addToCart(selectedProduct.id)">
+                                {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}
+                            </Button>
                         </div>
-                        <Button @click="addToCart(selectedProduct.id)">
-                            {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}
-                        </Button>
+                        <a
+                            :href="`/store/${selectedProduct.slug}`"
+                            class="inline-flex items-center justify-center gap-2 w-full rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 transition"
+                            @click="closeGallery"
+                        >
+                            <ExternalLink class="h-4 w-4" />
+                            Ver mais detalhes
+                        </a>
                     </div>
                 </div>
             </DialogContent>

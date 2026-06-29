@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInputRequest;
 use App\Http\Requests\UpdateInputRequest;
 use App\Models\Input;
+use App\Models\Supplier;
 use App\Services\DashboardSearchService;
 use App\Services\InputService;
 use Illuminate\Http\Request;
@@ -38,7 +39,11 @@ class InputController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Inputs/Create');
+        $suppliers = Supplier::orderBy('name')->get();
+
+        return Inertia::render('Inputs/Create', [
+            'suppliers' => $suppliers,
+        ]);
     }
 
     public function store(StoreInputRequest $request)
@@ -51,8 +56,11 @@ class InputController extends Controller
 
     public function edit(Input $input): Response
     {
+        $suppliers = Supplier::orderBy('name')->get();
+
         return Inertia::render('Inputs/Edit', [
             'input' => $input,
+            'suppliers' => $suppliers,
         ]);
     }
 
