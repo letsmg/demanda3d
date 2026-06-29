@@ -4,12 +4,22 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ImageModerationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {
+    private readonly ImageModerationService $imageModerationService;
+
+    public function __construct(
+        ?ImageModerationService $imageModerationService = null,
+    ) {
+        $this->imageModerationService = $imageModerationService ?? app(ImageModerationService::class);
+    }
+
     public function list(int $perPage = 15, array $filters = [])
     {
         $query = Product::query();
@@ -45,7 +55,14 @@ class ProductService
     {
         $data['tenant_id'] = auth()->user()->tenant->id;
 
+        $categorias = $data['categorias'] ?? [];
+        unset($data['categorias']);
+
         $product = Product::create($data);
+
+        if (!empty($categorias)) {
+            $product->categorias()->sync($categorias);
+        }
 
         $this->syncImages($product, $data['images'] ?? []);
 
@@ -54,7 +71,14 @@ class ProductService
 
     public function update(Product $product, array $data): Product
     {
+        $categorias = $data['categorias'] ?? null;
+        unset($data['categorias']);
+
         $product->update($data);
+
+        if ($categorias !== null) {
+            $product->categorias()->sync($categorias);
+        }
 
         if (isset($data['images'])) {
             $this->syncImages($product, $data['images']);
@@ -136,7 +160,72 @@ class ProductService
     }
 
     /**
+     * Lista produtos ativos para a API pública.
+     * Aplica filtro de conteúdo adulto baseado na permissão do usuário.
+     */
+    public function listActiveForApi(array $filters, bool $canViewAdult = false)
+    {
+        $searchTerm = $filters['search'] ?? '';
+        $minPrice = $filters['min_price'] ?? null;
+        $maxPrice = $filters['max_price'] ?? null;
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+        $categoriaSlug = $filters['categoria'] ?? null;
+
+        $query = Product::withoutGlobalScopes()
+            ->where('is_active', true)
+            ->with(['images', 'categorias']);
+
+        // Filtro de conteúdo adulto
+        if (!$canViewAdult) {
+            $query->withoutAdultCategories();
+        }
+
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', "%{$searchTerm}%")
+                  ->orWhere('description', 'ilike', "%{$searchTerm}%");
+            });
+        }
+
+        if (!empty($minPrice)) {
+            $query->where('sale_price', '>=', (float) $minPrice);
+        }
+
+        if (!empty($maxPrice)) {
+            $query->where('sale_price', '<=', (float) $maxPrice);
+        }
+
+        if (!empty($categoriaSlug)) {
+            $query->whereHas('categorias', function ($q) use ($categoriaSlug) {
+                $q->where('slug', $categoriaSlug);
+            });
+        }
+
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Determina se a moderação automática de imagem deve ser ignorada.
+     *
+     * Se o produto pertence à categoria 'adulto', a moderação (ex: Google SafeSearch)
+     * deve ser ignorada, pois o conteúdo adulto é permitido nessa categoria específica.
+     */
+    public function shouldSkipImageModeration(Product $product): bool
+    {
+        return $product->categorias()->where('slug', 'adulto')->exists();
+    }
+
+    /**
      * Sync product images: delete removed ones, upload new ones.
+     * Integra moderação inteligente de imagem via ImageModerationService.
+     *
+     * @throws \RuntimeException Se conteúdo ilegal for detectado (422).
      */
     private function syncImages(Product $product, array $images): void
     {
@@ -156,6 +245,34 @@ class ProductService
                 // Validate max size (4MB)
                 if ($image->getSize() > 4 * 1024 * 1024) {
                     continue;
+                }
+
+                // Moderação inteligente da imagem
+                try {
+                    $moderationResult = $this->imageModerationService->moderateUpload($image, $product);
+
+                    // Se conteúdo adulto detectado, vincula à categoria 'adulto'
+                    if ($moderationResult['adult_category_id']) {
+                        $currentCategorias = $product->categorias()->pluck('categoria_id')->toArray();
+                        if (!in_array($moderationResult['adult_category_id'], $currentCategorias, true)) {
+                            $currentCategorias[] = $moderationResult['adult_category_id'];
+                            $product->categorias()->sync($currentCategorias);
+                            Log::info('Categoria adulto vinculada automaticamente via moderação.', [
+                                'product_id' => $product->id,
+                            ]);
+                        }
+                    }
+
+                    // Se classificação incerta, marca produto como pendente de revisão
+                    if ($moderationResult['status'] === 'approved' && str_contains($moderationResult['category']->value, 'safe')) {
+                        // Verifica se houve incerteza na classificação
+                        if (str_contains($product->moderation_status ?? '', 'pending')) {
+                            $product->update(['moderation_status' => 'pending_review']);
+                        }
+                    }
+                } catch (\RuntimeException $e) {
+                    // Conteúdo ilegal — relança a exceção para o controller tratar
+                    throw $e;
                 }
 
                 $path = $image->store("imgs/products/{$product->tenant_id}", 'public');

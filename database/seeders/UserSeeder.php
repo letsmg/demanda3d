@@ -73,6 +73,7 @@ class UserSeeder extends Seeder
                 'email' => $userData['email'],
                 'password' => Hash::make('Mudar@123'),
                 'access_level' => $userData['access_level'],
+                'data_nascimento' => $userData['data_nascimento'] ?? '1990-01-01',
             ]);
 
             if ($userData['create_tenant']) {

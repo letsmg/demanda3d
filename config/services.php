@@ -41,4 +41,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'google_cloud' => [
+        'key_file' => env('GOOGLE_CLOUD_KEY_FILE'),
+    ],
+
 ];

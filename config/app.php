@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SEO Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuração de fallback para meta tags quando o produto não possui
+    | seus próprios dados de SEO definidos.
+    |
+    */
+    'seo' => [
+        'default_description' => env('SEO_DEFAULT_DESCRIPTION', 'Marketplace de impressão 3D sob demanda.'),
+    ],
+
 ];

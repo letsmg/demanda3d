@@ -64,6 +64,15 @@ enum UserAccessLevel: int
         return in_array($this, [self::MANAGEMENT, self::ADMIN], true);
     }
 
+    /**
+     * Staff (Admin, Management, Operational) sempre pode acessar conteúdo adulto.
+     * A verificação de idade para Customers é feita no Model User.
+     */
+    public function canAccessAdultContent(): bool
+    {
+        return $this->isStaff();
+    }
+
     public function group(): UserAccessGroup
     {
         return UserAccessGroup::fromAccessLevel($this);

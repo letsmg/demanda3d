@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminOnly;
 use App\Http\Middleware\CheckAccessLevel;
+use App\Http\Middleware\CheckAgeRequirement;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\StaffOnly;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'partner.only' => StaffOnly::class,
             'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'ensure.staff' => \App\Http\Middleware\EnsureStaff::class,
+            'check.age' => CheckAgeRequirement::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

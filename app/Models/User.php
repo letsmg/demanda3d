@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
     'last_name_hash',
     'password',
     'access_level',
+    'data_nascimento',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
@@ -34,6 +35,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'access_level' => UserAccessLevel::class,
+            'data_nascimento' => 'date',
         ];
     }
 
@@ -70,6 +72,44 @@ class User extends Authenticatable
     public function canAccessFinancials(): bool
     {
         return $this->access_level->canAccessFinancials();
+    }
+
+    /**
+     * Retorna a idade do usuário baseada na data_nascimento.
+     * Retorna null se data_nascimento não estiver definida.
+     */
+    public function getAge(): ?int
+    {
+        if (!$this->data_nascimento) {
+            return null;
+        }
+
+        return (int) $this->data_nascimento->diffInYears(now());
+    }
+
+    /**
+     * Verifica se o usuário tem 18 anos ou mais.
+     * Usuários sem data_nascimento definida são tratados como menores.
+     */
+    public function is18Plus(): bool
+    {
+        $age = $this->getAge();
+
+        return $age !== null && $age >= 18;
+    }
+
+    /**
+     * Determina se o usuário pode visualizar conteúdo adulto.
+     * Staff (Admin, Management, Operational) sempre pode.
+     * Customers precisam ter 18+ anos.
+     */
+    public function canAccessAdultContent(): bool
+    {
+        if ($this->isStaff()) {
+            return true;
+        }
+
+        return $this->is18Plus();
     }
 
     public function getDisplayName(): string

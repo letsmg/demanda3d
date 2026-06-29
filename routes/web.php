@@ -12,7 +12,9 @@ use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
 use App\Http\Controllers\Inertia\ProductController as InertiaProductController;
 use App\Http\Controllers\Inertia\ReportController;
 use App\Http\Controllers\Inertia\SupplierController as InertiaSupplierController;
+use App\Http\Controllers\ProductDetailController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\StoreDetailController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('welcome');
@@ -20,6 +22,16 @@ Route::inertia('/home', 'Dashboard')->name('home');
 
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
+
+// Public product detail page (store) — rota dinâmica por slug com verificação de idade
+Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
+    ->middleware(['check.age'])
+    ->name('store.detail');
+
+// Public product detail page — rota dinâmica por slug com verificação de idade
+Route::get('/produto/{slug}', [ProductDetailController::class, 'show'])
+    ->middleware(['check.age'])
+    ->name('product.detail');
 
 // Client auth (customers) — separate from staff auth
 Route::post('/logout_cli', [LoginClientController::class, 'destroy'])->name('logout.client');
