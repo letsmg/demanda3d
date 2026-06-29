@@ -77,4 +77,29 @@ enum UserAccessLevel: int
     {
         return UserAccessGroup::fromAccessLevel($this);
     }
+
+    /**
+     * Retorna os valores inteiros de todos os níveis de acesso Staff (Admin, Management, Operational).
+     * Uso principal: queries whereIn('access_level', ...).
+     *
+     * @return int[]
+     */
+    public static function staffValues(): array
+    {
+        return [
+            self::OPERATIONAL->value,
+            self::MANAGEMENT->value,
+            self::ADMIN->value,
+        ];
+    }
+
+    /**
+     * Retorna os valores inteiros de todos os níveis de acesso.
+     *
+     * @return int[]
+     */
+    public static function allValues(): array
+    {
+        return array_map(fn (self $case) => $case->value, self::cases());
+    }
 }

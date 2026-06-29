@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserAccessLevel;
 use App\Models\Client;
 use App\Models\Dispute;
 use App\Models\Order;
@@ -26,7 +27,7 @@ class DisputeSeeder extends Seeder
         $reasons = ['fraud', 'fake_product', 'offensive', 'not_delivered'];
         $statuses = ['pending', 'pending', 'investigating', 'resolved', 'dismissed'];
 
-        $adminUsers = User::where('access_level', 10)->get();
+        $adminUsers = User::where('access_level', UserAccessLevel::ADMIN)->get();
         $encrypt = fn ($v) => Crypt::encryptString($v);
 
         $descriptions = [
