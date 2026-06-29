@@ -1,19 +1,19 @@
 services:
   # =============================================
-  # PostgreSQL Master (Primary) - porta 5432
+  # PostgreSQL Master (Primary) - HOM
   # =============================================
-  demanda-psql-prod:
+  demanda-psql-hom:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-prod
+    container_name: demanda-psql-hom
     restart: unless-stopped
     env_file:
-      - .env.docker.prod
+      - .env.docker.hom
     environment:
       POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
     ports:
-      - "5436:5432"
+      - "5438:5432"
     volumes:
-      - demanda_psql_prod_data:/var/lib/postgresql
+      - demanda_psql_hom_data:/var/lib/postgresql
       - ./docker/psql/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
       - ./docker/psql/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
     healthcheck:
@@ -22,24 +22,24 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - demanda-net-prod
+      - demanda-net-hom
 
   # =============================================
-  # PostgreSQL Slave (Replica) - porta 5433
+  # PostgreSQL Slave (Replica) - HOM
   # =============================================
-  demanda-psql-rep-prod:
+  demanda-psql-rep-hom:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-rep-prod
+    container_name: demanda-psql-rep-hom
     restart: unless-stopped
     env_file:
-      - .env.docker.prod
+      - .env.docker.hom
     ports:
-      - "5437:5432"
+      - "5439:5432"
     volumes:
-      - demanda_psql_rep_prod_data:/var/lib/postgresql
+      - demanda_psql_rep_hom_data:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
     depends_on:
-      demanda-psql-prod:
+      demanda-psql-hom:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U demanda_user"]
@@ -48,37 +48,37 @@ services:
       retries: 20
       start_period: 60s
     networks:
-      - demanda-net-prod
+      - demanda-net-hom
 
   # =============================================
-  # Redis - Cache de busca do Marketplace
+  # Redis - HOM
   # =============================================
-  demanda-redis-prod:
+  demanda-redis-hom:
     image: redis:8.0-alpine
-    container_name: demanda-redis-prod
+    container_name: demanda-redis-hom
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
-      - "6381:6379"
+      - "6382:6379"
     volumes:
-      - demanda_redis_prod_data:/data
+      - demanda_redis_hom_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - demanda-net-prod
+      - demanda-net-hom
 
 volumes:
-  demanda_psql_prod_data:
-    name: demanda_psql_prod_data
-  demanda_psql_rep_prod_data:
-    name: demanda_psql_rep_prod_data
-  demanda_redis_prod_data:
-    name: demanda_redis_prod_data
+  demanda_psql_hom_data:
+    name: demanda_psql_hom_data
+  demanda_psql_rep_hom_data:
+    name: demanda_psql_rep_hom_data
+  demanda_redis_hom_data:
+    name: demanda_redis_hom_data
 
 networks:
-  demanda-net-prod:
-    name: demanda-net-prod
+  demanda-net-hom:
+    name: demanda-net-hom
     driver: bridge
