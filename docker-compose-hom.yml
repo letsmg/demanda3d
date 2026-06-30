@@ -7,7 +7,7 @@ services:
     container_name: demanda-psql-hom
     restart: unless-stopped
     env_file:
-      - .env.docker.hom
+      - .env.docker
     environment:
       POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
     ports:
@@ -32,7 +32,7 @@ services:
     container_name: demanda-psql-rep-hom
     restart: unless-stopped
     env_file:
-      - .env.docker.hom
+      - .env.docker
     ports:
       - "5439:5432"
     volumes:
