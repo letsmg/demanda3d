@@ -56,18 +56,11 @@ jobs:
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
-          # Codifica a senha em Base64 para proteção no transporte SSH
-          B64_DB_PASS=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | tr -d '\n')
-
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # Passando as variáveis de forma segura via escopo no SSH
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC B64_DB_PASS='$B64_DB_PASS' bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC bash -s" << 'EOF'
             set -e
-
-            # Decodifica a senha direto na memória do servidor
-            DB_PASS=$(echo -n "$B64_DB_PASS" | base64 -d)
 
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
@@ -173,19 +166,30 @@ jobs:
             # =============================================
             # 6. Banco de Dados & Backup Seguro
             # =============================================
-            echo "🔑 Configurando usuário do banco de dados..."
 
-            # Escapa aspas simples na senha para uso seguro no SQL
-            ESCAPED_PASS=$(printf '%s' "$DB_PASS" | sed "s/'/''/g")
+            # Verificação rápida de sanidade do banco (usuário e database existem?)
+            echo "🔍 Verificando banco de dados..."
+            sudo docker exec -i "$CONTAINER_NAME" \
+              psql -U postgres -d postgres -tAc \
+              "SELECT usename FROM pg_user WHERE usename = 'demanda_user';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o usuário demanda_user"
 
-            sudo docker exec "$CONTAINER_NAME" psql -U postgres -d postgres -c "ALTER USER demanda_user WITH PASSWORD '$ESCAPED_PASS';" > /dev/null 2>&1 || true
-            sudo docker exec "$CONTAINER_NAME" psql -U postgres -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
-            sudo docker exec "$CONTAINER_NAME" psql -U postgres -d demanda_db -c "GRANT ALL ON SCHEMA public TO demanda_user;" > /dev/null 2>&1 || true
-            echo "✅ Permissões do banco de dados atualizadas!"
+            sudo docker exec -i "$CONTAINER_NAME" \
+              psql -U postgres -d postgres -tAc \
+              "SELECT datname FROM pg_database WHERE datname = 'demanda_db';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o database demanda_db"
 
+            # Backup usando o superusuário postgres (sem necessidade de senha)
             echo "💾 Realizando backup de segurança (pg_dump)..."
-            sudo docker exec -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" pg_dump -h 127.0.0.1 -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
-            sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
+            sudo docker exec "$CONTAINER_NAME" \
+              pg_dump \
+              -U postgres \
+              demanda_db \
+              > "/tmp/bkp_${PROJECT_NAME}.sql"
+
+            sudo mv \
+              "/tmp/bkp_${PROJECT_NAME}.sql" \
+              "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
             echo "✅ Backup de segurança gerado com sucesso!"
 
             # =============================================
@@ -202,9 +206,7 @@ jobs:
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
 
             # Limpeza das variáveis sensíveis na memória do shell
-            unset DB_PASS
-            unset B64_DB_PASS
-            unset ESCAPED_PASS
+            # (DB_PASS foi removido; usuário/senha são gerenciados pelo init-master.sh)
 
             echo "🔄 Reiniciando o PHP FPM..."
             sudo systemctl reload php8.5-fpm
