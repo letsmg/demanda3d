@@ -36,7 +36,6 @@ jobs:
       - name: 🔑 Configure SSH
         run: |
           mkdir -p ~/.ssh
-          # Ajuste para evitar bloqueio por alteração de chave
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -46,24 +45,22 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
-            CONTAINER_NAME="demanda-psql-prod"
+            CONTAINER_NAME="prod-demanda-psql"
+            SERVICE_NAME="prod-demanda-psql"
+            DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
-            CONTAINER_NAME="demanda-psql-dev"
+            CONTAINER_NAME="hom-demanda-psql"
+            SERVICE_NAME="hom-demanda-psql"
+            DOCKER_SRC="docker-compose-hom.yml"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC bash -s" << 'EOF'
             set -e
-            
-            # 1. Validação do Container
-            if ! docker ps --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}$"; then
-              echo "❌ ERRO: Container '$CONTAINER_NAME' não está rodando. Deploy abortado."
-              exit 1
-            fi
 
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
@@ -71,43 +68,202 @@ jobs:
             BACKUPS="$ROOT/backups"
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)"
 
-            sudo mkdir -p "$NEW_RELEASE"
+            sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 2. Estrutura e Links
-            sudo mkdir -p "$SHARED/storage/app/public"
+            # Lê DB_USER e DB_NAME do .env.docker do shared (segregado por ambiente)
+            if [ -f "$SHARED/.env.docker" ]; then
+              DB_USER=$(grep -oP '^POSTGRES_USER=\K.*' "$SHARED/.env.docker" | head -1)
+              DB_NAME=$(grep -oP '^POSTGRES_DB=\K.*' "$SHARED/.env.docker" | head -1)
+            fi
+            # Fallback seguro (nunca deve acontecer, mas evita falha catastrófica)
+            DB_USER="${DB_USER:-unknown_user}"
+            DB_NAME="${DB_NAME:-unknown_db}"
+            echo "🎯 Ambiente detectado: DB_USER=$DB_USER DB_NAME=$DB_NAME"
+
+            # =============================================
+            # 1. Sincronização do docker-compose.yml
+            # =============================================
+            echo "📦 Sincronizando $DOCKER_SRC para shared/docker-compose.yml..."
+            if [ -f "$NEW_RELEASE/$DOCKER_SRC" ]; then
+              sudo cp "$NEW_RELEASE/$DOCKER_SRC" "$SHARED/docker-compose.yml"
+            else
+              echo "❌ ERRO: $DOCKER_SRC não encontrado na release!"
+              exit 1
+            fi
+
+            # =============================================
+            # 2. Sincronização da pasta docker/
+            #    (scripts de init do PostgreSQL e Redis)
+            # =============================================
+            echo "🐳 Sincronizando pasta docker/..."
+            if [ -d "$NEW_RELEASE/docker" ]; then
+              # Remove a pasta antiga e copia a nova (garantindo scripts atualizados)
+              sudo rm -rf "$SHARED/docker"
+              sudo cp -r "$NEW_RELEASE/docker" "$SHARED/docker"
+              sudo chmod -R 755 "$SHARED/docker"
+            else
+              echo "❌ ERRO: Pasta docker/ não encontrada na release!"
+              exit 1
+            fi
+
+            # =============================================
+            # 3. Garantir .env e .env.docker no shared
+            # =============================================
+            sudo touch "$SHARED/.env"
+            sudo touch "$SHARED/.env.docker"
+
+            COMPOSE_FILE="$SHARED/docker-compose.yml"
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "❌ ERRO: $COMPOSE_FILE não encontrado!"
+              exit 1
+            fi
+
+            # Extrai o prefixo do ambiente a partir do nome do container
+            # Ex: prod-demanda-psql → prefix=prod, hom-demanda-psql → prefix=hom
+            PREFIX=$(echo "$CONTAINER_NAME" | grep -oP '^[a-z]+(?=-demanda)')
+            NETWORK_NAME="${PREFIX}-demanda-net"
+            VOL_PSQL="${PREFIX}_demanda_psql_data"
+            VOL_PSQL_REP="${PREFIX}_demanda_psql_rep_data"
+            VOL_REDIS="${PREFIX}_demanda_redis_data"
+
+            echo "🔗 Prefixo do ambiente: $PREFIX"
+            echo "🌐 Network: $NETWORK_NAME"
+            echo "💾 Volumes: $VOL_PSQL, $VOL_PSQL_REP, $VOL_REDIS"
+
+            # =============================================
+            # 3.5. Idempotência de recursos Docker
+            #    Garante que networks e volumes external existam
+            #    antes do docker compose up (evita falhas em
+            #    ambientes onde são marcados como external: true).
+            # =============================================
+            echo "🔍 Verificando/Criando network $NETWORK_NAME..."
+            sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || {
+              echo "   Criando network $NETWORK_NAME..."
+              sudo docker network create "$NETWORK_NAME"
+            }
+            echo "   ✅ Network $NETWORK_NAME pronto."
+
+            for VOL in "$VOL_PSQL" "$VOL_PSQL_REP" "$VOL_REDIS"; do
+              echo "🔍 Verificando/Criando volume $VOL..."
+              sudo docker volume inspect "$VOL" >/dev/null 2>&1 || {
+                echo "   Criando volume $VOL..."
+                sudo docker volume create "$VOL"
+              }
+              echo "   ✅ Volume $VOL pronto."
+            done
+
+            # =============================================
+            # 4. docker compose pull + up com healthcheck
+            # =============================================
+            echo "⬇️  Baixando imagens Docker atualizadas..."
+            sudo docker compose -f "$COMPOSE_FILE" pull
+
+            echo "🚀 Subindo containers via $COMPOSE_FILE..."
+            sudo docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+
+            # Aguarda o PostgreSQL ficar saudável (healthcheck real, não sleep fixo)
+            echo "⏳ Aguardando o PostgreSQL ($CONTAINER_NAME) ficar pronto..."
+            ATTEMPTS=0
+            MAX_ATTEMPTS=60
+            until sudo docker exec "$CONTAINER_NAME" pg_isready -U "$DB_USER" -d "$DB_NAME" > /dev/null 2>&1; do
+              ATTEMPTS=$((ATTEMPTS + 1))
+              if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+                echo "❌ ERRO: Timeout aguardando o PostgreSQL ($CONTAINER_NAME) ficar saudável!"
+                exit 1
+              fi
+              echo "   Aguardando... ($ATTEMPTS/$MAX_ATTEMPTS)"
+              sleep 2
+            done
+            echo "✅ PostgreSQL ($CONTAINER_NAME) está saudável!"
+
+            # =============================================
+            # 5. Links Simbólicos e Permissões
+            # =============================================
+
+            # Link do docker-compose.yml e docker/ (não precisam de link na release,
+            # pois são usados apenas no shared pelo compose)
+            # Mas mantemos o link da pasta docker/ para compatibilidade
+            sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
+
+            # Link do .env
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+
+            # Link do .env.docker (CRÍTICO: os containers dependem disto!)
+            sudo ln -sfn "$SHARED/.env.docker" "$NEW_RELEASE/.env.docker"
+
+            # Storage
+            sudo mkdir -p "$SHARED/storage/app/public" \
+                          "$SHARED/storage/framework/cache" \
+                          "$SHARED/storage/framework/sessions" \
+                          "$SHARED/storage/framework/views" \
+                          "$SHARED/storage/logs"
+
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
 
+            # Permissões
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
+            sudo chmod -R 775 "$SHARED/storage"
 
-            # 3. Operações de Banco
+            # =============================================
+            # 6. Banco de Dados & Backup Seguro
+            # =============================================
+
+            # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
+            # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
+            # superusuário da aplicação para verificações e backup).
+            DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
+
+            # Verificação rápida de sanidade do banco (usuário e database existem?)
+            echo "🔍 Verificando banco de dados..."
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
+              "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
+
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
+              "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
+
+            # Backup usando o superusuário da aplicação
+            echo "💾 Realizando backup de segurança (pg_dump)..."
+            sudo docker exec -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              pg_dump \
+              -U "$DB_USER" \
+              "$DB_NAME" \
+              > "/tmp/bkp_${PROJECT_NAME}.sql"
+
+            sudo mv \
+              "/tmp/bkp_${PROJECT_NAME}.sql" \
+              "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
+            echo "✅ Backup de segurança gerado com sucesso!"
+
+            # =============================================
+            # 7. Finalização (Artisan Commands)
+            # =============================================
+            echo "🚀 Executando migrações do banco de dados..."
             cd "$NEW_RELEASE"
-            echo "🔧 Configurando banco de dados..."
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;"
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL ON SCHEMA public TO demanda_user;"
+            sudo -u www-data php artisan migrate --force
 
-            sudo mkdir -p "$BACKUPS"
-            docker exec -u postgres "$CONTAINER_NAME" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
-            sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
-
-            # 4. Migrações e Finalização
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              sudo -u www-data php artisan migrate --force
-            else
-              sudo -u www-data php artisan migrate:fresh --seed --force
-            fi
-            
+            echo "🚀 Otimizando a aplicação..."
             sudo -u www-data php artisan optimize
+
+            echo "🔗 Atualizando link simbólico da versão atual..."
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
+
+            # Limpeza das variáveis sensíveis na memória do shell
+            # (DB_PASS foi removido; usuário/senha são gerenciados pelo init-master.sh)
+
+            echo "🔄 Reiniciando o PHP FPM..."
             sudo systemctl reload php8.5-fpm
-            
-            # Limpeza
-            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
-            cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
-            rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído com sucesso para $PROJECT_NAME"
+
+            # =============================================
+            # 8. Limpeza de releases antigas (mantém as últimas 5)
+            # =============================================
+            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
+            sudo rm -f "/tmp/$PROJECT_NAME.zip"
+            echo "✅ Deploy concluído com sucesso!"
           EOF
