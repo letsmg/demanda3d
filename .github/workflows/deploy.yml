@@ -80,27 +80,30 @@ jobs:
             fi
             
             # 2. Localizar/Subir Container
-            # Definimos o nome esperado do container principal (o que executa o banco/app)
-              # Ajuste 'demanda-psql-hom' se o seu container principal tiver outro nome
-              EXPECTED_SERVICE="psql-hom" 
+            # Caminho absoluto do arquivo compose que sincronizamos no passo anterior
+            COMPOSE_FILE="$SHARED/docker-compose.yml"
+            EXPECTED_SERVICE="psql-hom" 
 
-              REAL_CONTAINER=$(docker compose -f docker-compose.yml ps -q "$EXPECTED_SERVICE" | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///')
+            echo "🔍 Procurando container em $COMPOSE_FILE..."
+            
+            # Tenta identificar o container usando o arquivo de compose específico
+            REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$EXPECTED_SERVICE" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
 
-              if [ -z "$REAL_CONTAINER" ]; then
-                echo "⚠️ Container não encontrado. Subindo..."
-                sudo docker compose up -d --remove-orphans
-                
-                # Aumentamos o tempo de espera para garantir que o Docker inicializou o container
-                sleep 15
-                
-                REAL_CONTAINER=$(docker compose -f docker-compose.yml ps -q "$EXPECTED_SERVICE" | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///')
-              fi
+            if [ -z "$REAL_CONTAINER" ]; then
+              echo "⚠️ Container não encontrado. Subindo via $COMPOSE_FILE..."
+              # Forçamos o uso do caminho absoluto aqui
+              sudo docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+              
+              sleep 15
+              
+              REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$EXPECTED_SERVICE" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
+            fi
 
-              if [ -z "$REAL_CONTAINER" ]; then
-                echo "❌ ERRO: Não foi possível identificar o container para '$EXPECTED_SERVICE'."
-                exit 1
-              fi
-              echo "✅ Usando container: $REAL_CONTAINER"
+            if [ -z "$REAL_CONTAINER" ]; then
+              echo "❌ ERRO: Não foi possível identificar o container para '$EXPECTED_SERVICE'."
+              exit 1
+            fi
+            echo "✅ Usando container: $REAL_CONTAINER"
 
             # 3. Links Simbólicos
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
