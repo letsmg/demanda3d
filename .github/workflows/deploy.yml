@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v5
 
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
@@ -18,7 +18,7 @@ jobs:
           extensions: mbstring, bcmath, pdo_pgsql, redis
 
       - name: 🟢 Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -248,17 +248,31 @@ jobs:
             cd "$NEW_RELEASE"
             sudo -u www-data php artisan migrate --force
 
-            echo "🚀 Otimizando a aplicação..."
+            # ⚡ Limpeza COMPLETA de cache antes de regenerar
+            #    Evita que views cacheadas apontem para assets Vite antigos
+            #    (hashes de build mudam a cada deploy).
+            echo "🧹 Limpando todos os caches do Laravel..."
+            sudo -u www-data php artisan view:clear
+            sudo -u www-data php artisan config:clear
+            sudo -u www-data php artisan route:clear
+            sudo -u www-data php artisan cache:clear
+            sudo -u www-data php artisan event:clear
+
+            # Regenera cache otimizado com os assets da release ATUAL
+            echo "⚡ Regenerando cache otimizado..."
             sudo -u www-data php artisan optimize
 
             echo "🔗 Atualizando link simbólico da versão atual..."
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
 
-            # Limpeza das variáveis sensíveis na memória do shell
-            # (DB_PASS foi removido; usuário/senha são gerenciados pelo init-master.sh)
+            # 💥 Restart do PHP-FPM (não reload) para limpar OPcache completamente
+            echo "🔄 Reiniciando o PHP-FPM (limpeza de OPcache)..."
+            sudo systemctl restart php8.5-fpm
 
-            echo "🔄 Reiniciando o PHP FPM..."
-            sudo systemctl reload php8.5-fpm
+            # 🌐 Recarregar Nginx para garantir que os novos paths estáticos
+            #    ($CURRENT/public/build/) sejam resolvidos corretamente.
+            echo "🌐 Recarregando Nginx..."
+            sudo systemctl reload nginx || sudo systemctl reload apache2 2>/dev/null || true
 
             # =============================================
             # 8. Limpeza de releases antigas (mantém as últimas 5)
