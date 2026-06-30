@@ -14,7 +14,8 @@ EOF
 echo "=== [Master Init] 2/2: Aplicando configurações de replicação ==="
 export PGPASSWORD="${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
 
-psql -U postgres -d postgres << 'EOSQL'
+psql -U postgres -d postgres << EOSQL
+-- Configurações do Sistema
 ALTER SYSTEM SET listen_addresses = '*';
 ALTER SYSTEM SET wal_level = 'replica';
 ALTER SYSTEM SET max_wal_senders = 10; 
@@ -32,6 +33,16 @@ ALTER SYSTEM SET timezone = 'America/Sao_Paulo';
 ALTER SYSTEM SET log_timezone = 'America/Sao_Paulo';
 ALTER SYSTEM SET datestyle = 'iso, dmy';
 SELECT pg_reload_conf();
+
+-- [PRODUÇÃO] Criação segura do usuário de replicação
+-- Evita erro se o usuário já existir e define a permissão estrita de REPLICATION
+DO \$\$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${REPL_USER:-demanda_user}') THEN
+        CREATE ROLE ${REPL_USER:-demanda_user} WITH REPLICATION LOGIN PASSWORD '${REPL_PASSWORD:?REPL_PASSWORD must be set}';
+    END IF;
+END
+\$\$;
 EOSQL
 
 echo "=== [Master Init] Setup concluído com sucesso! ==="

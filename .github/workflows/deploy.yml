@@ -56,17 +56,17 @@ jobs:
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
-          # 🛡️ O SEGREDO: Codifica a senha em Base64 para torná-la imune a caracteres especiais no transporte SSH
+          # Codifica a senha em Base64 para proteção no transporte SSH
           B64_DB_PASS=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | tr -d '\n')
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # Passamos a hash Base64 de forma totalmente segura na linha do SSH
+          # Passando as variáveis de forma segura via escopo no SSH
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
           "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC B64_DB_PASS='$B64_DB_PASS' bash -s" << 'EOF'
             set -e
 
-            # Decodifica a senha original direto na memória do servidor de destino
+            # Decodifica a senha direto na memória do servidor
             DB_PASS=$(echo -n "$B64_DB_PASS" | base64 -d)
 
             RELEASES="$ROOT/releases"
@@ -75,30 +75,31 @@ jobs:
             BACKUPS="$ROOT/backups"
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)"
 
-            sudo mkdir -p "$NEW_RELEASE"
+            sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
             # 1. Sincronização de Docker
             echo "📦 Sincronizando $DOCKER_SRC..."
             sudo mkdir -p "$SHARED/docker"
             if [ -f "$NEW_RELEASE/$DOCKER_SRC" ]; then
-              sudo cp "$NEW_RELEASE/$DOCKER_SRC" "$SHARED/docker-compose.yml"
+              sudo cp "$NEW_RELEASE/$DOCKER_SRC" "$SHARED/docker/docker-compose.yml"
             else
               echo "❌ ERRO: $DOCKER_SRC não encontrado na release!"
               exit 1
             fi
             
-            # 2. Localizar/Subir Container
-            COMPOSE_FILE="$SHARED/docker-compose.yml"
+            # 2. Localizar/Subir Container (Garantindo o sudo para o ecossistema Docker)
+            COMPOSE_FILE="$SHARED/docker/docker-compose.yml"
             echo "🔍 Identificando container do serviço: $SERVICE_NAME..."
             
-            REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
+            # Correção no mapeamento e identificação usando sudo no docker
+            REAL_CONTAINER=$(sudo docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs sudo docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
 
             if [ -z "$REAL_CONTAINER" ]; then
               echo "⚠️ Container não encontrado. Subindo via $COMPOSE_FILE..."
               sudo docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
               sleep 15
-              REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
+              REAL_CONTAINER=$(sudo docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs sudo docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
             fi
 
             if [ -z "$REAL_CONTAINER" ]; then
@@ -107,29 +108,37 @@ jobs:
             fi
             echo "✅ Usando container: $REAL_CONTAINER"
 
-            # 3. Links Simbólicos
+            # 3. Links Simbólicos e Permissões de Produção
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
+            
+            # Garante que o arquivo .env exista no shared para não quebrar o link simbólico
+            sudo touch "$SHARED/.env"
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            
+            # Garante a estrutura correta do storage antes do link
+            sudo mkdir -p "$SHARED/storage/app/public" "$SHARED/storage/framework/cache" "$SHARED/storage/framework/sessions" "$SHARED/storage/framework/views" "$SHARED/storage/logs"
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
+            
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
+            
+            # Aplica dono correto para o servidor web processar a aplicação e gravar logs
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
+            sudo chmod -R 775 "$SHARED/storage"
 
-            # 4. Banco de Dados
+            # 4. Banco de Dados & Backup Seguro
             echo "🔑 Atualizando senhas e permissões no banco de dados..."
-            docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1 || true
-            docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
+            sudo docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1 || true
+            sudo docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
 
             echo "💾 Realizando backup de segurança (pg_dump)..."
-            sudo mkdir -p "$BACKUPS"
-            
-            # Agora com a variável DB_PASS vindo descriptografada e intacta
-            docker exec -e PGPASSWORD="$DB_PASS" "$REAL_CONTAINER" pg_dump -h 127.0.0.1 -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
+            # Agora injetando a variável de forma isolada dentro do ambiente de execução do container
+            sudo docker exec -e PGPASSWORD="$DB_PASS" "$REAL_CONTAINER" pg_dump -h 127.0.0.1 -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
 
             sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
             echo "✅ Backup de segurança gerado com sucesso!"
 
-            # 5. Finalização
+            # 5. Finalização (Artisan Commands)
             echo "🚀 Executando migrações do banco de dados..."
             cd "$NEW_RELEASE"
             sudo -u www-data php artisan migrate --force
@@ -140,15 +149,15 @@ jobs:
             echo "🔗 Atualizando link simbólico da versão atual..."
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             
-            # Limpeza das variáveis de memória por segurança
+            # Limpeza das variáveis sensíveis na memória do shell
             unset DB_PASS
             unset B64_DB_PASS
 
             echo "🔄 Reiniciando o PHP FPM..."
             sudo systemctl reload php8.5-fpm
             
-            # Limpeza de releases antigas
+            # Limpeza de releases antigas (Mantendo as últimas 5)
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
-            rm -f "/tmp/$PROJECT_NAME.zip"
+            sudo rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído com sucesso!"
           EOF
