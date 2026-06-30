@@ -58,7 +58,6 @@ jobs:
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # Injetamos a variável DB_PASS protegida por aspas simples na linha do SSH
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
           "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC DB_PASS='${{ secrets.DB_PASSWORD }}' bash -s" << 'EOF'
             set -e
@@ -111,22 +110,18 @@ jobs:
 
             # 4. Banco de Dados
             echo "🔑 Atualizando senhas e permissões no banco de dados..."
-            docker exec "$REAL_CONTAINER" bash -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U postgres -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '"'$DB_PASS'"';"' > /dev/null 2>&1 || true
-            docker exec "$REAL_CONTAINER" bash -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;"' > /dev/null 2>&1 || true
+            # Executa os comandos administrativos usando o privilégio local do container (ignora erros se já estiver configurado)
+            docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1 || true
+            docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
 
             echo "💾 Realizando backup de segurança (pg_dump)..."
             sudo mkdir -p "$BACKUPS"
             
-            # Tentativa 1: Usando o root (postgres) interno do container
-            if docker exec "$REAL_CONTAINER" bash -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U postgres demanda_db' > "/tmp/bkp_${PROJECT_NAME}.sql" 2>/dev/null; then
-              echo "✅ Backup gerado com sucesso via usuário root."
-            else
-              echo "⚠️ Usuário root falhou. Tentando backup seguro com o usuário da aplicação..."
-              # Tentativa 2: Fallback usando a senha isolada pelo envelope do SSH
-              docker exec -e PGPASSWORD="$DB_PASS" "$REAL_CONTAINER" pg_dump -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
-            fi
+            # O SEGREDO: Injetamos o -h 127.0.0.1 para contornar o bloqueio do Socket Unix
+            docker exec -e PGPASSWORD="$DB_PASS" "$REAL_CONTAINER" pg_dump -h 127.0.0.1 -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
 
             sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
+            echo "✅ Backup de segurança gerado com sucesso!"
 
             # 5. Finalização
             echo "🚀 Executando migrações do banco de dados..."
