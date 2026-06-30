@@ -31,7 +31,6 @@ jobs:
 
       - name: 🤐 Criar Pacote de Deploy
         run: |
-          # Garante que a pasta docker/ seja incluída
           zip -r deploy.zip . -x ".git/*" ".github/*" "node_modules/*" "tests/*" ".env*" "storage/framework/*" "storage/logs/*"
 
       - name: 🔑 Configure SSH
@@ -47,19 +46,20 @@ jobs:
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
             CONTAINER_BASE="demanda-psql-prod"
+            DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             CONTAINER_BASE="demanda-psql-dev"
+            DOCKER_SRC="docker-compose-hom.yml"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE DOCKER_SRC=$DOCKER_SRC bash -s" << 'EOF'
             set -e
 
-            # Variáveis de diretório
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
@@ -69,46 +69,36 @@ jobs:
             sudo mkdir -p "$NEW_RELEASE"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 1. Sincronização de Configurações Docker (O PULO DO GATO)
-            echo "📦 Sincronizando configs do Docker para $SHARED..."
+            # 1. Sincronização de Docker
+            echo "📦 Sincronizando $DOCKER_SRC..."
             sudo mkdir -p "$SHARED/docker"
-            # Copia a pasta docker e o docker-compose.yml da nova release para o shared
-            [ -d "$NEW_RELEASE/docker" ] && sudo cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
-            [ -f "$NEW_RELEASE/docker-compose.yml" ] && sudo cp "$NEW_RELEASE/docker-compose.yml" "$SHARED/"
-            sudo chown -R www-data:www-data "$SHARED"
-
+            if [ -f "$NEW_RELEASE/$DOCKER_SRC" ]; then
+              sudo cp "$NEW_RELEASE/$DOCKER_SRC" "$SHARED/docker-compose.yml"
+            else
+              echo "❌ ERRO: $DOCKER_SRC não encontrado na release!"
+              exit 1
+            fi
+            
             # 2. Localizar/Subir Container
             REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
-
             if [ -z "$REAL_CONTAINER" ]; then
-              echo "⚠️ Container não encontrado. Subindo via $SHARED/docker-compose.yml..."
-              # Usa o caminho absoluto que acabamos de garantir que existe
-              cd "$SHARED" && sudo docker compose -f docker-compose.yml up -d
+              echo "⚠️ Container não encontrado. Subindo via docker-compose.yml..."
+              cd "$SHARED" && sudo docker compose up -d
               sleep 10
               REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
             fi
 
-            if [ -z "$REAL_CONTAINER" ]; then
-              echo "❌ ERRO: Container '$CONTAINER_BASE' não subiu."
-              exit 1
-            fi
-            echo "✅ Usando container: $REAL_CONTAINER"
-
-            # 3. Links Simbólicos e Permissões
-            sudo mkdir -p "$SHARED/storage/app/public"
-            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
-            
-            # Adicione esta linha abaixo para garantir o link da pasta docker:
+            # 3. Links Simbólicos
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
-            
+            sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
 
             # 4. Banco de Dados
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';" > /dev/null
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null
+            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';" > /dev/null 2>&1 || true
+            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
 
             sudo mkdir -p "$BACKUPS"
             docker exec -u postgres "$REAL_CONTAINER" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
@@ -116,12 +106,7 @@ jobs:
 
             # 5. Finalização
             cd "$NEW_RELEASE"
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              sudo -u www-data php artisan migrate --force
-            else
-              sudo -u www-data php artisan migrate:fresh --seed --force
-            fi
-            
+            sudo -u www-data php artisan migrate --force
             sudo -u www-data php artisan optimize
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
