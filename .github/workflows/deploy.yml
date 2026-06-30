@@ -42,18 +42,18 @@ jobs:
 
       - name: 🚀 Executar Deploy Atômico
         run: |
-          # Define as variáveis dinâmicas conforme a branch
+          # Define as variáveis dinâmicas conforme a branch      
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
             CONTAINER_BASE="demanda-psql-prod"
-            SERVICE_NAME="psql-prod"
+            SERVICE_NAME="psql-prod" # Ajuste conforme o que aparecer no comando ps --services para a main
             DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
-            CONTAINER_BASE="demanda-psql-dev"
-            SERVICE_NAME="psql-hom"
+            CONTAINER_BASE="demanda-psql-hom"
+            SERVICE_NAME="demanda-psql-hom" # <--- ESTE É O NOME CORRETO QUE VOCÊ LISTOU
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
