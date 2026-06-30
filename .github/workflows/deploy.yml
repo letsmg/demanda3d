@@ -42,18 +42,17 @@ jobs:
 
       - name: 🚀 Executar Deploy Atômico
         run: |
-          # Define as variáveis dinâmicas conforme a branch      
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
             CONTAINER_BASE="demanda-psql-prod"
-            SERVICE_NAME="psql-prod" # Ajuste conforme o que aparecer no comando ps --services para a main
+            SERVICE_NAME="psql-prod"
             DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             CONTAINER_BASE="demanda-psql-hom"
-            SERVICE_NAME="demanda-psql-hom" # <--- ESTE É O NOME CORRETO QUE VOCÊ LISTOU
+            SERVICE_NAME="demanda-psql-hom"
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
@@ -82,7 +81,7 @@ jobs:
               exit 1
             fi
             
-            # 2. Localizar/Subir Container (Lógica Dinâmica)
+            # 2. Localizar/Subir Container
             COMPOSE_FILE="$SHARED/docker-compose.yml"
             echo "🔍 Identificando container do serviço: $SERVICE_NAME..."
             
@@ -109,23 +108,35 @@ jobs:
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
 
-            # 4. Banco de Dados
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';" > /dev/null 2>&1 || true
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
+            # 4. Banco de Dados (Corrigido para usar PGPASSWORD interna do container)
+            echo "🔑 Atualizando senhas e permissões no banco de dados..."
+            docker exec "$REAL_CONTAINER" bash -c "PGPASSWORD=\$POSTGRES_PASSWORD psql -U postgres -d demanda_db -c \"ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';\"" > /dev/null 2>&1 || true
+            docker exec "$REAL_CONTAINER" bash -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;"' > /dev/null 2>&1 || true
 
+            echo "💾 Realizando backup de segurança (pg_dump)..."
             sudo mkdir -p "$BACKUPS"
-            docker exec -u postgres "$REAL_CONTAINER" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
+            docker exec "$REAL_CONTAINER" bash -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U postgres流 demanda_db' > "/tmp/bkp_${PROJECT_NAME}.sql" 2>/dev/null || \
+            docker exec -e PGPASSWORD="${{ secrets.DB_PASSWORD }}" "$REAL_CONTAINER" pg_dump -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
+
             sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
 
             # 5. Finalização
+            echo "🚀 Executando migrações do banco de dados..."
             cd "$NEW_RELEASE"
             sudo -u www-data php artisan migrate --force
+            
+            echo "🚀 Otimizando a aplicação..."
             sudo -u www-data php artisan optimize
+            
+            # Atualiza o apontamento para a nova versão de forma atômica
+            echo "🔗 Atualizando link simbólico da versão atual..."
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
+            
+            echo "🔄 Reiniciando o PHP FPM..."
             sudo systemctl reload php8.5-fpm
             
-            # Limpeza
+            # Limpeza de releases antigas (mantém as últimas 5)
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído!"
+            echo "✅ Deploy concluído com sucesso!"
           EOF
