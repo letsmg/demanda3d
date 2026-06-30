@@ -80,13 +80,27 @@ jobs:
             fi
             
             # 2. Localizar/Subir Container
-            REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
-            if [ -z "$REAL_CONTAINER" ]; then
-              echo "⚠️ Container não encontrado. Subindo via docker-compose.yml..."
-              cd "$SHARED" && sudo docker compose up -d
-              sleep 10
-              REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
-            fi
+            # Definimos o nome esperado do container principal (o que executa o banco/app)
+              # Ajuste 'demanda-psql-hom' se o seu container principal tiver outro nome
+              EXPECTED_SERVICE="psql-hom" 
+
+              REAL_CONTAINER=$(docker compose -f docker-compose.yml ps -q "$EXPECTED_SERVICE" | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///')
+
+              if [ -z "$REAL_CONTAINER" ]; then
+                echo "⚠️ Container não encontrado. Subindo..."
+                sudo docker compose up -d --remove-orphans
+                
+                # Aumentamos o tempo de espera para garantir que o Docker inicializou o container
+                sleep 15
+                
+                REAL_CONTAINER=$(docker compose -f docker-compose.yml ps -q "$EXPECTED_SERVICE" | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///')
+              fi
+
+              if [ -z "$REAL_CONTAINER" ]; then
+                echo "❌ ERRO: Não foi possível identificar o container para '$EXPECTED_SERVICE'."
+                exit 1
+              fi
+              echo "✅ Usando container: $REAL_CONTAINER"
 
             # 3. Links Simbólicos
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
