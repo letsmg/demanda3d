@@ -56,11 +56,18 @@ jobs:
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
+          # 🛡️ O SEGREDO: Codifica a senha em Base64 para torná-la imune a caracteres especiais no transporte SSH
+          B64_DB_PASS=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | tr -d '\n')
+
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
+          # Passamos a hash Base64 de forma totalmente segura na linha do SSH
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC DB_PASS='${{ secrets.DB_PASSWORD }}' bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC B64_DB_PASS='$B64_DB_PASS' bash -s" << 'EOF'
             set -e
+
+            # Decodifica a senha original direto na memória do servidor de destino
+            DB_PASS=$(echo -n "$B64_DB_PASS" | base64 -d)
 
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
@@ -110,14 +117,13 @@ jobs:
 
             # 4. Banco de Dados
             echo "🔑 Atualizando senhas e permissões no banco de dados..."
-            # Executa os comandos administrativos usando o privilégio local do container (ignora erros se já estiver configurado)
             docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '$DB_PASS';" > /dev/null 2>&1 || true
             docker exec "$REAL_CONTAINER" psql -U postgres -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null 2>&1 || true
 
             echo "💾 Realizando backup de segurança (pg_dump)..."
             sudo mkdir -p "$BACKUPS"
             
-            # O SEGREDO: Injetamos o -h 127.0.0.1 para contornar o bloqueio do Socket Unix
+            # Agora com a variável DB_PASS vindo descriptografada e intacta
             docker exec -e PGPASSWORD="$DB_PASS" "$REAL_CONTAINER" pg_dump -h 127.0.0.1 -U demanda_user -d demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
 
             sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
@@ -134,10 +140,14 @@ jobs:
             echo "🔗 Atualizando link simbólico da versão atual..."
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             
+            # Limpeza das variáveis de memória por segurança
+            unset DB_PASS
+            unset B64_DB_PASS
+
             echo "🔄 Reiniciando o PHP FPM..."
             sudo systemctl reload php8.5-fpm
             
-            # Limpeza
+            # Limpeza de releases antigas
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído com sucesso!"
