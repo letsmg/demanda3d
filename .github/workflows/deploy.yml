@@ -119,6 +119,40 @@ jobs:
               exit 1
             fi
 
+            # Extrai o prefixo do ambiente a partir do nome do container
+            # Ex: prod-demanda-psql → prefix=prod, hom-demanda-psql → prefix=hom
+            PREFIX=$(echo "$CONTAINER_NAME" | grep -oP '^[a-z]+(?=-demanda)')
+            NETWORK_NAME="${PREFIX}-demanda-net"
+            VOL_PSQL="${PREFIX}_demanda_psql_data"
+            VOL_PSQL_REP="${PREFIX}_demanda_psql_rep_data"
+            VOL_REDIS="${PREFIX}_demanda_redis_data"
+
+            echo "🔗 Prefixo do ambiente: $PREFIX"
+            echo "🌐 Network: $NETWORK_NAME"
+            echo "💾 Volumes: $VOL_PSQL, $VOL_PSQL_REP, $VOL_REDIS"
+
+            # =============================================
+            # 3.5. Idempotência de recursos Docker
+            #    Garante que networks e volumes external existam
+            #    antes do docker compose up (evita falhas em
+            #    ambientes onde são marcados como external: true).
+            # =============================================
+            echo "🔍 Verificando/Criando network $NETWORK_NAME..."
+            sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || {
+              echo "   Criando network $NETWORK_NAME..."
+              sudo docker network create "$NETWORK_NAME"
+            }
+            echo "   ✅ Network $NETWORK_NAME pronto."
+
+            for VOL in "$VOL_PSQL" "$VOL_PSQL_REP" "$VOL_REDIS"; do
+              echo "🔍 Verificando/Criando volume $VOL..."
+              sudo docker volume inspect "$VOL" >/dev/null 2>&1 || {
+                echo "   Criando volume $VOL..."
+                sudo docker volume create "$VOL"
+              }
+              echo "   ✅ Volume $VOL pronto."
+            done
+
             # =============================================
             # 4. docker compose pull + up com healthcheck
             # =============================================
@@ -177,23 +211,28 @@ jobs:
             # 6. Banco de Dados & Backup Seguro
             # =============================================
 
+            # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
+            # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
+            # superusuário da aplicação para verificações e backup).
+            DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
+
             # Verificação rápida de sanidade do banco (usuário e database existem?)
             echo "🔍 Verificando banco de dados..."
-            sudo docker exec -i "$CONTAINER_NAME" \
-              psql -U postgres -d postgres -tAc \
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
               "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
               || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
 
-            sudo docker exec -i "$CONTAINER_NAME" \
-              psql -U postgres -d postgres -tAc \
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
               "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
               || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
 
-            # Backup usando o superusuário postgres (sem necessidade de senha)
+            # Backup usando o superusuário da aplicação
             echo "💾 Realizando backup de segurança (pg_dump)..."
-            sudo docker exec "$CONTAINER_NAME" \
+            sudo docker exec -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
               pg_dump \
-              -U postgres \
+              -U "$DB_USER" \
               "$DB_NAME" \
               > "/tmp/bkp_${PROJECT_NAME}.sql"
 
