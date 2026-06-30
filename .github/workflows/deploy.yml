@@ -63,8 +63,9 @@ jobs:
             REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
 
             if [ -z "$REAL_CONTAINER" ]; then
-              echo "⚠️ Container para '$CONTAINER_BASE' não encontrado. Tentando subir com docker compose..."
-              cd "$ROOT" && docker compose up -d
+              echo "⚠️ Container para '$CONTAINER_BASE' não encontrado. Tentando subir no diretório 'current'..."
+              # Acessa o diretório 'current' onde o docker-compose.yml deve estar
+              cd "$CURRENT" && docker compose up -d
               sleep 5
               REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
             fi
