@@ -42,22 +42,25 @@ jobs:
 
       - name: 🚀 Executar Deploy Atômico
         run: |
+          # Define as variáveis dinâmicas conforme a branch
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
             CONTAINER_BASE="demanda-psql-prod"
+            SERVICE_NAME="psql-prod"
             DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             CONTAINER_BASE="demanda-psql-dev"
+            SERVICE_NAME="psql-hom"
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE DOCKER_SRC=$DOCKER_SRC bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE SERVICE_NAME=$SERVICE_NAME DOCKER_SRC=$DOCKER_SRC bash -s" << 'EOF'
             set -e
 
             RELEASES="$ROOT/releases"
@@ -79,28 +82,21 @@ jobs:
               exit 1
             fi
             
-            # 2. Localizar/Subir Container
-            # Caminho absoluto do arquivo compose que sincronizamos no passo anterior
+            # 2. Localizar/Subir Container (Lógica Dinâmica)
             COMPOSE_FILE="$SHARED/docker-compose.yml"
-            EXPECTED_SERVICE="psql-hom" 
-
-            echo "🔍 Procurando container em $COMPOSE_FILE..."
+            echo "🔍 Identificando container do serviço: $SERVICE_NAME..."
             
-            # Tenta identificar o container usando o arquivo de compose específico
-            REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$EXPECTED_SERVICE" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
+            REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
 
             if [ -z "$REAL_CONTAINER" ]; then
               echo "⚠️ Container não encontrado. Subindo via $COMPOSE_FILE..."
-              # Forçamos o uso do caminho absoluto aqui
               sudo docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
-              
               sleep 15
-              
-              REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$EXPECTED_SERVICE" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
+              REAL_CONTAINER=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" 2>/dev/null | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's/\///' || true)
             fi
 
             if [ -z "$REAL_CONTAINER" ]; then
-              echo "❌ ERRO: Não foi possível identificar o container para '$EXPECTED_SERVICE'."
+              echo "❌ ERRO: Não foi possível identificar o container para o serviço '$SERVICE_NAME'."
               exit 1
             fi
             echo "✅ Usando container: $REAL_CONTAINER"
