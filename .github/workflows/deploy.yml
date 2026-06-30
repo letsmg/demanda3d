@@ -36,7 +36,6 @@ jobs:
       - name: 🔑 Configure SSH
         run: |
           mkdir -p ~/.ssh
-          # Ajuste para evitar bloqueio por alteração de chave
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -46,25 +45,37 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
-            CONTAINER_NAME="demanda-psql-prod"
+            CONTAINER_BASE="demanda-psql-prod"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
-            CONTAINER_NAME="demanda-psql-dev"
+            CONTAINER_BASE="demanda-psql-dev"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_NAME=$CONTAINER_NAME bash -s" << 'EOF'
+          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE bash -s" << 'EOF'
             set -e
-            
-            # 1. Validação do Container
-            if ! docker ps --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}$"; then
-              echo "❌ ERRO: Container '$CONTAINER_NAME' não está rodando. Deploy abortado."
-              exit 1
+
+            # 1. Localizar Container (Resiliente a prefixos do Docker Compose)
+            # Busca qualquer container que contenha o nome base
+            REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
+
+            if [ -z "$REAL_CONTAINER" ]; then
+              echo "⚠️ Container para '$CONTAINER_BASE' não encontrado. Tentando subir com docker compose..."
+              cd "$ROOT" && docker compose up -d
+              sleep 5
+              REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
             fi
 
+            if [ -z "$REAL_CONTAINER" ]; then
+              echo "❌ ERRO: Container '$CONTAINER_BASE' não está rodando. Deploy abortado."
+              exit 1
+            fi
+            echo "✅ Usando container: $REAL_CONTAINER"
+
+            # 2. Preparar Release
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
@@ -74,27 +85,25 @@ jobs:
             sudo mkdir -p "$NEW_RELEASE"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 2. Estrutura e Links
+            # 3. Links Simbólicos
             sudo mkdir -p "$SHARED/storage/app/public"
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
-
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
 
-            # 3. Operações de Banco
+            # 4. Banco de Dados
             cd "$NEW_RELEASE"
-            echo "🔧 Configurando banco de dados..."
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;"
-            docker exec -u postgres "$CONTAINER_NAME" psql -c "GRANT ALL ON SCHEMA public TO demanda_user;"
+            echo "🔧 Atualizando permissões do banco..."
+            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';" > /dev/null
+            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null
 
             sudo mkdir -p "$BACKUPS"
-            docker exec -u postgres "$CONTAINER_NAME" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
+            docker exec -u postgres "$REAL_CONTAINER" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
             sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
 
-            # 4. Migrações e Finalização
+            # 5. Finalização
             if [ "$PROJECT_NAME" = "demanda3d" ]; then
               sudo -u www-data php artisan migrate --force
             else
@@ -106,8 +115,8 @@ jobs:
             sudo systemctl reload php8.5-fpm
             
             # Limpeza
-            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
-            cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf --
+            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
+            cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído com sucesso para $PROJECT_NAME"
+            echo "✅ Deploy concluído para $PROJECT_NAME"
           EOF
