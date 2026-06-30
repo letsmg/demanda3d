@@ -97,6 +97,10 @@ jobs:
             # 3. Links Simbólicos e Permissões
             sudo mkdir -p "$SHARED/storage/app/public"
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            
+            # Adicione esta linha abaixo para garantir o link da pasta docker:
+            sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
+            
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
