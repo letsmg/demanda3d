@@ -2,9 +2,9 @@ services:
   # =============================================
   # PostgreSQL Master (Primary) - HOM
   # =============================================
-  demanda-psql-hom:
+  hom-demanda-psql:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-hom
+    container_name: hom-demanda-psql
     restart: unless-stopped
     env_file:
       - .env.docker
@@ -13,76 +13,75 @@ services:
     ports:
       - "5438:5432"
     volumes:
-      - demanda_psql_hom_data:/var/lib/postgresql
-      - ./docker/psql/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
-      - ./docker/psql/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
+      - hom_demanda_psql_data:/var/lib/postgresql
+      - ./docker/psql/01-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demanda_user -d demanda_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - demanda-net-hom
+      - hom-demanda-net
 
   # =============================================
   # PostgreSQL Slave (Replica) - HOM
   # =============================================
-  demanda-psql-rep-hom:
+  hom-demanda-psql-rep:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-rep-hom
+    container_name: hom-demanda-psql-rep
     restart: unless-stopped
     env_file:
       - .env.docker
     ports:
       - "5439:5432"
     volumes:
-      - demanda_psql_rep_hom_data:/var/lib/postgresql
+      - hom_demanda_psql_rep_data:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
     depends_on:
-      demanda-psql-hom:
+      hom-demanda-psql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demanda_user"]
+      test: ["CMD-SHELL", "pg_isready -U $${REPL_USER:-$${POSTGRES_USER}}"]
       interval: 10s
       timeout: 5s
       retries: 20
       start_period: 60s
     networks:
-      - demanda-net-hom
+      - hom-demanda-net
 
   # =============================================
   # Redis - HOM
   # =============================================
-  demanda-redis-hom:
+  hom-demanda-redis:
     image: redis:8.0-alpine
-    container_name: demanda-redis-hom
+    container_name: hom-demanda-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6382:6379"
     volumes:
-      - demanda_redis_hom_data:/data
+      - hom_demanda_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - demanda-net-hom
+      - hom-demanda-net
 
 volumes:
-  demanda_psql_hom_data:
-    name: demanda_psql_hom_data
+  hom_demanda_psql_data:
+    name: hom_demanda_psql_data
     external: true
-  demanda_psql_rep_hom_data:
-    name: demanda_psql_rep_hom_data
+  hom_demanda_psql_rep_data:
+    name: hom_demanda_psql_rep_data
     external: true
-  demanda_redis_hom_data:
-    name: demanda_redis_hom_data
+  hom_demanda_redis_data:
+    name: hom_demanda_redis_data
     external: true
 
 networks:
-  demanda-net-hom:
-    name: demanda-net-hom
+  hom-demanda-net:
+    name: hom-demanda-net
     driver: bridge
     external: true

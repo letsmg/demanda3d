@@ -45,14 +45,14 @@ jobs:
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
-            CONTAINER_NAME="demanda-psql-prod"
-            SERVICE_NAME="psql-prod"
+            CONTAINER_NAME="prod-demanda-psql"
+            SERVICE_NAME="prod-demanda-psql"
             DOCKER_SRC="docker-compose-prod.yml"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
-            CONTAINER_NAME="demanda-psql-hom"
-            SERVICE_NAME="demanda-psql-hom"
+            CONTAINER_NAME="hom-demanda-psql"
+            SERVICE_NAME="hom-demanda-psql"
             DOCKER_SRC="docker-compose-hom.yml"
           fi
 
@@ -70,6 +70,16 @@ jobs:
 
             sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
+
+            # Lê DB_USER e DB_NAME do .env.docker do shared (segregado por ambiente)
+            if [ -f "$SHARED/.env.docker" ]; then
+              DB_USER=$(grep -oP '^POSTGRES_USER=\K.*' "$SHARED/.env.docker" | head -1)
+              DB_NAME=$(grep -oP '^POSTGRES_DB=\K.*' "$SHARED/.env.docker" | head -1)
+            fi
+            # Fallback seguro (nunca deve acontecer, mas evita falha catastrófica)
+            DB_USER="${DB_USER:-unknown_user}"
+            DB_NAME="${DB_NAME:-unknown_db}"
+            echo "🎯 Ambiente detectado: DB_USER=$DB_USER DB_NAME=$DB_NAME"
 
             # =============================================
             # 1. Sincronização do docker-compose.yml
@@ -122,7 +132,7 @@ jobs:
             echo "⏳ Aguardando o PostgreSQL ($CONTAINER_NAME) ficar pronto..."
             ATTEMPTS=0
             MAX_ATTEMPTS=60
-            until sudo docker exec "$CONTAINER_NAME" pg_isready -U demanda_user -d demanda_db > /dev/null 2>&1; do
+            until sudo docker exec "$CONTAINER_NAME" pg_isready -U "$DB_USER" -d "$DB_NAME" > /dev/null 2>&1; do
               ATTEMPTS=$((ATTEMPTS + 1))
               if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
                 echo "❌ ERRO: Timeout aguardando o PostgreSQL ($CONTAINER_NAME) ficar saudável!"
@@ -171,20 +181,20 @@ jobs:
             echo "🔍 Verificando banco de dados..."
             sudo docker exec -i "$CONTAINER_NAME" \
               psql -U postgres -d postgres -tAc \
-              "SELECT usename FROM pg_user WHERE usename = 'demanda_user';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o usuário demanda_user"
+              "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
 
             sudo docker exec -i "$CONTAINER_NAME" \
               psql -U postgres -d postgres -tAc \
-              "SELECT datname FROM pg_database WHERE datname = 'demanda_db';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o database demanda_db"
+              "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
 
             # Backup usando o superusuário postgres (sem necessidade de senha)
             echo "💾 Realizando backup de segurança (pg_dump)..."
             sudo docker exec "$CONTAINER_NAME" \
               pg_dump \
               -U postgres \
-              demanda_db \
+              "$DB_NAME" \
               > "/tmp/bkp_${PROJECT_NAME}.sql"
 
             sudo mv \

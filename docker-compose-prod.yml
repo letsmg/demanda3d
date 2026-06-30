@@ -1,10 +1,10 @@
 services:
   # =============================================
-  # PostgreSQL Master (Primary) - porta 5432
+  # PostgreSQL Master (Primary) - PROD
   # =============================================
-  demanda-psql-prod:
+  prod-demanda-psql:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-prod
+    container_name: prod-demanda-psql
     restart: unless-stopped
     env_file:
       - .env.docker
@@ -13,76 +13,75 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - demanda_psql_prod_data:/var/lib/postgresql
-      - ./docker/psql/init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
-      - ./docker/psql/init-replication-config.sh:/docker-entrypoint-initdb.d/01-replication-config.sh
+      - prod_demanda_psql_data:/var/lib/postgresql
+      - ./docker/psql/01-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demanda_user -d demanda_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - demanda-net-prod
+      - prod-demanda-net
 
   # =============================================
-  # PostgreSQL Slave (Replica) - porta 5433
+  # PostgreSQL Slave (Replica) - PROD
   # =============================================
-  demanda-psql-rep-prod:
+  prod-demanda-psql-rep:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-rep-prod
+    container_name: prod-demanda-psql-rep
     restart: unless-stopped
     env_file:
       - .env.docker
     ports:
       - "5437:5432"
     volumes:
-      - demanda_psql_rep_prod_data:/var/lib/postgresql
+      - prod_demanda_psql_rep_data:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
     depends_on:
-      demanda-psql-prod:
+      prod-demanda-psql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U demanda_user"]
+      test: ["CMD-SHELL", "pg_isready -U $${REPL_USER:-$${POSTGRES_USER}}"]
       interval: 10s
       timeout: 5s
       retries: 20
       start_period: 60s
     networks:
-      - demanda-net-prod
+      - prod-demanda-net
 
   # =============================================
-  # Redis - Cache de busca do Marketplace
+  # Redis - PROD
   # =============================================
-  demanda-redis-prod:
+  prod-demanda-redis:
     image: redis:8.0-alpine
-    container_name: demanda-redis-prod
+    container_name: prod-demanda-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6381:6379"
     volumes:
-      - demanda_redis_prod_data:/data
+      - prod_demanda_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - demanda-net-prod
+      - prod-demanda-net
 
 volumes:
-  demanda_psql_prod_data:
-    name: demanda_psql_prod_data
+  prod_demanda_psql_data:
+    name: prod_demanda_psql_data
     external: true
-  demanda_psql_rep_prod_data:
-    name: demanda_psql_rep_prod_data
+  prod_demanda_psql_rep_data:
+    name: prod_demanda_psql_rep_data
     external: true
-  demanda_redis_prod_data:
-    name: demanda_redis_prod_data
+  prod_demanda_redis_data:
+    name: prod_demanda_redis_data
     external: true
 
 networks:
-  demanda-net-prod:
-    name: demanda-net-prod
+  prod-demanda-net:
+    name: prod-demanda-net
     driver: bridge
     external: true
