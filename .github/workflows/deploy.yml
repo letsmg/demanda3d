@@ -198,7 +198,8 @@ jobs:
                           "$SHARED/storage/framework/sessions" \
                           "$SHARED/storage/framework/views" \
                           "$SHARED/storage/logs"
-
+            echo "🔄 Reiniciando Nginx..."
+            sudo systemctl restart nginx || sudo systemctl restart apache2 2>/dev/null || true
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
