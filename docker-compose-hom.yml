@@ -73,12 +73,16 @@ services:
 volumes:
   demanda_psql_hom_data:
     name: demanda_psql_hom_data
+    external: true
   demanda_psql_rep_hom_data:
     name: demanda_psql_rep_hom_data
+    external: true
   demanda_redis_hom_data:
     name: demanda_redis_hom_data
+    external: true
 
 networks:
   demanda-net-hom:
     name: demanda-net-hom
     driver: bridge
+    external: true

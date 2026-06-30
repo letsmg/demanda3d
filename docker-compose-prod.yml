@@ -73,12 +73,16 @@ services:
 volumes:
   demanda_psql_prod_data:
     name: demanda_psql_prod_data
+    external: true
   demanda_psql_rep_prod_data:
     name: demanda_psql_rep_prod_data
+    external: true
   demanda_redis_prod_data:
     name: demanda_redis_prod_data
+    external: true
 
 networks:
   demanda-net-prod:
     name: demanda-net-prod
     driver: bridge
+    external: true
