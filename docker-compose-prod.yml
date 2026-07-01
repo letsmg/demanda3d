@@ -8,18 +8,17 @@ services:
     restart: unless-stopped
     env_file:
       - .env.docker
-    environment:
-      POSTGRES_INITDB_ARGS: "--locale=en_US.utf8 --data-checksums"
     ports:
       - "5436:5432"
     volumes:
-      - prod_demanda_psql_data:/var/lib/postgresql
-      - ./docker/psql/01-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh
+      - prod_psql_data:/var/lib/postgresql
+      - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 120s
     networks:
       - prod-demanda-net
 
@@ -35,13 +34,13 @@ services:
     ports:
       - "5437:5432"
     volumes:
-      - prod_demanda_psql_rep_data:/var/lib/postgresql
-      - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh
+      - prod_psql_rep_data:/var/lib/postgresql
+      - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
       prod-demanda-psql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${REPL_USER:-$${POSTGRES_USER}}"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -60,7 +59,7 @@ services:
     ports:
       - "6381:6379"
     volumes:
-      - prod_demanda_redis_data:/data
+      - prod_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -69,19 +68,15 @@ services:
     networks:
       - prod-demanda-net
 
-volumes:
-  prod_demanda_psql_data:
-    name: prod_demanda_psql_data
-    external: true
-  prod_demanda_psql_rep_data:
-    name: prod_demanda_psql_rep_data
-    external: true
-  prod_demanda_redis_data:
-    name: prod_demanda_redis_data
-    external: true
-
 networks:
   prod-demanda-net:
     name: prod-demanda-net
     driver: bridge
-    external: true
+
+volumes:
+  prod_psql_data:
+    name: prod_psql_data
+  prod_psql_rep_data:
+    name: prod_psql_rep_data
+  prod_redis_data:
+    name: prod_redis_data
