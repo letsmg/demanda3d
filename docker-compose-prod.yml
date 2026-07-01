@@ -2,9 +2,9 @@ services:
   # =============================================
   # PostgreSQL Master (Primary) - PROD
   # =============================================
-  demanda-psql-prod:
+  prod-demanda-psql:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-prod
+    container_name: prod-demanda-psql
     restart: unless-stopped
     env_file:
       - .env.docker
@@ -25,9 +25,9 @@ services:
   # =============================================
   # PostgreSQL Slave (Replica) - PROD
   # =============================================
-  demanda-psql-rep-prod:
+  prod-demanda-psql-rep:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-rep-prod
+    container_name: prod-demanda-psql-rep
     restart: unless-stopped
     env_file:
       - .env.docker
@@ -37,7 +37,7 @@ services:
       - prod_psql_rep_data:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
-      demanda-psql-prod:
+      prod-demanda-psql:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
@@ -51,9 +51,9 @@ services:
   # =============================================
   # Redis - PROD
   # =============================================
-  demanda-redis-prod:
+  prod-demanda-redis:
     image: redis:8.0-alpine
-    container_name: demanda-redis-prod
+    container_name: prod-demanda-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
