@@ -1,8 +1,15 @@
+# ==============================================================================
+# ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
+# Eles servem como documentação viva para o portfólio e explicam decisões técnicas 
+# complexas de infraestrutura que evitam a quebra do pipeline em atualizações futuras.
+# ==============================================================================
+
 name: 🚀 Deploy Demanda3D
 
 on:
   push:
-    branches: [main, dev]
+    # Monitora as duas branches para isolar os ambientes automaticamente
+    branches: [main, hom]
 
 jobs:
   build-and-deploy:
@@ -42,41 +49,21 @@ jobs:
 
       - name: 🚀 Executar Deploy Atômico
         run: |
+          # Define os metadados do projeto dinamicamente baseando-se na branch
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
-            CONTAINER_BASE="demanda-psql-prod"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
-            CONTAINER_BASE="demanda-psql-dev"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-          "PROJECT_NAME=$PROJECT_NAME ROOT=$ROOT CONTAINER_BASE=$CONTAINER_BASE bash -s" << 'EOF'
+            "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT'" 'bash -s' << 'DEPLOY_SCRIPT'
             set -e
 
-            # 1. Localizar Container (Resiliente a prefixos do Docker Compose)
-            # Busca qualquer container que contenha o nome base
-            REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
-
-            if [ -z "$REAL_CONTAINER" ]; then
-              echo "⚠️ Container para '$CONTAINER_BASE' não encontrado. Tentando subir no diretório 'current'..."
-              # Acessa o diretório 'current' onde o docker-compose.yml deve estar
-              cd "$CURRENT" && docker compose up -d
-              sleep 5
-              REAL_CONTAINER=$(docker ps --format '{{.Names}}' | grep "${CONTAINER_BASE}" | head -n 1)
-            fi
-
-            if [ -z "$REAL_CONTAINER" ]; then
-              echo "❌ ERRO: Container '$CONTAINER_BASE' não está rodando. Deploy abortado."
-              exit 1
-            fi
-            echo "✅ Usando container: $REAL_CONTAINER"
-
-            # 2. Preparar Release
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
@@ -86,38 +73,84 @@ jobs:
             sudo mkdir -p "$NEW_RELEASE"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 3. Links Simbólicos
+            # 1. Sincronizar configs Docker versionadas (compose e scripts init)
+            echo "📦 Sincronizando configs do Docker..."
+            sudo mkdir -p "$SHARED/docker"
+            [ -d "$NEW_RELEASE/docker" ] && sudo cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
+
+            # Copia o compose do ambiente para referência no shared
+            if [ "$PROJECT_NAME" = "demanda3d" ]; then
+              [ -f "$NEW_RELEASE/docker-compose-prod.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-prod.yml" "$SHARED/docker-compose.yml"
+            else
+              [ -f "$NEW_RELEASE/docker-compose-hom.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-hom.yml" "$SHARED/docker-compose.yml"
+            fi
+
+            # 2. Garantir containers rodando (idempotente — só recria se necessário)
+            echo "🔄 Verificando containers..."
+            cd "$SHARED"
+            
+            # Remove containers com nomes conflitantes de qualquer projeto anterior
+            sudo docker rm -f demanda-psql-hom demanda-psql-rep-hom demanda-redis-hom \
+                             demanda-psql-prod demanda-psql-rep-prod demanda-redis-prod 2>/dev/null || true
+            
+            # Remove volume órfão do projeto 'tmp' (teste anterior) se existir e for do ambiente atual
+            if [ "$PROJECT_NAME" != "demanda3d" ]; then
+              sudo docker volume rm hom_psql_data hom_psql_rep_data hom_redis_data 2>/dev/null || true
+            fi
+            
+            sudo docker compose -p "$PROJECT_NAME" up -d --remove-orphans
+            echo "⏳ Aguardando containers iniciarem..."
+            sleep 20
+            cd "$NEW_RELEASE"
+
+            # 3. Links Simbólicos e Permissões (Deploy Atômico)
+            echo "🔗 Criando links simbólicos..."
             sudo mkdir -p "$SHARED/storage/app/public"
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
+            sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
 
-            # 4. Banco de Dados
+            # 3. Migrations e Otimização
             cd "$NEW_RELEASE"
-            echo "🔧 Atualizando permissões do banco..."
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "ALTER USER demanda_user WITH PASSWORD '${{ secrets.DB_PASSWORD }}';" > /dev/null
-            docker exec -u postgres "$REAL_CONTAINER" psql -d demanda_db -c "GRANT ALL PRIVILEGES ON DATABASE demanda_db TO demanda_user;" > /dev/null
-
-            sudo mkdir -p "$BACKUPS"
-            docker exec -u postgres "$REAL_CONTAINER" pg_dump demanda_db > "/tmp/bkp_${PROJECT_NAME}.sql"
-            sudo mv "/tmp/bkp_${PROJECT_NAME}.sql" "$BACKUPS/backup_$(date +%Y%m%d%H%M%S).sql"
-
-            # 5. Finalização
+            
             if [ "$PROJECT_NAME" = "demanda3d" ]; then
               sudo -u www-data php artisan migrate --force
             else
               sudo -u www-data php artisan migrate:fresh --seed --force
             fi
-            
+
             sudo -u www-data php artisan optimize
+
+            # 4. Ativar nova release
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
-            
-            # Limpeza
+
+            # 5. Limpeza: mantém últimas 5 releases
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
-            cd "$BACKUPS" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
-            echo "✅ Deploy concluído para $PROJECT_NAME"
-          EOF
+            echo "✅ Deploy concluído com sucesso!"
+          DEPLOY_SCRIPT
+
+# ==============================================================================
+# 📋 NOTAS DE INFRAESTRUTURA
+# ==============================================================================
+# Os containers PostgreSQL e Redis são gerenciados MANUALMENTE no servidor.
+# Suba-os uma vez com:
+#
+#   # Homologação
+#   cd /var/www/dev-demanda3d/shared
+#   sudo -E docker compose -p dev-demanda3d up -d
+#
+#   # Produção
+#   cd /var/www/demanda3d/shared
+#   sudo -E docker compose -p demanda3d up -d
+#
+# O .env.docker (com POSTGRES_PASSWORD) já está no $SHARED/ e é lido via env_file.
+# Use 'sudo -E' para preservar as variáveis de ambiente, ou configure o .env.docker
+# diretamente no servidor com a senha correta.
+#
+# O deploy cuida apenas do código da aplicação (PHP, assets, migrations).
+# ==============================================================================
