@@ -11,7 +11,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - prod_psql_data:/var/lib/postgresql/data
+      - prod_psql_data:/var/lib/postgresql
       - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
@@ -36,7 +36,7 @@ services:
     ports:
       - "5437:5432"
     volumes:
-      - prod_psql_rep_data:/var/lib/postgresql/data
+      - prod_psql_rep_data:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
       demanda-psql-prod:
