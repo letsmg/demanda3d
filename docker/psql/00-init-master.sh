@@ -11,7 +11,7 @@ echo "=== [Master Init] Aplicando parâmetros de replicação ==="
 # Aplica apenas as configurações essenciais de replicação.
 # Parâmetros de performance (shared_buffers, etc.) são deixados com defaults
 # do PostgreSQL para evitar incompatibilidades com a versão Alpine.
-psql -v ON_ERROR_STOP=1 -U postgres -d postgres <<'EOSQL'
+psql -v ON_ERROR_STOP=1 -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" <<'EOSQL'
 ALTER SYSTEM SET listen_addresses = '*';
 ALTER SYSTEM SET wal_level = 'replica';
 ALTER SYSTEM SET max_wal_senders = 10;
