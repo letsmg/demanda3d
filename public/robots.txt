@@ -1,11 +1,35 @@
 User-agent: *
 Allow: /
+
+# ── Páginas públicas ──────────────────────
+Allow: /store
+Allow: /store/
+Allow: /legal/
+Allow: /legal/terms
+Allow: /legal/privacy
+
+# ── Rotas administrativas (bloqueadas) ────
 Disallow: /login
 Disallow: /register
+Disallow: /login_cli
+Disallow: /register_cli
 Disallow: /dashboard
 Disallow: /clients
+Disallow: /clientes
 Disallow: /orders
 Disallow: /inputs
-Disallow: /settings/*
+Disallow: /suppliers
+Disallow: /carriers
+Disallow: /freight-contracts
+Disallow: /products
+Disallow: /perfil
+Disallow: /cart
+Disallow: /checkout
+Disallow: /settings/
+Disallow: /reports/
+Disallow: /home
+Disallow: /password/
+Disallow: /fortify/
+Disallow: /api/
 
 Sitemap: https://demanda3d.com.br/sitemap.xml

@@ -14,6 +14,7 @@ use App\Http\Controllers\Inertia\InputController as InertiaInputController;
 use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
 use App\Http\Controllers\Inertia\ProductController as InertiaProductController;
 use App\Http\Controllers\Inertia\ReportController;
+use App\Http\Controllers\Inertia\ToolsController as InertiaToolsController;
 use App\Http\Controllers\Inertia\SupplierController as InertiaSupplierController;
 use App\Http\Controllers\ProductDetailController;
 use App\Http\Controllers\StoreController;
@@ -148,6 +149,12 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::get('{contract}/edit', [InertiaFreightContractController::class, 'edit'])->name('edit');
         Route::put('{contract}', [InertiaFreightContractController::class, 'update'])->name('update');
         Route::delete('{contract}', [InertiaFreightContractController::class, 'destroy'])->name('destroy');
+    });
+
+    // Tools
+    Route::prefix('tools')->name('tools.')->group(function () {
+        Route::get('/', [InertiaToolsController::class, 'index'])->name('index');
+        Route::post('/sitemap', [InertiaToolsController::class, 'generateSitemap'])->name('sitemap.generate');
     });
 
     // Reports (management + admin com canAccessFinancials)
