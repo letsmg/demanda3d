@@ -49,19 +49,25 @@ jobs:
 
       - name: 🚀 Executar Deploy Atômico
         run: |
-          # Define os metadados do projeto dinamicamente baseando-se na branch
+          # Define os metadados do projeto dinamicamente baseando-se na branch.
+          # Toda a lógica de ambiente fica centralizada aqui — o restante do script
+          # usa apenas as variáveis já resolvidas, sem novos if/else.
           if [ "${{ github.ref_name }}" = "main" ]; then
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
+            COMPOSE_FILE="docker-compose-prod.yml"
+            MIGRATION_STRATEGY="migrate"
           else
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
+            COMPOSE_FILE="docker-compose-hom.yml"
+            MIGRATION_STRATEGY="migrate:fresh --seed"
           fi
 
           scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
           ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-            "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT'" 'bash -s' << 'DEPLOY_SCRIPT'
+            "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT' COMPOSE_FILE='$COMPOSE_FILE' MIGRATION_STRATEGY='$MIGRATION_STRATEGY'" 'bash -s' << 'DEPLOY_SCRIPT'
             set -e
 
             RELEASES="$ROOT/releases"
@@ -79,30 +85,26 @@ jobs:
             [ -d "$NEW_RELEASE/docker" ] && sudo cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
 
             # Copia o compose do ambiente para referência no shared
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              [ -f "$NEW_RELEASE/docker-compose-prod.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-prod.yml" "$SHARED/docker-compose.yml"
-            else
-              [ -f "$NEW_RELEASE/docker-compose-hom.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-hom.yml" "$SHARED/docker-compose.yml"
-            fi
+            [ -f "$NEW_RELEASE/$COMPOSE_FILE" ] && sudo cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
 
-            # 2. Garantir containers rodando (idempotente — só recria se necessário)
+            # 2. Garantir containers rodando (idempotente)
             echo "🔄 Verificando containers..."
             cd "$SHARED"
-            
-            # Remove containers com nomes conflitantes de qualquer projeto anterior
-            sudo docker rm -f demanda-psql-hom demanda-psql-rep-hom demanda-redis-hom \
-                             demanda-psql-prod demanda-psql-rep-prod demanda-redis-prod 2>/dev/null || true
-            
-            # Remove volume órfão do projeto 'tmp' (teste anterior) se existir e for do ambiente atual
-            if [ "$PROJECT_NAME" != "demanda3d" ]; then
-              sudo docker volume rm hom_psql_data hom_psql_rep_data hom_redis_data 2>/dev/null || true
+
+            # Verifica se o compose padronizado existe (copiado e renomeado pelo bloco 1)
+            if [ ! -f "docker-compose.yml" ]; then
+                echo "⚠️ Erro: docker-compose.yml não encontrado em $SHARED"
+                exit 1
             fi
-            
-            sudo docker compose -p "$PROJECT_NAME" up -d --remove-orphans
+
+            # Sobe os containers usando o compose padronizado e projeto correto
+            # O --remove-orphans cuida de remover containers que não estão mais no arquivo
+            sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
+
             echo "⏳ Aguardando containers iniciarem..."
             sleep 20
             cd "$NEW_RELEASE"
-
+            
             # 3. Links Simbólicos e Permissões (Deploy Atômico)
             echo "🔗 Criando links simbólicos..."
             sudo mkdir -p "$SHARED/storage/app/public"
@@ -114,17 +116,13 @@ jobs:
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
             sudo chmod -R 775 "$SHARED/storage"
 
-            # =============================================
-            # 6. Banco de Dados & Backup Seguro
-            # =============================================
+            # 4. Verificação do Banco de Dados
+            echo "🔍 Verificando banco de dados..."
 
             # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
             # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
             # superusuário da aplicação para verificações e backup).
             DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
-
-            # Verificação rápida de sanidade do banco (usuário e database existem?)
-            echo "🔍 Verificando banco de dados..."
             sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
               psql -U "$DB_USER" -d postgres -tAc \
               "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
@@ -135,44 +133,19 @@ jobs:
               "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
               || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
 
-            # 3. Migrations e Otimização
+            # 5. Migrations e Otimização
             cd "$NEW_RELEASE"
             
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              sudo -u www-data php artisan migrate --force
-            else
-              sudo -u www-data php artisan migrate:fresh --seed --force
-            fi
+            sudo -u www-data php artisan $MIGRATION_STRATEGY --force
 
             sudo -u www-data php artisan optimize
 
-            # 4. Ativar nova release
+            # 6. Ativar nova release
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
 
-            # 5. Limpeza: mantém últimas 5 releases
+            # 7. Limpeza: mantém últimas 5 releases
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído com sucesso!"
           DEPLOY_SCRIPT
-
-# ==============================================================================
-# 📋 NOTAS DE INFRAESTRUTURA
-# ==============================================================================
-# Os containers PostgreSQL e Redis são gerenciados MANUALMENTE no servidor.
-# Suba-os uma vez com:
-#
-#   # Homologação
-#   cd /var/www/dev-demanda3d/shared
-#   sudo -E docker compose -p dev-demanda3d up -d
-#
-#   # Produção
-#   cd /var/www/demanda3d/shared
-#   sudo -E docker compose -p demanda3d up -d
-#
-# O .env.docker (com POSTGRES_PASSWORD) já está no $SHARED/ e é lido via env_file.
-# Use 'sudo -E' para preservar as variáveis de ambiente, ou configure o .env.docker
-# diretamente no servidor com a senha correta.
-#
-# O deploy cuida apenas do código da aplicação (PHP, assets, migrations).
-# ==============================================================================

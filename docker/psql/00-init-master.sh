@@ -23,4 +23,14 @@ ALTER SYSTEM SET synchronous_commit = 'on';
 SELECT pg_reload_conf();
 EOSQL
 
+# Adiciona entrada de replicação no pg_hba.conf para permitir conexões da réplica
+# O arquivo pg_hba.conf fica no diretório de dados do PostgreSQL ($PGDATA)
+PG_HBA="${PGDATA:-/var/lib/postgresql/data}/pg_hba.conf"
+if ! grep -q "replication" "$PG_HBA" 2>/dev/null; then
+    echo "host replication all samenet trust" >> "$PG_HBA"
+    echo "host replication all 0.0.0.0/0 md5" >> "$PG_HBA"
+    pg_ctl reload -D "${PGDATA:-/var/lib/postgresql/data}" 2>/dev/null || true
+    echo "=== [Master Init] pg_hba.conf atualizado para replicação ==="
+fi
+
 echo "=== [Master Init] Setup concluído com sucesso! ==="

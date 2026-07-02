@@ -11,7 +11,7 @@ services:
     ports:
       - "5438:5432"
     volumes:
-      - hom_psql_data:/var/lib/postgresql
+      - demanda-psql-hom:/var/lib/postgresql
       - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
@@ -20,7 +20,7 @@ services:
       retries: 10
       start_period: 120s
     networks:
-      - hom-demanda-net
+      - demanda-net-hom
 
   # =============================================
   # PostgreSQL Slave (Replica) - HOM
@@ -34,7 +34,7 @@ services:
     ports:
       - "5439:5432"
     volumes:
-      - hom_psql_rep_data:/var/lib/postgresql
+      - demanda-psql-rep-hom:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
       demanda-psql-hom:
@@ -46,7 +46,7 @@ services:
       retries: 20
       start_period: 60s
     networks:
-      - hom-demanda-net
+      - demanda-net-hom
 
   # =============================================
   # Redis - HOM
@@ -59,24 +59,24 @@ services:
     ports:
       - "6382:6379"
     volumes:
-      - hom_redis_data:/data
+      - demanda-redis-hom:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - hom-demanda-net
+      - demanda-net-hom
 
 networks:
-  hom-demanda-net:
-    name: hom-demanda-net
+  demanda-net-hom:
+    name: demanda-net-hom
     driver: bridge
 
 volumes:
-  hom_psql_data:
-    name: hom_psql_data
-  hom_psql_rep_data:
-    name: hom_psql_rep_data
-  hom_redis_data:
-    name: hom_redis_data
+  demanda-psql-hom:
+    name: demanda-psql-hom
+  demanda-psql-rep-hom:
+    name: demanda-psql-rep-hom
+  demanda-redis-hom:
+    name: demanda-redis-hom
