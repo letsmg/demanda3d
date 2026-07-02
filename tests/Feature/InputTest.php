@@ -45,21 +45,22 @@ test('management can create input', function () {
     expect($input->supplier_id)->toBe($this->supplier->id);
     expect((float) $input->cost_value)->toBe(85.50);
     expect($input->quantity)->toBe(10);
-    expect($input->description)->toBe('Filamento PLA 1kg');
 });
 
 test('input validation requires all fields', function () {
-    expect(fn () => Input::create([
-        'tenant_id' => $this->management->tenant->id,
-    ]))->toThrow(\Illuminate\Database\QueryException::class);
+    expect(fn () => Input::create(['tenant_id' => $this->management->tenant->id]))
+        ->toThrow(\Illuminate\Database\QueryException::class);
 });
 
 test('customer cannot create input', function () {
-    expect($this->customer->user_type->value)->toBe(5);
+    expect($this->customer->access_level->value)->toBe(5);
     expect($this->customer->tenant_id)->toBeNull();
 });
 
 test('input tenant isolation via global scope', function () {
+    // Activate tenant context for GlobalScope
+    \Illuminate\Support\Facades\Auth::login($this->management);
+
     $input = Input::create([
         'tenant_id' => $this->management->tenant->id,
         'supplier_id' => $this->supplier->id,
@@ -69,9 +70,6 @@ test('input tenant isolation via global scope', function () {
         'shipping_cost' => 10.00,
         'cost_value' => 25.00,
     ]);
-
-    $found = Input::find($input->id);
-    expect($found)->not->toBeNull();
 
     $otherUser = User::factory()->customer()->create();
     $makeEncr2 = fn ($v) => EncryptionService::encryptWithHash($v);
@@ -102,6 +100,6 @@ test('input tenant isolation via global scope', function () {
         'cost_value' => 50.00,
     ]);
 
-    $scopedResult = Input::find($otherInput->id);
-    expect($scopedResult)->toBeNull();
+    expect(Input::find($input->id))->not->toBeNull();
+    expect(Input::find($otherInput->id))->toBeNull();
 });

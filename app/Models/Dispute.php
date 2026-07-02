@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Dispute extends Model
 {
     use HasFactory;
-{
+
     /**
      * Atributos virtuais descriptografados para serialização JSON/Inertia.
      */

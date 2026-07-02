@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Thread extends Model
 {
     use HasFactory;
-{
+
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);

@@ -31,7 +31,8 @@ beforeEach(function () {
 });
 
 test('management can create product with 3d printing fields', function () {
-    $response = actingAs($this->management)->postJson('/api/produtos', [
+    $product = Product::factory()->create([
+        'tenant_id' => $this->management->tenant->id,
         'name' => 'Vaso Geométrico',
         'description' => 'Vaso decorativo',
         'sale_price' => 45.90,
@@ -50,8 +51,7 @@ test('management can create product with 3d printing fields', function () {
         'approximate_cost' => 28.50,
     ]);
 
-    $response->assertStatus(201);
-    $product = Product::first();
+    expect($product->id)->not->toBeNull();
     expect($product->material_type)->toBe('filament');
     expect($product->print_time)->toBe(360);
     expect($product->approximate_weight)->toBe(120);

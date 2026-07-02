@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Carrier extends Model
 {
     use HasFactory;
-{
+
     protected $appends = [
         'document', 'address', 'number', 'district', 'city',
         'contact1', 'phone1', 'contact2', 'phone2',

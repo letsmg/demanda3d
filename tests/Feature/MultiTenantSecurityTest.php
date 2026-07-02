@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Client;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Services\EncryptionService;
 
@@ -10,7 +9,6 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 beforeEach(function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
 
-    // Tenant A
     $this->tenantAUser = User::factory()->management()->create();
     $this->tenantA = $this->tenantAUser->tenant()->create([
         'company_name_encrypted' => $makeEncr('A')['encrypted'],
@@ -28,7 +26,6 @@ beforeEach(function () {
         'state' => 'SP', 'zipcode' => '01000-000', 'active' => true,
     ]);
 
-    // Tenant B
     $this->tenantBUser = User::factory()->management()->create();
     $this->tenantB = $this->tenantBUser->tenant()->create([
         'company_name_encrypted' => $makeEncr('B')['encrypted'],
@@ -48,6 +45,8 @@ beforeEach(function () {
 });
 
 test('tenant a cannot view client from tenant b', function () {
+    \Illuminate\Support\Facades\Auth::login($this->tenantAUser);
+
     $clientA = Client::factory()->create(['tenant_id' => $this->tenantA->id]);
     $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
 
@@ -56,81 +55,64 @@ test('tenant a cannot view client from tenant b', function () {
 });
 
 test('tenant a cannot update client from tenant b', function () {
-    $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
+    \Illuminate\Support\Facades\Auth::login($this->tenantAUser);
 
-    // Via global scope, tenant A cannot even find client B
-    $found = Client::find($clientB->id);
-    expect($found)->toBeNull();
+    $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
+    expect(Client::find($clientB->id))->toBeNull();
 });
 
 test('tenant a cannot delete client from tenant b', function () {
-    $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
+    \Illuminate\Support\Facades\Auth::login($this->tenantAUser);
 
-    // Via global scope, tenant A cannot find client B to delete it
-    $found = Client::find($clientB->id);
-    expect($found)->toBeNull();
+    $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
+    expect(Client::find($clientB->id))->toBeNull();
 });
 
 test('tenant isolation via tenant id on clients', function () {
+    \Illuminate\Support\Facades\Auth::login($this->tenantAUser);
+
     $clientA = Client::factory()->create(['tenant_id' => $this->tenantA->id]);
     $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
 
-    expect($clientA->tenant_id)->not->toBe($clientB->tenant_id);
     expect($clientA->tenant_id)->toBe($this->tenantA->id);
     expect($clientB->tenant_id)->toBe($this->tenantB->id);
+    expect($clientA->tenant_id)->not->toBe($clientB->tenant_id);
 
-    // Global scope hides tenant B's client from tenant A
     expect(Client::find($clientA->id))->not->toBeNull();
     expect(Client::find($clientB->id))->toBeNull();
     expect(Client::withoutGlobalScopes()->find($clientB->id))->not->toBeNull();
 });
 
-test('admin can update clients from any tenant', function () {
+test('admin can access clients from any tenant via unscoped query', function () {
     $admin = User::factory()->admin()->create();
     $clientB = Client::factory()->create(['tenant_id' => $this->tenantB->id]);
 
-    // Admin can find client via withoutGlobalScopes (admin exception)
     $found = Client::withoutGlobalScopes()->find($clientB->id);
     expect($found)->not->toBeNull();
     expect($found->tenant_id)->toBe($this->tenantB->id);
-
-    // Admin user type should be 10
-    expect($admin->user_type->value)->toBe(10);
 });
 
-test('management can update clients from any tenant', function () {
+test('management user type value', function () {
     $management = User::factory()->management()->create();
-    $clientA = Client::factory()->create(['tenant_id' => $this->tenantA->id]);
-
-    // Management without tenant context can use withoutGlobalScopes
-    $found = Client::withoutGlobalScopes()->find($clientA->id);
-    expect($found)->not->toBeNull();
-
-    // Management user type should be 1
-    expect($management->user_type->value)->toBe(1);
+    expect($management->access_level->value)->toBe(1);
 });
 
-test('customer cannot create client via inertia redirects to login', function () {
+test('customer is not staff', function () {
     $customer = User::factory()->customer()->create();
-
-    // Customer user type is 5 — not staff
-    expect($customer->user_type->value)->toBe(5);
+    expect($customer->access_level->value)->toBe(5);
+    expect(in_array($customer->access_level->value, [0, 1, 10]))->toBeFalse();
 });
 
 test('all business tables have tenant id', function () {
     $tables = ['clients', 'orders', 'inputs', 'products', 'suppliers', 'carriers'];
-
     foreach ($tables as $table) {
-        expect(\Illuminate\Support\Facades\Schema::hasColumn($table, 'tenant_id'))->toBeTrue(
-            "Table {$table} must have tenant_id column"
-        );
+        expect(\Illuminate\Support\Facades\Schema::hasColumn($table, 'tenant_id'))->toBeTrue();
     }
 });
 
 test('soft deletes on clients for lgpd', function () {
     $client = Client::factory()->create(['tenant_id' => $this->tenantA->id]);
     $clientId = $client->id;
-
     $client->delete();
 
     expect(Client::withTrashed()->find($clientId))->not->toBeNull();

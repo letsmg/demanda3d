@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Message extends Model
 {
     use HasFactory;
-{
+
     /**
      * Atributos virtuais descriptografados para serialização JSON/Inertia.
      */
