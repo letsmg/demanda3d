@@ -24,7 +24,7 @@ class ReportService
         }
 
         return $query->orderBy('quantity', 'asc')
-            ->orderBy('purchase_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
