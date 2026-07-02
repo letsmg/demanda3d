@@ -89,7 +89,7 @@ jobs:
             echo "🔄 Verificando containers..."
             cd "$SHARED"
             
-            COMPOSE_FILE="docker-compose-prod.yml"
+            COMPOSE_FILE="docker-compose.yml"
 
             # Verifica se o arquivo existe para evitar erro
             if [ ! -f "$COMPOSE_FILE" ]; then
