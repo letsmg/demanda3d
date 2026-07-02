@@ -74,18 +74,9 @@ networks:
     driver: bridge
 
 volumes:
-<<<<<<< HEAD
   demanda-psql-prod:
     name: demanda-psql-prod
   demanda-psql-rep-prod:
     name: demanda-psql-rep-prod
   demanda-redis-prod:
     name: demanda-redis-prod
-=======
-  prod_psql_data:
-    name: prod_psql_data
-  prod_psql_rep_data:
-    name: prod_psql_rep_data
-  prod_redis_data:
-    name: prod_redis_data
->>>>>>> 07420dea377203c2e090b64ce5ceb63e23deb7e8
