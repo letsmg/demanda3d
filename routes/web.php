@@ -69,14 +69,14 @@ Route::get('/checkout/success', [App\Http\Controllers\CheckoutController::class,
 Route::get('/checkout/cancel', [App\Http\Controllers\CheckoutController::class, 'cancel'])->name('checkout.cancel');
 
 // Client profile routes (authenticated via clients guard)
-Route::middleware(['auth:clients'])->group(function () {
+Route::middleware(['auth:clients', 'verify.user.exists'])->group(function () {
     Route::get('/perfil', [ClientProfileController::class, 'profile'])->name('client.profile');
     Route::put('/perfil', [ClientProfileController::class, 'updateProfile'])->name('client.profile.update');
     Route::get('/perfil/enderecos', [ClientProfileController::class, 'addresses'])->name('client.addresses');
     Route::put('/perfil/enderecos', [ClientProfileController::class, 'updateAddress'])->name('client.addresses.update');
 });
 
-Route::middleware(['auth', 'verified', 'ensure.staff'])->group(function () {
+Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

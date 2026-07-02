@@ -28,7 +28,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-            VerifyUserExists::class,
         ]);
 
         $middleware->alias([
@@ -39,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'ensure.staff' => \App\Http\Middleware\EnsureStaff::class,
             'check.age' => CheckAgeRequirement::class,
+            'verify.user.exists' => VerifyUserExists::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
