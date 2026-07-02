@@ -21,19 +21,22 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
-    filaments: props.input.filaments,
-    energy: props.input.energy.toString(),
-    dt_buy: props.input.dt_buy,
-    cost_buy: props.input.cost_buy.toString(),
-    purge: props.input.purge.toString(),
+    supplier_id: props.input.supplier_id,
+    description: props.input.description,
+    brand: props.input.brand || '',
+    purchase_date: props.input.purchase_date || '',
+    quantity: String(props.input.quantity || ''),
+    shipping_cost: String(props.input.shipping_cost || ''),
+    cost_value: String(props.input.cost_value || ''),
 });
 
 const testFields: TestField[] = [
-    { key: 'filaments', value: 'PETG 1.75mm Translúcido' },
-    { key: 'energy', value: '0.65' },
-    { key: 'dt_buy', value: '2026-06-20' },
-    { key: 'cost_buy', value: '99.90' },
-    { key: 'purge', value: '12.5' },
+    { key: 'description', value: 'PETG 1.75mm Translúcido' },
+    { key: 'brand', value: '3DLab' },
+    { key: 'purchase_date', value: '2026-06-20' },
+    { key: 'quantity', value: '2000' },
+    { key: 'shipping_cost', value: '15.90' },
+    { key: 'cost_value', value: '99.90' },
 ];
 
 function handleFill(fields: TestField[]) {
@@ -69,7 +72,7 @@ const submit = () => {
                     Editar Insumo
                 </h1>
                 <p class="text-sm text-muted-foreground">
-                    Editando: {{ props.input.filaments }}
+                    Editando: {{ props.input.description }}
                 </p>
             </div>
         </div>
@@ -86,108 +89,89 @@ const submit = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Insumo</CardTitle>
-                    <CardDescription
-                        >Edite os dados do material abaixo</CardDescription
-                    >
+                    <CardDescription>Edite os dados do material abaixo</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="space-y-2">
-                        <Label for="filaments">Filamento / Material *</Label>
+                        <Label for="description">Filamento / Material *</Label>
                         <Input
-                            id="filaments"
-                            v-model="form.filaments"
+                            id="description"
+                            v-model="form.description"
                             placeholder="Ex: PLA 1.75mm"
-                            :class="{
-                                'border-destructive': form.errors.filaments,
-                            }"
+                            :class="{ 'border-destructive': form.errors.description }"
                         />
-                        <span
-                            v-if="form.errors.filaments"
-                            class="text-sm text-destructive"
-                            >{{ form.errors.filaments }}</span
-                        >
+                        <span v-if="form.errors.description" class="text-sm text-destructive">{{ form.errors.description }}</span>
                     </div>
+
+                    <div class="space-y-2">
+                        <Label for="brand">Marca *</Label>
+                        <Input
+                            id="brand"
+                            v-model="form.brand"
+                            placeholder="Ex: 3DLab, Creality"
+                            :class="{ 'border-destructive': form.errors.brand }"
+                        />
+                        <span v-if="form.errors.brand" class="text-sm text-destructive">{{ form.errors.brand }}</span>
+                    </div>
+
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="dt_buy">Data da Compra *</Label>
+                            <Label for="purchase_date">Data da Compra *</Label>
                             <Input
-                                id="dt_buy"
+                                id="purchase_date"
                                 type="date"
-                                v-model="form.dt_buy"
-                                :class="{
-                                    'border-destructive': form.errors.dt_buy,
-                                }"
+                                v-model="form.purchase_date"
+                                :class="{ 'border-destructive': form.errors.purchase_date }"
                             />
-                            <span
-                                v-if="form.errors.dt_buy"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.dt_buy }}</span
-                            >
+                            <span v-if="form.errors.purchase_date" class="text-sm text-destructive">{{ form.errors.purchase_date }}</span>
                         </div>
                         <div class="space-y-2">
-                            <Label for="cost_buy">Custo de Compra *</Label>
+                            <Label for="cost_value">Custo de Compra *</Label>
                             <Input
-                                id="cost_buy"
+                                id="cost_value"
                                 type="number"
                                 step="0.01"
-                                v-model="form.cost_buy"
+                                v-model="form.cost_value"
                                 placeholder="0.00"
-                                :class="{
-                                    'border-destructive': form.errors.cost_buy,
-                                }"
+                                :class="{ 'border-destructive': form.errors.cost_value }"
                             />
-                            <span
-                                v-if="form.errors.cost_buy"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.cost_buy }}</span
-                            >
+                            <span v-if="form.errors.cost_value" class="text-sm text-destructive">{{ form.errors.cost_value }}</span>
                         </div>
                     </div>
+
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="energy">Custo de Energia *</Label>
+                            <Label for="quantity">Quantidade (gramas) *</Label>
                             <Input
-                                id="energy"
+                                id="quantity"
                                 type="number"
-                                step="0.01"
-                                v-model="form.energy"
-                                placeholder="0.00"
-                                :class="{
-                                    'border-destructive': form.errors.energy,
-                                }"
+                                step="1"
+                                v-model="form.quantity"
+                                placeholder="0"
+                                :class="{ 'border-destructive': form.errors.quantity }"
                             />
-                            <span
-                                v-if="form.errors.energy"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.energy }}</span
-                            >
+                            <span v-if="form.errors.quantity" class="text-sm text-destructive">{{ form.errors.quantity }}</span>
                         </div>
                         <div class="space-y-2">
-                            <Label for="purge">Purga (gramas) *</Label>
+                            <Label for="shipping_cost">Frete *</Label>
                             <Input
-                                id="purge"
+                                id="shipping_cost"
                                 type="number"
-                                step="0.1"
-                                v-model="form.purge"
-                                placeholder="0.0"
-                                :class="{
-                                    'border-destructive': form.errors.purge,
-                                }"
+                                step="0.01"
+                                v-model="form.shipping_cost"
+                                placeholder="0.00"
+                                :class="{ 'border-destructive': form.errors.shipping_cost }"
                             />
-                            <span
-                                v-if="form.errors.purge"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.purge }}</span
-                            >
+                            <span v-if="form.errors.shipping_cost" class="text-sm text-destructive">{{ form.errors.shipping_cost }}</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child
-                    ><Link :href="inputsIndex()">Cancelar</Link></Button
-                >
+                <Button variant="outline" as-child>
+                    <Link :href="inputsIndex()">Cancelar</Link>
+                </Button>
                 <Button type="submit" :disabled="form.processing">
                     <Save class="mr-2 h-4 w-4" />
                     {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}

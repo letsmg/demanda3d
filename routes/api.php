@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\InputController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductApiController;
+use App\Http\Controllers\SupplierApiController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas públicas (acessíveis sem autenticação, mas com verificação de idade)
@@ -24,4 +25,7 @@ Route::middleware(['auth', 'verified'])->name('api.')->group(function () {
 
     // Inputs API
     Route::apiResource('inputs', InputController::class);
+
+    // Suppliers API
+    Route::apiResource('suppliers', SupplierApiController::class);
 });

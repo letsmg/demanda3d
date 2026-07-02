@@ -13,8 +13,8 @@ const props = defineProps<{ supplier: any }>();
 
 const form = useForm({
     name: props.supplier.name,
-    document: '',
-    contact: '',
+    document: props.supplier.document || '',
+    contact: props.supplier.contact || '',
 });
 
 const nomesFornecedores = ['3D Supplies Brasil', 'Filamentos Prime', 'ResinPro', 'MakerParts', 'Impressão Fácil', 'Plásticos Técnicos', 'PrintSupply', 'EcoFilamentos'];

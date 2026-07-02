@@ -6,6 +6,7 @@ use App\Http\Middleware\CheckAgeRequirement;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\StaffOnly;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -42,4 +43,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Defesa em profundidade: converte UniqueConstraintViolationException
+        // em mensagem amigável. A validação nas Requests DEVE impedir que
+        // isso ocorra, mas este handler garante que o usuário nunca veja um
+        // erro 500 de banco de dados.
+        $exceptions->render(function (UniqueConstraintViolationException $e, Request $request) {
+            if ($request->is('api/*') || $request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Este registro já existe. Verifique os dados e tente novamente.',
+                ], 409); // 409 Conflict
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Este registro já existe. Verifique os dados e tente novamente.');
+        });
     })->create();

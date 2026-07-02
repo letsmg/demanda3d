@@ -48,22 +48,45 @@ class Client extends Authenticatable
 {
     use HasFactory, SoftDeletes, Notifiable;
 
+    /**
+     * Atributos virtuais que DEVEM ser serializados para JSON/Inertia.
+     * Sem o $appends, os accessors get{Nome}Attribute NÃO são incluídos
+     * no toArray() e os dados ficam nulos no frontend Vue.
+     */
+    protected $appends = [
+        'first_name',
+        'last_name',
+        'doc',
+        'address',
+        'number',
+        'state',
+        'zipcode',
+        'city',
+        'phone1',
+        'phone2',
+        'contact1',
+        'contact2',
+    ];
+
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
     }
 
+    /**
+     * Casts removidos intencionalmente.
+     *
+     * Os campos *_encrypted são tratados manualmente pelos accessors
+     * via EncryptionService::decrypt(). Os casts nativos 'encrypted' do
+     * Laravel causariam dupla descriptografia, corrompendo os dados.
+     *
+     * Os campos 'phone1', 'phone2', 'contact1', 'contact2' são VIRTUAIS
+     * (não existem como colunas no banco) — são populados pelos accessors.
+     * Mantê-los nos casts faria o Laravel tentar buscar colunas inexistentes.
+     */
     protected function casts(): array
     {
-        return [
-            'phone1' => 'string',
-            'phone2' => 'string',
-            'contact1' => 'string',
-            'contact2' => 'string',
-            'doc_encrypted' => 'encrypted',
-            'phone1_encrypted' => 'encrypted',
-            'phone2_encrypted' => 'encrypted',
-        ];
+        return [];
     }
 
     public function tenant(): BelongsTo
@@ -115,6 +138,70 @@ class Client extends Authenticatable
     public function getDecryptedPhone2(): ?string
     {
         return EncryptionService::decrypt($this->phone2_encrypted);
+    }
+
+    /**
+     * Accessors para descriptografar campos sensíveis ao serializar para JSON/Inertia.
+     * O Laravel inclui automaticamente accessors no toArray() quando usam get{Nome}Attribute.
+     */
+    public function getFirstNameAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->first_name_encrypted);
+    }
+
+    public function getLastNameAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->last_name_encrypted);
+    }
+
+    public function getDocAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->doc_encrypted);
+    }
+
+    public function getAddressAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->address_encrypted);
+    }
+
+    public function getNumberAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->number_encrypted);
+    }
+
+    public function getStateAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->state_encrypted);
+    }
+
+    public function getZipcodeAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->zipcode_encrypted);
+    }
+
+    public function getCityAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->city_encrypted);
+    }
+
+    public function getPhone1Attribute(): ?string
+    {
+        return EncryptionService::decrypt($this->phone1_encrypted);
+    }
+
+    public function getPhone2Attribute(): ?string
+    {
+        return EncryptionService::decrypt($this->phone2_encrypted);
+    }
+
+    public function getContact1Attribute(): ?string
+    {
+        return EncryptionService::decrypt($this->contact1_encrypted);
+    }
+
+    public function getContact2Attribute(): ?string
+    {
+        return EncryptionService::decrypt($this->contact2_encrypted);
     }
 
     /**

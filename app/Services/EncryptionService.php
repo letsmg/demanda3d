@@ -44,10 +44,38 @@ class EncryptionService
         }
 
         try {
-            return Crypt::decryptString($encryptedValue);
+            $result = Crypt::decryptString($encryptedValue);
+
+            // Defesa contra dupla criptografia: os casts nativos 'encrypted' do
+            // Laravel re-criptografavam valores já criptografados na inserção,
+            // criando uma segunda camada. Descriptografamos recursivamente até
+            // obter texto plano (máximo 2 iterações por segurança).
+            if (self::looksEncrypted($result)) {
+                $result = Crypt::decryptString($result);
+            }
+
+            return $result;
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Verifica se uma string parece ser um payload criptografado do Laravel.
+     * Payloads válidos são JSON base64-encoded com as chaves "iv", "value", "mac".
+     */
+    private static function looksEncrypted(string $value): bool
+    {
+        $decoded = base64_decode($value, true);
+
+        if ($decoded === false) {
+            return false;
+        }
+
+        $payload = json_decode($decoded, true);
+
+        return is_array($payload)
+            && isset($payload['iv'], $payload['value'], $payload['mac']);
     }
 
     /**
