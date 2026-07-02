@@ -67,6 +67,53 @@ export function useTestData() {
         return (Math.random() * 400 + 50).toFixed(2);
     }
 
+    /**
+     * Gera um CNPJ aleatório válido com dígitos verificadores corretos.
+     * Retorna no formato 00.000.000/0001-00
+     */
+    function randomCNPJ(): string {
+        const n = Array.from({ length: 12 }, () => Math.floor(Math.random() * 9));
+
+        // Raiz fixa: 0001 (filial)
+        const raiz = [0, 0, 0, 1];
+        const cnpj = [...n.slice(0, 8), ...raiz];
+
+        let d1 = 0;
+        let d2 = 0;
+        const pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        const pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+        for (let i = 0; i < 12; i++) {
+            d1 += cnpj[i] * pesos1[i];
+            d2 += cnpj[i] * pesos2[i];
+        }
+        d1 = d1 % 11 < 2 ? 0 : 11 - (d1 % 11);
+        d2 += d1 * pesos2[12];
+        d2 = d2 % 11 < 2 ? 0 : 11 - (d2 % 11);
+
+        const digits = [...cnpj, d1, d2];
+        return digits.join('').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    }
+
+    /**
+     * Gera um CPF aleatório válido com dígitos verificadores corretos.
+     */
+    function randomCPF(): string {
+        const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 9));
+        let d1 = 0;
+        let d2 = 0;
+        for (let i = 0; i < 9; i++) {
+            d1 += n[i] * (10 - i);
+            d2 += n[i] * (11 - i);
+        }
+        d1 = (d1 * 10) % 11;
+        d1 = d1 >= 10 ? 0 : d1;
+        d2 += d1 * 2;
+        d2 = (d2 * 10) % 11;
+        d2 = d2 >= 10 ? 0 : d2;
+        return [...n, d1, d2].join('').replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    }
+
     return {
         randomProductName,
         randomProductDescription,
@@ -76,5 +123,7 @@ export function useTestData() {
         randomQuantity,
         randomShippingCost,
         randomCostValue,
+        randomCNPJ,
+        randomCPF,
     };
 }

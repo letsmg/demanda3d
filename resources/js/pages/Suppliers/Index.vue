@@ -37,13 +37,26 @@ const deleteSupplier = (id: number) => {
                         <thead>
                             <tr class="border-b">
                                 <th class="py-3 px-4 font-medium">Nome</th>
+                                <th class="py-3 px-4 font-medium hidden md:table-cell">Documento</th>
+                                <th class="py-3 px-4 font-medium hidden lg:table-cell">Contato</th>
+                                <th class="py-3 px-4 font-medium hidden lg:table-cell">E-mail</th>
+                                <th class="py-3 px-4 font-medium hidden xl:table-cell">Cidade/UF</th>
                                 <th class="py-3 px-4 font-medium text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="supplier in (Array.isArray(suppliers) ? suppliers : suppliers.data)" :key="supplier.id" class="border-b hover:bg-muted/50">
                                 <td class="py-3 px-4 font-medium">{{ supplier.name }}</td>
-                                <td class="py-3 px-4 text-right">
+                                <td class="py-3 px-4 hidden md:table-cell text-muted-foreground">{{ supplier.document || '-' }}</td>
+                                <td class="py-3 px-4 hidden lg:table-cell text-muted-foreground">{{ supplier.contact || '-' }}</td>
+                                <td class="py-3 px-4 hidden lg:table-cell text-muted-foreground">
+                                    <a v-if="supplier.email" :href="'mailto:' + supplier.email" class="text-blue-600 hover:underline">{{ supplier.email }}</a>
+                                    <span v-else>-</span>
+                                </td>
+                                <td class="py-3 px-4 hidden xl:table-cell text-muted-foreground">
+                                    {{ supplier.city ? supplier.city + '/' + supplier.state : '-' }}
+                                </td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
                                     <Button variant="ghost" size="icon" as-child>
                                         <Link :href="`/suppliers/${supplier.id}/edit`"><Pencil class="h-4 w-4" /></Link>
                                     </Button>
@@ -53,7 +66,7 @@ const deleteSupplier = (id: number) => {
                                 </td>
                             </tr>
                             <tr v-if="!(Array.isArray(suppliers) ? suppliers : suppliers.data)?.length">
-                                <td colspan="2" class="py-8 text-center text-muted-foreground">Nenhum fornecedor encontrado.</td>
+                                <td colspan="6" class="py-8 text-center text-muted-foreground">Nenhum fornecedor encontrado.</td>
                             </tr>
                         </tbody>
                     </table>
