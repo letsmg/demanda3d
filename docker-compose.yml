@@ -27,9 +27,9 @@ services:
   # =============================================
   # PostgreSQL Slave (Replica) - DEV
   # =============================================
-  demanda-psql-dev-rep:
+  demanda-psql-rep-dev:
     image: postgres:18.4-alpine
-    container_name: demanda-psql-dev-rep
+    container_name: demanda-psql-rep-dev
     restart: unless-stopped
     env_file:
       - .env.docker
