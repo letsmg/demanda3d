@@ -25,7 +25,9 @@ class ProductSeeder extends Seeder
             return;
         }
 
-        $this->command->info('=== Criando produtos e baixando imagens ===');
+        if ($this->command) {
+            $this->command->info('=== Criando produtos e baixando imagens ===');
+        }
 
         $products = [
             [
@@ -163,7 +165,9 @@ class ProductSeeder extends Seeder
         foreach ($tenants as $tenant) {
             $tenantId = $tenant->id;
             $tenantDisplay = $tenant->display_name ?? "Tenant #{$tenantId}";
-            $this->command->info("  ── Tenant: {$tenantDisplay} ──");
+            if ($this->command) {
+                $this->command->info("  ── Tenant: {$tenantDisplay} ──");
+            }
 
             foreach ($products as $productData) {
                 // Check if product already exists for this tenant
@@ -199,8 +203,8 @@ class ProductSeeder extends Seeder
                         'meta_keywords' => $productData['meta_keywords'],
                         'canonical_url' => $productData['canonical_url'],
                         'og_image' => $productData['og_image'],
-                        'schema_markup' => $productData['schema_markup'],
-                        'google_tag_manager' => $productData['google_tag_manager'],
+                        'schema_markup' => $this->generateSchemaMarkup($productData),
+                        'google_tag_manager' => $this->generateGtmScript($productData),
                     ]);
 
                     // Vincular categorias ao produto
@@ -212,9 +216,13 @@ class ProductSeeder extends Seeder
                         }
                     }
 
-                    $this->command->line("    ✓ Produto criado: {$product->name} (slug: {$product->slug})");
+                    if ($this->command) {
+                        $this->command->line("    ✓ Produto criado: {$product->name} (slug: {$product->slug})");
+                    }
                 } else {
-                    $this->command->line("    → Produto já existe: {$product->name}");
+                    if ($this->command) {
+                        $this->command->line("    → Produto já existe: {$product->name}");
+                    }
                 }
 
                 // Check existing images for this product
@@ -222,7 +230,9 @@ class ProductSeeder extends Seeder
                 $neededImages = self::MAX_IMAGES_PER_PRODUCT - $existingCount;
 
                 if ($neededImages <= 0) {
-                    $this->command->line("    → {$existingCount} imagens já existentes, pulando download");
+                    if ($this->command) {
+                        $this->command->line("    → {$existingCount} imagens já existentes, pulando download");
+                    }
                     continue;
                 }
 
@@ -230,7 +240,9 @@ class ProductSeeder extends Seeder
                 for ($i = $existingCount; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
                     $imageUrl = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
                     $filename = "products/{$tenantId}/{$product->id}-{$i}.jpg";
-                    $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/" . (self::MAX_IMAGES_PER_PRODUCT - 1) . "... ");
+                    if ($this->command) {
+                        $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/" . (self::MAX_IMAGES_PER_PRODUCT - 1) . "... ");
+                    }
 
                     $imageContent = @file_get_contents($imageUrl);
 
@@ -242,14 +254,85 @@ class ProductSeeder extends Seeder
                             'path' => $filename,
                             'order' => $i,
                         ]);
-                        $this->command->getOutput()->writeln("<fg=green>✓ OK</>");
+                        if ($this->command) {
+                            $this->command->getOutput()->writeln("<fg=green>✓ OK</>");
+                        }
                     } else {
-                        $this->command->getOutput()->writeln("<fg=red>✗ FALHA</>");
-                        $this->command->warn("      Não foi possível baixar imagem de {$imageUrl}");
+                        if ($this->command) {
+                            $this->command->getOutput()->writeln("<fg=red>✗ FALHA</>");
+                            $this->command->warn("      Não foi possível baixar imagem de {$imageUrl}");
+                        }
                     }
                 }
             }
-            $this->command->info('');
+            if ($this->command) {
+                $this->command->info('');
+            }
         }
+    }
+
+    /**
+     * Gera schema markup JSON-LD para Product (schema.org) durante o seed.
+     */
+    private function generateSchemaMarkup(array $productData): string
+    {
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Product',
+            'name' => $productData['name'],
+            'description' => mb_substr(strip_tags($productData['description']), 0, 5000),
+            'sku' => Str::slug($productData['name']),
+            'offers' => [
+                '@type' => 'Offer',
+                'price' => (string) $productData['sale_price'],
+                'priceCurrency' => 'BRL',
+                'availability' => 'https://schema.org/InStock',
+                'priceValidUntil' => now()->addYear()->format('Y-m-d'),
+            ],
+        ];
+
+        if (!empty($productData['height']) || !empty($productData['width']) || !empty($productData['approximate_weight'])) {
+            $schema['additionalProperty'] = [];
+            if (!empty($productData['height'])) {
+                $schema['additionalProperty'][] = ['@type' => 'PropertyValue', 'name' => 'Altura', 'value' => $productData['height'] . ' mm'];
+            }
+            if (!empty($productData['width'])) {
+                $schema['additionalProperty'][] = ['@type' => 'PropertyValue', 'name' => 'Largura', 'value' => $productData['width'] . ' mm'];
+            }
+            if (!empty($productData['approximate_weight'])) {
+                $schema['additionalProperty'][] = ['@type' => 'PropertyValue', 'name' => 'Peso', 'value' => $productData['approximate_weight'] . ' g'];
+            }
+        }
+
+        if (!empty($productData['categorias'])) {
+            $categoriaNames = Categoria::whereIn('slug', $productData['categorias'])->pluck('nome')->toArray();
+            if (!empty($categoriaNames)) {
+                $schema['category'] = implode(', ', $categoriaNames);
+            }
+        }
+
+        return json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Gera script Google Tag Manager com dataLayer durante o seed.
+     */
+    private function generateGtmScript(array $productData): string
+    {
+        $dataLayer = [
+            'event' => 'product_detail_view',
+            'ecommerce' => [
+                'detail' => [
+                    'products' => [[
+                        'name' => $productData['name'],
+                        'price' => (string) $productData['sale_price'],
+                    ]],
+                ],
+            ],
+        ];
+
+        $json = json_encode($dataLayer, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return "<!-- Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  dataLayer.push({$json});\n</script>";
     }
 }

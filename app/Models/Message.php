@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'content_encrypted',
 ])]
 class Message extends Model
+{
+    use HasFactory;
 {
     /**
      * Atributos virtuais descriptografados para serialização JSON/Inertia.

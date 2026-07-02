@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Queue;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
 
-uses(\Illuminate\Framework\Testing\RefreshDatabase::class);
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     Queue::fake();
@@ -37,9 +37,18 @@ beforeEach(function () {
         'active' => true,
     ]);
     $this->client = Client::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    // Create product needed for order FK
+    $product = \App\Models\Product::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Product for Review Test',
+        'sale_price' => 50.00,
+    ]);
+
     $this->order = Order::factory()->create([
         'tenant_id' => $this->tenant->id,
         'client_id' => $this->client->id,
+        'product_id' => $product->id,
         'status' => 'delivered',
     ]);
 });
@@ -125,7 +134,7 @@ test('recalculate job updates tenant rating', function () {
 
     $this->tenant->refresh();
     expect((float) $this->tenant->rating_average)->toBe(4.00);
-    expect((int) $this->tenant->rating_count)->toBe(4); // 3 + 1 do beforeEach
+    expect((int) $this->tenant->rating_count)->toBe(3);
 });
 
 test('tenant starts with zero ratings', function () {

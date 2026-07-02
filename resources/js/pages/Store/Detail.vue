@@ -117,9 +117,16 @@ onMounted(() => {
 /**
  * Injeta schema_markup (JSON-LD) e google_tag_manager no <head> de forma segura.
  * Esses campos contêm código JS/JSON que NÃO deve ser sanitizado.
+ *
+ * Remove scripts injetados anteriormente para evitar duplicação durante
+ * navegação SPA via Inertia.
  */
 function injectSeoScripts(): void {
     const head = document.head;
+
+    // Remove scripts de SEO injetados anteriormente (evita duplicação no SPA)
+    head.querySelectorAll('[data-seo="schema-markup"]').forEach((el) => el.remove());
+    head.querySelectorAll('[data-seo="google-tag-manager"]').forEach((el) => el.remove());
 
     // Inject schema_markup (JSON-LD structured data)
     if (seo.value.schema_markup) {

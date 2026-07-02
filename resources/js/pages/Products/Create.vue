@@ -22,7 +22,6 @@ const form = useForm({
     sale_price: '',
     is_active: true,
     image: null as File | null,
-    // SEO fields
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
@@ -31,6 +30,57 @@ const form = useForm({
     schema_markup: '',
     google_tag_manager: '',
 });
+
+const NEWLINE = String.fromCharCode(10);
+
+function generateGtm(name: string, price: string): string {
+    const dataLayer = {
+        event: 'product_detail_view',
+        ecommerce: {
+            detail: {
+                products: [{
+                    name: name,
+                    price: price,
+                }],
+            },
+        },
+    };
+    const jsonStr = JSON.stringify(dataLayer, null, 2);
+    const parts = [
+        '<!-- Google Tag Manager -->',
+        '<script>',
+        '  window.dataLayer = window.dataLayer || [];',
+        '  dataLayer.push(' + jsonStr + ');',
+        '</script>',
+    ];
+    return parts.join(NEWLINE);
+}
+
+function generateSeoFromData(name: string, description: string): Record<string, string> {
+    const cleanDesc = description.replace(/<[^>]+>/g, '').trim();
+    const words = name.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+
+    return {
+        meta_title: name.substring(0, 120),
+        meta_description: (cleanDesc || name).substring(0, 320),
+        meta_keywords: [name.toLowerCase(), ...words, 'impressão 3d', 'produto 3d', 'marketplace 3d'].join(', ').substring(0, 255),
+        canonical_url: '',
+        og_image: '',
+        schema_markup: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            'name': name,
+            'description': cleanDesc || name,
+            'offers': {
+                '@type': 'Offer',
+                'price': form.sale_price || '0',
+                'priceCurrency': 'BRL',
+                'availability': 'https://schema.org/InStock',
+            },
+        }, null, 2),
+        google_tag_manager: generateGtm(name, form.sale_price || '0'),
+    };
+}
 
 function buildTestFields() {
     return [
@@ -45,6 +95,13 @@ function handleFill() {
     for (const f of fresh) {
         if (f.key in form) {
             (form as any)[f.key] = f.value;
+        }
+    }
+
+    const seoFields = generateSeoFromData(form.name, form.description);
+    for (const [key, value] of Object.entries(seoFields)) {
+        if (key in form) {
+            (form as any)[key] = value;
         }
     }
 }

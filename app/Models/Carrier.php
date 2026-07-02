@@ -7,6 +7,7 @@ use App\Scopes\TenantScope;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'email', 'website', 'notes', 'is_active',
 ])]
 class Carrier extends Model
+{
+    use HasFactory;
 {
     protected $appends = [
         'document', 'address', 'number', 'district', 'city',
