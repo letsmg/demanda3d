@@ -88,13 +88,8 @@ jobs:
             # 2. Garantir containers rodando (idempotente)
             echo "🔄 Verificando containers..."
             cd "$SHARED"
-
-            # Define o arquivo de configuração correto
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-                COMPOSE_FILE="docker-compose-prod.yml"
-            else
-                COMPOSE_FILE="docker-compose-hom.yml"
-            fi
+            
+            COMPOSE_FILE="docker-compose-prod.yml"
 
             # Verifica se o arquivo existe para evitar erro
             if [ ! -f "$COMPOSE_FILE" ]; then
