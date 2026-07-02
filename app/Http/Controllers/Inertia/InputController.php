@@ -27,7 +27,7 @@ class InputController extends Controller
         if ($search && strlen($search) >= 3 && auth()->user()->tenant_id) {
             $inputs = $this->searchService->search('inputs', $search, (string) auth()->user()->tenant_id);
         } else {
-            $inputs = Input::orderBy('purchase_date', 'desc')
+            $inputs = Input::orderBy('created_at', 'desc')
                 ->paginate($request->get('per_page', 10))
                 ->withQueryString();
         }

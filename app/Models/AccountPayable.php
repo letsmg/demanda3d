@@ -5,36 +5,40 @@ namespace App\Models;
 
 use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'tenant_id',
     'supplier_id',
+    'input_id',
     'description',
-    'brand',
-    'quantity',
-    'shipping_cost',
-    'cost_value',
+    'purchase_date',
+    'due_date',
+    'amount',
+    'paid_amount',
+    'status',
+    'notes',
+    'paid_at',
 ])]
-class Input extends Model
+class AccountPayable extends Model
 {
-    use HasFactory;
-
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new TenantScope);
-    }
+    protected $table = 'accounts_payable';
 
     protected function casts(): array
     {
         return [
-            'shipping_cost' => 'decimal:2',
-            'cost_value' => 'decimal:2',
-            'quantity' => 'integer',
+            'purchase_date' => 'date',
+            'due_date' => 'date',
+            'amount' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
+            'paid_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
     }
 
     public function tenant(): BelongsTo
@@ -47,8 +51,8 @@ class Input extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function accountsPayable(): HasMany
+    public function input(): BelongsTo
     {
-        return $this->hasMany(AccountPayable::class);
+        return $this->belongsTo(Input::class);
     }
 }

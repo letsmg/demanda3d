@@ -16,6 +16,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Limpa sessões do Redis (migrate:fresh apaga o banco mas não o cache de sessão)
+        if (config('session.driver') === 'redis') {
+            try {
+                \Illuminate\Support\Facades\Redis::command('flushdb');
+                $this->command->info('⚡ Redis limpo (sessões invalidadas).');
+            } catch (\Exception $e) {
+                $this->command->warn('⚠ Não foi possível limpar o Redis: '.$e->getMessage());
+            }
+        }
+
         $this->command->info('');
         $this->command->info('╔══════════════════════════════════════════╗');
         $this->command->info('║        DEMANDA3D — SEED INICIADO          ║');

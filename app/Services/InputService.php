@@ -9,7 +9,7 @@ class InputService
 {
     public function list(int $perPage = 15): Paginator
     {
-        return Input::orderBy('purchase_date', 'desc')->paginate($perPage);
+        return Input::orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     public function findById(int $id): Input

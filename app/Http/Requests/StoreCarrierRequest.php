@@ -1,13 +1,12 @@
 <?php
-// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
 namespace App\Http\Requests;
 
-use App\Models\Supplier;
+use App\Models\Carrier;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-class StoreSupplierRequest extends FormRequest
+class StoreCarrierRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -21,7 +20,6 @@ class StoreSupplierRequest extends FormRequest
             'doc_type' => ['required', 'string', 'in:CPF,CNPJ'],
             'document' => ['required', 'string', 'max:18'],
             'ie' => ['nullable', 'string', 'max:20'],
-            'contact' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'number' => ['nullable', 'string', 'max:20'],
             'district' => ['nullable', 'string', 'max:100'],
@@ -45,14 +43,11 @@ class StoreSupplierRequest extends FormRequest
             $document = $this->input('document');
             if (empty($document)) return;
             $tenant = auth()->user()->tenant;
-            if (!$tenant) {
-                $validator->errors()->add('document', 'Erro interno: tenant não encontrado.');
-                return;
-            }
+            if (!$tenant) return;
             $digits = preg_replace('/[.\-\/()\s]/', '', $document);
             $hash = hash('sha256', $digits);
-            if (Supplier::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('document_hash', $hash)->exists()) {
-                $validator->errors()->add('document', 'Já existe um fornecedor com este documento.');
+            if (Carrier::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('document_hash', $hash)->exists()) {
+                $validator->errors()->add('document', 'Já existe uma transportadora com este documento.');
             }
         });
     }
@@ -61,16 +56,14 @@ class StoreSupplierRequest extends FormRequest
     {
         $this->merge([
             'name' => trim(strip_tags($this->name ?? '')),
-            'contact' => trim(strip_tags($this->contact ?? '')),
         ]);
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'O nome do fornecedor é obrigatório.',
+            'name.required' => 'O nome da transportadora é obrigatório.',
             'document.required' => 'O CNPJ/CPF é obrigatório.',
-            'contact.required' => 'O contato é obrigatório.',
         ];
     }
 }

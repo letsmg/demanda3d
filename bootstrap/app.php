@@ -6,6 +6,7 @@ use App\Http\Middleware\CheckAgeRequirement;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\StaffOnly;
+use App\Http\Middleware\VerifyUserExists;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'ensure.staff' => \App\Http\Middleware\EnsureStaff::class,
             'check.age' => CheckAgeRequirement::class,
+            'verify.user.exists' => VerifyUserExists::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

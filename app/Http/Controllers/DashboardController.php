@@ -25,7 +25,7 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $recentInputs = Input::orderBy('purchase_date', 'desc')
+        $recentInputs = Input::orderBy('created_at', 'desc')
             ->take(3)
             ->get();
 

@@ -3,56 +3,41 @@
 
 namespace App\Services;
 
-use App\Models\Supplier;
-use Illuminate\Support\Facades\Crypt;
+use App\Models\Carrier;
 
-class SupplierService
+class CarrierService
 {
-    public function create(array $data): Supplier
+    public function create(array $data): Carrier
     {
         $data['tenant_id'] = auth()->user()->tenant->id;
         $data = $this->encryptSensitiveFields($data);
 
-        return Supplier::create($data);
+        return Carrier::create($data);
     }
 
-    public function update(Supplier $supplier, array $data): Supplier
+    public function update(Carrier $carrier, array $data): Carrier
     {
         $data = $this->encryptSensitiveFields($data);
-        $supplier->update($data);
+        $carrier->update($data);
 
-        return $supplier;
+        return $carrier;
     }
 
-    public function delete(Supplier $supplier): bool
+    public function delete(Carrier $carrier): bool
     {
-        return $supplier->delete();
+        return $carrier->delete();
     }
 
-    /**
-     * Criptografa todos os campos sensíveis com paridade *_encrypted + *_hash.
-     */
     private function encryptSensitiveFields(array $data): array
     {
-        // Documento
         if (isset($data['document'])) {
             $data = EncryptionService::buildEncryptedFields($data, 'document');
         }
-
-        // Contato original
-        if (isset($data['contact'])) {
-            $data['contact_encrypted'] = Crypt::encryptString($data['contact']);
-            unset($data['contact']);
-        }
-
-        // Endereço
         foreach (['address', 'number', 'district', 'city'] as $field) {
             if (isset($data[$field])) {
                 $data = EncryptionService::buildEncryptedFields($data, $field);
             }
         }
-
-        // Contatos
         foreach (['contact1', 'phone1', 'contact2', 'phone2'] as $field) {
             if (isset($data[$field])) {
                 $data = EncryptionService::buildEncryptedFields($data, $field);
