@@ -70,7 +70,7 @@ jobs:
             BACKUPS="$ROOT/backups"
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)"
 
-            sudo mkdir -p "$NEW_RELEASE"
+            sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
             # 1. Sincronizar configs Docker versionadas (compose e scripts init)
@@ -85,24 +85,31 @@ jobs:
               [ -f "$NEW_RELEASE/docker-compose-hom.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-hom.yml" "$SHARED/docker-compose.yml"
             fi
 
-            # 2. Garantir containers rodando (idempotente — só recria se necessário)
+            # 2. Garantir containers rodando (idempotente)
             echo "🔄 Verificando containers..."
             cd "$SHARED"
-            
-            # Remove containers com nomes conflitantes de qualquer projeto anterior
-            sudo docker rm -f demanda-psql-hom demanda-psql-rep-hom demanda-redis-hom \
-                             demanda-psql-prod demanda-psql-rep-prod demanda-redis-prod 2>/dev/null || true
-            
-            # Remove volume órfão do projeto 'tmp' (teste anterior) se existir e for do ambiente atual
-            if [ "$PROJECT_NAME" != "demanda3d" ]; then
-              sudo docker volume rm demanda-psql-hom demanda-psql-rep-hom demanda-redis-hom 2>/dev/null || true
+
+            # Define o arquivo de configuração correto
+            if [ "$PROJECT_NAME" = "demanda3d" ]; then
+                COMPOSE_FILE="docker-compose-prod.yml"
+            else
+                COMPOSE_FILE="docker-compose-hom.yml"
             fi
-            
-            sudo docker compose -p "$PROJECT_NAME" up -d --remove-orphans
+
+            # Verifica se o arquivo existe para evitar erro
+            if [ ! -f "$COMPOSE_FILE" ]; then
+                echo "⚠️ Erro: $COMPOSE_FILE não encontrado em $SHARED"
+                exit 1
+            fi
+
+            # Sobe os containers usando o arquivo e projeto corretos
+            # O --remove-orphans cuida de remover containers que não estão mais no arquivo
+            sudo docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d --remove-orphans
+
             echo "⏳ Aguardando containers iniciarem..."
             sleep 20
             cd "$NEW_RELEASE"
-
+            
             # 3. Links Simbólicos e Permissões (Deploy Atômico)
             echo "🔗 Criando links simbólicos..."
             sudo mkdir -p "$SHARED/storage/app/public"
@@ -112,6 +119,28 @@ jobs:
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
+            sudo chmod -R 775 "$SHARED/storage"
+
+            # =============================================
+            # 6. Banco de Dados & Backup Seguro
+            # =============================================
+
+            # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
+            # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
+            # superusuário da aplicação para verificações e backup).
+            DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
+
+            # Verificação rápida de sanidade do banco (usuário e database existem?)
+            echo "🔍 Verificando banco de dados..."
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
+              "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
+
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+              psql -U "$DB_USER" -d postgres -tAc \
+              "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
+              || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
 
             # 3. Migrations e Otimização
             cd "$NEW_RELEASE"

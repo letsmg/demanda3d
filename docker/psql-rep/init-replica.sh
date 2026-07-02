@@ -26,7 +26,6 @@ pg_basebackup \
     -Xs \
     -P \
     -R \
-    -C \
     -S "$SLOT_NAME" \
     -v
 

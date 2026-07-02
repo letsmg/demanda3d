@@ -74,9 +74,18 @@ networks:
     driver: bridge
 
 volumes:
+<<<<<<< HEAD
   demanda-psql-hom:
     name: demanda-psql-hom
   demanda-psql-rep-hom:
     name: demanda-psql-rep-hom
   demanda-redis-hom:
     name: demanda-redis-hom
+=======
+  hom_psql_data:
+    name: hom_psql_data
+  hom_psql_rep_data:
+    name: hom_psql_rep_data
+  hom_redis_data:
+    name: hom_redis_data
+>>>>>>> 07420dea377203c2e090b64ce5ceb63e23deb7e8
