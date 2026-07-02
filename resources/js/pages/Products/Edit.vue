@@ -14,8 +14,6 @@ import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
 
 const { randomProductName, randomProductDescription, randomPrice } = useTestData();
-const NEWLINE = String.fromCharCode(10);
-
 function generateGtm(name: string, price: string): string {
     const dataLayer = {
         event: 'product_detail_view',
@@ -29,14 +27,8 @@ function generateGtm(name: string, price: string): string {
         },
     };
     const jsonStr = JSON.stringify(dataLayer, null, 2);
-    const parts = [
-        '<!-- Google Tag Manager -->',
-        '<script>',
-        '  window.dataLayer = window.dataLayer || [];',
-        '  dataLayer.push(' + jsonStr + ');',
-        '</script>',
-    ];
-    return parts.join(NEWLINE);
+    const endTag = '</' + 'script>';
+    return '<!-- Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  dataLayer.push(' + jsonStr + ');\n' + endTag;
 }
 
 function generateSeoFromData(name: string, description: string): Record<string, string> {
