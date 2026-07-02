@@ -149,24 +149,3 @@ jobs:
             rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído com sucesso!"
           DEPLOY_SCRIPT
-
-# ==============================================================================
-# 📋 NOTAS DE INFRAESTRUTURA
-# ==============================================================================
-# Os containers PostgreSQL e Redis são gerenciados MANUALMENTE no servidor.
-# Suba-os uma vez com:
-#
-#   # Homologação
-#   cd /var/www/dev-demanda3d/shared
-#   sudo -E docker compose -p dev-demanda3d up -d
-#
-#   # Produção
-#   cd /var/www/demanda3d/shared
-#   sudo -E docker compose -p demanda3d up -d
-#
-# O .env.docker (com POSTGRES_PASSWORD) já está no $SHARED/ e é lido via env_file.
-# Use 'sudo -E' para preservar as variáveis de ambiente, ou configure o .env.docker
-# diretamente no servidor com a senha correta.
-#
-# O deploy cuida apenas do código da aplicação (PHP, assets, migrations).
-# ==============================================================================
