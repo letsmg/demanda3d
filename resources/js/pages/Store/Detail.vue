@@ -111,7 +111,36 @@ async function addToCart(productId: number): Promise<void> {
 
 onMounted(() => {
     fetchCart();
+    injectSeoScripts();
 });
+
+/**
+ * Injeta schema_markup (JSON-LD) e google_tag_manager no <head> de forma segura.
+ * Esses campos contêm código JS/JSON que NÃO deve ser sanitizado.
+ */
+function injectSeoScripts(): void {
+    const head = document.head;
+
+    // Inject schema_markup (JSON-LD structured data)
+    if (seo.value.schema_markup) {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.textContent = seo.value.schema_markup;
+        script.setAttribute('data-seo', 'schema-markup');
+        head.appendChild(script);
+    }
+
+    // Inject google_tag_manager (GTM scripts)
+    if (seo.value.google_tag_manager) {
+        const container = document.createElement('div');
+        container.setAttribute('data-seo', 'google-tag-manager');
+        container.style.display = 'none';
+        // Usamos um DocumentFragment para parsear o HTML/JS sem sanitização
+        const template = document.createElement('template');
+        template.innerHTML = seo.value.google_tag_manager;
+        head.appendChild(template.content);
+    }
+}
 
 // SEO
 const seo = computed(() => props.product.seo || {});
@@ -139,9 +168,11 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
 <template>
     <Head :title="seo.meta_title || product.name">
         <meta name="description" :content="seo.meta_description" />
+        <meta v-if="seo.meta_keywords" name="keywords" :content="seo.meta_keywords" />
         <meta property="og:title" :content="seo.meta_title || product.name" />
         <meta property="og:description" :content="seo.meta_description" />
         <meta property="og:image" :content="seo.og_image" />
+        <meta property="og:type" content="product" />
         <link rel="canonical" :href="seo.canonical_url" />
     </Head>
 

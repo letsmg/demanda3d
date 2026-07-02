@@ -12,6 +12,9 @@ use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
+    /** Maximum images per product (database limit is 5, but seeder only creates 3). */
+    private const MAX_IMAGES_PER_PRODUCT = 3;
+
     public function run(): void
     {
         // Get all tenants (admin + management)
@@ -43,6 +46,13 @@ class ProductSeeder extends Seeder
                 'extras_cost' => 1.50,
                 'approximate_cost' => 14.90,
                 'sale_price' => 45.90,
+                'meta_title' => 'Suporte para Smartphone ABS 3D | Demanda3D',
+                'meta_description' => 'Suporte universal para smartphone impresso em ABS. Compatível com modelos de 4 a 7 polegadas. Alta resistência e durabilidade. Compre agora!',
+                'meta_keywords' => 'suporte smartphone, ABS, impressão 3D, suporte universal, suporte celular',
+                'canonical_url' => null,
+                'og_image' => null,
+                'schema_markup' => null,
+                'google_tag_manager' => null,
             ],
             [
                 'name' => 'Porta-chaves personalizado PLA',
@@ -62,6 +72,13 @@ class ProductSeeder extends Seeder
                 'extras_cost' => 0.80,
                 'approximate_cost' => 8.40,
                 'sale_price' => 25.50,
+                'meta_title' => 'Porta-Chaves Personalizado PLA 3D | Demanda3D',
+                'meta_description' => 'Porta-chaves impresso em PLA com design personalizável. Ideal para brindes corporativos, lembrancinhas e presentes personalizados.',
+                'meta_keywords' => 'porta chaves, PLA, impressão 3D, brinde corporativo, personalizado',
+                'canonical_url' => null,
+                'og_image' => null,
+                'schema_markup' => null,
+                'google_tag_manager' => null,
             ],
             [
                 'name' => 'Organizador de mesa PETG',
@@ -81,6 +98,13 @@ class ProductSeeder extends Seeder
                 'extras_cost' => 3.00,
                 'approximate_cost' => 42.90,
                 'sale_price' => 89.90,
+                'meta_title' => 'Organizador de Mesa PETG Modular 3D | Demanda3D',
+                'meta_description' => 'Organizador modular para mesa de escritório em PETG. Compartimentos para canetas, clips e post-its. Design funcional e durável.',
+                'meta_keywords' => 'organizador mesa, PETG, impressão 3D, escritório, organizador modular',
+                'canonical_url' => null,
+                'og_image' => null,
+                'schema_markup' => null,
+                'google_tag_manager' => null,
             ],
             [
                 'name' => 'Vaso decorativo geométrico PLA',
@@ -100,6 +124,13 @@ class ProductSeeder extends Seeder
                 'extras_cost' => 2.00,
                 'approximate_cost' => 28.50,
                 'sale_price' => 35.00,
+                'meta_title' => 'Vaso Geométrico Decorativo PLA 3D | Demanda3D',
+                'meta_description' => 'Vaso com design geométrico moderno em PLA. Ideal para decoração de interiores. Disponível em diversas cores e tamanhos.',
+                'meta_keywords' => 'vaso decorativo, geométrico, PLA, impressão 3D, decoração',
+                'canonical_url' => null,
+                'og_image' => null,
+                'schema_markup' => null,
+                'google_tag_manager' => null,
             ],
             [
                 'name' => 'Engrenagem para protótipo funcional',
@@ -119,6 +150,13 @@ class ProductSeeder extends Seeder
                 'extras_cost' => 1.00,
                 'approximate_cost' => 22.00,
                 'sale_price' => 120.00,
+                'meta_title' => 'Engrenagem Protótipo Nylon 3D | Demanda3D',
+                'meta_description' => 'Engrenagem industrial em Nylon reforçado para prototipagem rápida. Alta precisão dimensional e resistência mecânica superior.',
+                'meta_keywords' => 'engrenagem, protótipo, nylon, impressão 3D, engrenagem industrial',
+                'canonical_url' => null,
+                'og_image' => null,
+                'schema_markup' => null,
+                'google_tag_manager' => null,
             ],
         ];
 
@@ -156,9 +194,16 @@ class ProductSeeder extends Seeder
                         'sale_price' => $productData['sale_price'],
                         'is_active' => true,
                         'moderation_status' => 'approved',
+                        'meta_title' => $productData['meta_title'],
+                        'meta_description' => $productData['meta_description'],
+                        'meta_keywords' => $productData['meta_keywords'],
+                        'canonical_url' => $productData['canonical_url'],
+                        'og_image' => $productData['og_image'],
+                        'schema_markup' => $productData['schema_markup'],
+                        'google_tag_manager' => $productData['google_tag_manager'],
                     ]);
 
-                    // Vincular categorias ao produto (ex: 'escritorio', 'decorativo', 'utilitarios')
+                    // Vincular categorias ao produto
                     $categoriaSlugs = $productData['categorias'] ?? [];
                     if (!empty($categoriaSlugs)) {
                         $categoriaIds = Categoria::whereIn('slug', $categoriaSlugs)->pluck('id')->toArray();
@@ -174,18 +219,18 @@ class ProductSeeder extends Seeder
 
                 // Check existing images for this product
                 $existingCount = ProductImage::where('product_id', $product->id)->count();
-                $neededImages = 5 - $existingCount;
+                $neededImages = self::MAX_IMAGES_PER_PRODUCT - $existingCount;
 
                 if ($neededImages <= 0) {
                     $this->command->line("    → {$existingCount} imagens já existentes, pulando download");
                     continue;
                 }
 
-                // Download missing images
-                for ($i = $existingCount; $i < 5; $i++) {
+                // Download missing images (limit to MAX_IMAGES_PER_PRODUCT)
+                for ($i = $existingCount; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
                     $imageUrl = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
                     $filename = "products/{$tenantId}/{$product->id}-{$i}.jpg";
-                    $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/4... ");
+                    $this->command->getOutput()->write("    ⏳ Baixando imagem {$i}/" . (self::MAX_IMAGES_PER_PRODUCT - 1) . "... ");
 
                     $imageContent = @file_get_contents($imageUrl);
 

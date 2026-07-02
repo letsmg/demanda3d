@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Tenant;
 use App\Services\EncryptionService;
+use App\Services\LegalConsentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -13,6 +14,10 @@ use Inertia\Inertia;
 
 class RegisterClientController extends Controller
 {
+    public function __construct(
+        private LegalConsentService $consentService,
+    ) {}
+
     public function create()
     {
         return Inertia::render('auth/RegisterClient');
@@ -24,6 +29,13 @@ class RegisterClientController extends Controller
             'display_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:clients,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'accept_terms' => ['required', 'accepted', 'accepted'],
+            'accept_privacy' => ['required', 'accepted', 'accepted'],
+        ], [
+            'accept_terms.required' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'accept_terms.accepted' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'accept_privacy.required' => 'Você deve aceitar a Política de Privacidade para se cadastrar.',
+            'accept_privacy.accepted' => 'Você deve aceitar a Política de Privacidade para se cadastrar.',
         ]);
 
         $validated['display_name'] = trim(strip_tags($validated['display_name']));
@@ -57,6 +69,9 @@ class RegisterClientController extends Controller
             'last_name_encrypted' => $lastNameData['encrypted'],
             'last_name_hash' => $lastNameData['hash'],
         ]);
+
+        // Registrar consentimentos legais
+        $this->consentService->recordBothAccepted($request, $client->id);
 
         // Auto-login the client
         \Illuminate\Support\Facades\Auth::guard('clients')->login($client);
