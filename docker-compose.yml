@@ -13,7 +13,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - dev_psql_data:/var/lib/postgresql
+      - demanda-psql-dev:/var/lib/postgresql
       - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
@@ -22,7 +22,7 @@ services:
       retries: 10
       start_period: 120s
     networks:
-      - dev-demanda-net
+      - demanda-net-dev
 
   # =============================================
   # PostgreSQL Slave (Replica) - DEV
@@ -38,7 +38,7 @@ services:
     ports:
       - "5435:5432"
     volumes:
-      - dev_psql_rep_data:/var/lib/postgresql
+      - demanda-psql-rep-dev:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
       demanda-psql-dev:
@@ -50,7 +50,7 @@ services:
       retries: 20
       start_period: 60s
     networks:
-      - dev-demanda-net
+      - demanda-net-dev
 
   # =============================================
   # Redis - DEV
@@ -63,24 +63,24 @@ services:
     ports:
       - "6380:6379"
     volumes:
-      - dev_redis_data:/data
+      - demanda-redis-dev:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - dev-demanda-net
+      - demanda-net-dev
 
 networks:
-  dev-demanda-net:
-    name: dev-demanda-net
+  demanda-net-dev:
+    name: demanda-net-dev
     driver: bridge
 
 volumes:
-  dev_psql_data:
-    name: dev_psql_data
-  dev_psql_rep_data:
-    name: dev_psql_rep_data
-  dev_redis_data:
-    name: dev_redis_data
+  demanda-psql-dev:
+    name: demanda-psql-dev
+  demanda-psql-rep-dev:
+    name: demanda-psql-rep-dev
+  demanda-redis-dev:
+    name: demanda-redis-dev

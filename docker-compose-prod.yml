@@ -11,7 +11,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - prod_psql_data:/var/lib/postgresql
+      - demanda-psql-prod:/var/lib/postgresql
       - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
@@ -20,7 +20,7 @@ services:
       retries: 10
       start_period: 120s
     networks:
-      - prod-demanda-net
+      - demanda-net-prod
 
   # =============================================
   # PostgreSQL Slave (Replica) - PROD
@@ -34,7 +34,7 @@ services:
     ports:
       - "5437:5432"
     volumes:
-      - prod_psql_rep_data:/var/lib/postgresql
+      - demanda-psql-rep-prod:/var/lib/postgresql
       - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
     depends_on:
       demanda-psql-prod:
@@ -46,7 +46,7 @@ services:
       retries: 20
       start_period: 60s
     networks:
-      - prod-demanda-net
+      - demanda-net-prod
 
   # =============================================
   # Redis - PROD
@@ -59,24 +59,24 @@ services:
     ports:
       - "6381:6379"
     volumes:
-      - prod_redis_data:/data
+      - demanda-redis-prod:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - prod-demanda-net
+      - demanda-net-prod
 
 networks:
-  prod-demanda-net:
-    name: prod-demanda-net
+  demanda-net-prod:
+    name: demanda-net-prod
     driver: bridge
 
 volumes:
-  prod_psql_data:
-    name: prod_psql_data
-  prod_psql_rep_data:
-    name: prod_psql_rep_data
-  prod_redis_data:
-    name: prod_redis_data
+  demanda-psql-prod:
+    name: demanda-psql-prod
+  demanda-psql-rep-prod:
+    name: demanda-psql-rep-prod
+  demanda-redis-prod:
+    name: demanda-redis-prod

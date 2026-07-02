@@ -95,7 +95,7 @@ jobs:
             
             # Remove volume órfão do projeto 'tmp' (teste anterior) se existir e for do ambiente atual
             if [ "$PROJECT_NAME" != "demanda3d" ]; then
-              sudo docker volume rm hom_psql_data hom_psql_rep_data hom_redis_data 2>/dev/null || true
+              sudo docker volume rm demanda-psql-hom demanda-psql-rep-hom demanda-redis-hom 2>/dev/null || true
             fi
             
             sudo docker compose -p "$PROJECT_NAME" up -d --remove-orphans
