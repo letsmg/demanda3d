@@ -73,39 +73,30 @@ jobs:
             sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
             sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 1. Sincronizar configs Docker versionadas (compose e scripts init)
+            # 1. Sincronizar configs Docker
             echo "📦 Sincronizando configs do Docker..."
             sudo mkdir -p "$SHARED/docker"
             [ -d "$NEW_RELEASE/docker" ] && sudo cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
+            # Copia o docker-compose.yml padrão de qualquer ambiente
+            [ -f "$NEW_RELEASE/docker-compose.yml" ] && sudo cp "$NEW_RELEASE/docker-compose.yml" "$SHARED/docker-compose.yml"
 
-            # Copia o compose do ambiente para referência no shared
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              [ -f "$NEW_RELEASE/docker-compose-prod.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-prod.yml" "$SHARED/docker-compose.yml"
-            else
-              [ -f "$NEW_RELEASE/docker-compose-hom.yml" ] && sudo cp "$NEW_RELEASE/docker-compose-hom.yml" "$SHARED/docker-compose.yml"
-            fi
-
-            # 2. Garantir containers rodando (idempotente)
+            # 2. Garantir containers rodando
             echo "🔄 Verificando containers..."
             cd "$SHARED"
             
             COMPOSE_FILE="docker-compose.yml"
-
-            # Verifica se o arquivo existe para evitar erro
             if [ ! -f "$COMPOSE_FILE" ]; then
                 echo "⚠️ Erro: $COMPOSE_FILE não encontrado em $SHARED"
                 exit 1
             fi
 
-            # Sobe os containers usando o arquivo e projeto corretos
-            # O --remove-orphans cuida de remover containers que não estão mais no arquivo
             sudo docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d --remove-orphans
 
             echo "⏳ Aguardando containers iniciarem..."
             sleep 20
             cd "$NEW_RELEASE"
             
-            # 3. Links Simbólicos e Permissões (Deploy Atômico)
+            # 3. Links Simbólicos e Permissões
             echo "🔗 Criando links simbólicos..."
             sudo mkdir -p "$SHARED/storage/app/public"
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
@@ -116,65 +107,27 @@ jobs:
             sudo chown -R www-data:www-data "$NEW_RELEASE" "$SHARED/storage"
             sudo chmod -R 775 "$SHARED/storage"
 
-            # =============================================
-            # 6. Banco de Dados & Backup Seguro
-            # =============================================
-
-            # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
-            # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
-            # superusuário da aplicação para verificações e backup).
+            # 6. Banco de Dados
             DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
 
-            # Verificação rápida de sanidade do banco (usuário e database existem?)
             echo "🔍 Verificando banco de dados..."
-            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
-              psql -U "$DB_USER" -d postgres -tAc \
-              "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
-
-            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
-              psql -U "$DB_USER" -d postgres -tAc \
-              "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
+            # Nota: O CONTAINER_NAME e DB_USER/DB_NAME devem ser padronizados ou definidos no .env
+            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$PROJECT_NAME-psql-1" \
+              psql -U "$DB_USER" -d postgres -tAc "SELECT 1;" 2>/dev/null || echo "⚠️ Aviso: erro no DB"
 
             # 3. Migrations e Otimização
             cd "$NEW_RELEASE"
             
-            if [ "$PROJECT_NAME" = "demanda3d" ]; then
-              sudo -u www-data php artisan migrate --force
-            else
-              sudo -u www-data php artisan migrate:fresh --seed --force
-            fi
-
+            # Executa sempre o migrate --force (o fresh--seed deve ser feito manualmente se necessário)
+            sudo -u www-data php artisan migrate --force
             sudo -u www-data php artisan optimize
 
             # 4. Ativar nova release
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
 
-            # 5. Limpeza: mantém últimas 5 releases
+            # 5. Limpeza
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
             echo "✅ Deploy concluído com sucesso!"
           DEPLOY_SCRIPT
-
-# ==============================================================================
-# 📋 NOTAS DE INFRAESTRUTURA
-# ==============================================================================
-# Os containers PostgreSQL e Redis são gerenciados MANUALMENTE no servidor.
-# Suba-os uma vez com:
-#
-#   # Homologação
-#   cd /var/www/dev-demanda3d/shared
-#   sudo -E docker compose -p dev-demanda3d up -d
-#
-#   # Produção
-#   cd /var/www/demanda3d/shared
-#   sudo -E docker compose -p demanda3d up -d
-#
-# O .env.docker (com POSTGRES_PASSWORD) já está no $SHARED/ e é lido via env_file.
-# Use 'sudo -E' para preservar as variáveis de ambiente, ou configure o .env.docker
-# diretamente no servidor com a senha correta.
-#
-# O deploy cuida apenas do código da aplicação (PHP, assets, migrations).
-# ==============================================================================
