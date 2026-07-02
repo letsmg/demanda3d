@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\InputController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductApiController;
+use App\Http\Controllers\CarrierApiController;
 use App\Http\Controllers\SupplierApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,4 +29,7 @@ Route::middleware(['auth', 'verified'])->name('api.')->group(function () {
 
     // Suppliers API
     Route::apiResource('suppliers', SupplierApiController::class);
+
+    // Carriers API
+    Route::apiResource('carriers', CarrierApiController::class);
 });

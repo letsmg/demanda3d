@@ -1,5 +1,4 @@
 <?php
-// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
 namespace App\Http\Requests;
 
@@ -18,54 +17,45 @@ class StoreSupplierRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'doc_type' => ['required', 'string', 'in:CPF,CNPJ'],
             'document' => ['required', 'string', 'max:18'],
+            'ie' => ['nullable', 'string', 'max:20'],
             'contact' => ['required', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'number' => ['nullable', 'string', 'max:20'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'size:2'],
+            'zipcode' => ['nullable', 'string', 'max:9'],
+            'contact1' => ['nullable', 'string', 'max:100'],
+            'phone1' => ['nullable', 'string', 'max:20'],
+            'contact2' => ['nullable', 'string', 'max:100'],
+            'phone2' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'website' => ['nullable', 'url', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 
-    /**
-     * Validação pós-regras: verifica unicidade do documento via hash
-     * ANTES do banco, evitando UniqueConstraintViolationException.
-     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
             $document = $this->input('document');
-
-            if (empty($document)) {
-                return;
-            }
-
-            // Obtém tenant via relação HasOne (mesmo padrão do SupplierService)
+            if (empty($document)) return;
             $tenant = auth()->user()->tenant;
-
             if (!$tenant) {
-                $validator->errors()->add('document', 'Erro interno: tenant não encontrado para o usuário.');
-
+                $validator->errors()->add('document', 'Erro interno: tenant não encontrado.');
                 return;
             }
-
             $digits = preg_replace('/[.\-\/()\s]/', '', $document);
             $hash = hash('sha256', $digits);
-
-            $exists = Supplier::withoutGlobalScopes()
-                ->where('tenant_id', $tenant->id)
-                ->where('document_hash', $hash)
-                ->exists();
-
-            if ($exists) {
-                $validator->errors()->add(
-                    'document',
-                    'Já existe um fornecedor com este documento cadastrado.',
-                );
+            if (Supplier::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('document_hash', $hash)->exists()) {
+                $validator->errors()->add('document', 'Já existe um fornecedor com este documento.');
             }
         });
     }
 
-    /**
-     * Prepara os dados antes da validação: sanitiza name e contact.
-     * NOTA: document NÃO é sanitizado pois contém pontuação (./-) de CPF/CNPJ.
-     */
     protected function prepareForValidation(): void
     {
         $this->merge([
