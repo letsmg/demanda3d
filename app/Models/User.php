@@ -29,6 +29,14 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    /**
+     * Atributos virtuais descriptografados para serialização JSON/Inertia.
+     */
+    protected $appends = [
+        'first_name',
+        'last_name',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -138,6 +146,18 @@ class User extends Authenticatable
         return EncryptionService::decrypt($this->last_name_encrypted);
     }
 
+    // ── Accessors para serialização automática ──────────────
+
+    public function getFirstNameAttribute(): ?string
+    {
+        return $this->getDecryptedFirstName();
+    }
+
+    public function getLastNameAttribute(): ?string
+    {
+        return $this->getDecryptedLastName();
+    }
+
     public function scopeByFirstNameHash($query, string $hash)
     {
         return $query->where('first_name_hash', $hash);
@@ -149,3 +169,4 @@ class User extends Authenticatable
     }
 
 }
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

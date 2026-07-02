@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterClientController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LegalConsentController;
 use App\Http\Controllers\Inertia\ClientController as InertiaClientController;
 use App\Http\Controllers\Inertia\InputController as InertiaInputController;
 use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
@@ -27,6 +28,14 @@ Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
     ->middleware(['check.age'])
     ->name('store.detail');
+
+// Legal consent routes (public)
+Route::get('/legal/{type}', [LegalConsentController::class, 'show'])
+    ->where('type', 'terms|privacy')
+    ->name('legal.show');
+Route::post('/legal/accept', [LegalConsentController::class, 'accept'])->name('legal.accept');
+Route::post('/legal/decline', [LegalConsentController::class, 'decline'])->name('legal.decline');
+Route::post('/legal/accept-both', [LegalConsentController::class, 'acceptBoth'])->name('legal.acceptBoth');
 
 // Public product detail page — rota dinâmica por slug com verificação de idade
 Route::get('/produto/{slug}', [ProductDetailController::class, 'show'])

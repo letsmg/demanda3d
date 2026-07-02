@@ -151,10 +151,10 @@ const formatDate = (dateStr: string) =>
                             class="border-b bg-muted/50 text-left text-sm font-medium text-muted-foreground"
                         >
                             <th class="px-6 py-4">Filamento</th>
+                            <th class="px-6 py-4">Marca</th>
                             <th class="px-6 py-4">Data Compra</th>
                             <th class="px-6 py-4">Custo</th>
-                            <th class="px-6 py-4">Energia</th>
-                            <th class="px-6 py-4">Purga</th>
+                            <th class="px-6 py-4">Qtd (g)</th>
                             <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
                     </thead>
@@ -165,19 +165,19 @@ const formatDate = (dateStr: string) =>
                             class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-6 py-4 font-medium">
-                                {{ input.filaments }}
+                                {{ input.description }}
                             </td>
                             <td class="px-6 py-4 text-sm">
-                                {{ formatDate(input.dt_buy) }}
+                                {{ input.brand }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                {{ formatDate(input.purchase_date) }}
                             </td>
                             <td class="px-6 py-4 text-sm font-medium">
-                                {{ formatCurrency(Number(input.cost_buy)) }}
+                                {{ formatCurrency(Number(input.cost_value)) }}
                             </td>
                             <td class="px-6 py-4 text-sm">
-                                {{ formatCurrency(Number(input.energy)) }}
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                {{ Number(input.purge).toFixed(1) }}g
+                                {{ input.quantity }}
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div
@@ -219,10 +219,10 @@ const formatDate = (dateStr: string) =>
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
                             <CardTitle class="text-base">{{
-                                input.filaments
+                                input.description
                             }}</CardTitle>
                             <Badge variant="secondary" class="shrink-0">{{
-                                formatDate(input.dt_buy)
+                                formatDate(input.purchase_date)
                             }}</Badge>
                         </div>
                     </CardHeader>
@@ -233,7 +233,7 @@ const formatDate = (dateStr: string) =>
                                     class="h-3.5 w-3.5 text-green-600"
                                 />
                                 <span>{{
-                                    formatCurrency(Number(input.cost_buy))
+                                    formatCurrency(Number(input.cost_value))
                                 }}</span>
                             </div>
                             <div
@@ -241,10 +241,8 @@ const formatDate = (dateStr: string) =>
                             >
                                 <Gauge class="h-3.5 w-3.5" />
                                 <span
-                                    >Energia:
-                                    {{ formatCurrency(Number(input.energy)) }} |
-                                    Purga:
-                                    {{ Number(input.purge).toFixed(1) }}g</span
+                                    >Qtd: {{ input.quantity }}g | Frete:
+                                    {{ formatCurrency(Number(input.shipping_cost)) }}</span
                                 >
                             </div>
                         </div>
@@ -310,7 +308,7 @@ const formatDate = (dateStr: string) =>
                 <DialogTitle>Excluir Insumo</DialogTitle>
                 <DialogDescription
                     >Tem certeza que deseja excluir
-                    <strong>{{ deletingInput?.filaments }}</strong
+                    <strong>{{ deletingInput?.description }}</strong
                     >? Esta ação não pode ser desfeita.</DialogDescription
                 >
             </DialogHeader>

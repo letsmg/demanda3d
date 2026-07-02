@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import { Checkbox } from '@/components/ui/checkbox';
 
 defineOptions({
     layout: {
@@ -21,6 +22,8 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    accept_terms: true,
+    accept_privacy: true,
 });
 
 const testFields: TestField[] = [
@@ -124,10 +127,49 @@ function submit() {
                 <InputError :message="form.errors.password_confirmation" />
             </div>
 
+            <!-- Consentimento legal obrigatório -->
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                <p class="text-sm font-medium text-amber-900">Termos e Condições</p>
+
+                <div class="flex items-start gap-2">
+                    <Checkbox
+                        id="accept_terms"
+                        v-model:checked="form.accept_terms"
+                        :tabindex="5"
+                    />
+                    <div class="grid gap-1">
+                        <Label for="accept_terms" class="text-sm font-normal cursor-pointer">
+                            Li e aceito os
+                            <TextLink :href="'/legal/terms'" class="underline underline-offset-4">
+                                Termos de Uso
+                            </TextLink>
+                        </Label>
+                        <InputError :message="form.errors.accept_terms" />
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-2">
+                    <Checkbox
+                        id="accept_privacy"
+                        v-model:checked="form.accept_privacy"
+                        :tabindex="6"
+                    />
+                    <div class="grid gap-1">
+                        <Label for="accept_privacy" class="text-sm font-normal cursor-pointer">
+                            Li e aceito a
+                            <TextLink :href="'/legal/privacy'" class="underline underline-offset-4">
+                                Política de Privacidade
+                            </TextLink>
+                        </Label>
+                        <InputError :message="form.errors.accept_privacy" />
+                    </div>
+                </div>
+            </div>
+
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                :tabindex="5"
+                :tabindex="7"
                 :disabled="form.processing"
                 data-test="register-client-button"
             >
@@ -141,7 +183,7 @@ function submit() {
             <TextLink
                 :href="'/login_cli'"
                 class="underline underline-offset-4"
-                :tabindex="6"
+                :tabindex="8"
             >
                 Faça login
             </TextLink>

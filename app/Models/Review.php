@@ -1,7 +1,9 @@
 <?php
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
 namespace App\Models;
 
+use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +17,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Review extends Model
 {
+    /**
+     * Atributos virtuais descriptografados para serialização JSON/Inertia.
+     */
+    protected $appends = [
+        'comment',
+    ];
+
     protected function casts(): array
     {
         return [
             'rating' => 'integer',
-            'comment_encrypted' => 'encrypted',
+            // IMPORTANTE: NÃO usar cast 'encrypted' — dupla descriptografia com accessors.
         ];
     }
 
@@ -36,5 +45,13 @@ class Review extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Retorna o comentário descriptografado para exibição no frontend.
+     */
+    public function getCommentAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->comment_encrypted);
     }
 }

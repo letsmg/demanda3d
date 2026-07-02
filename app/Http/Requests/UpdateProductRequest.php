@@ -33,6 +33,11 @@ class UpdateProductRequest extends FormRequest
             'meta_description' => ['nullable', 'string', 'max:320'],
             'canonical_url' => ['nullable', 'url', 'max:255'],
             'og_image' => ['nullable', 'url', 'max:255'],
+            // IMPORTANT: schema_markup accepts JSON-LD/HTML - must NOT be sanitized
+            'schema_markup' => ['nullable', 'string', 'max:10000'],
+            // IMPORTANT: google_tag_manager accepts HTML/JS - must NOT be sanitized
+            'google_tag_manager' => ['nullable', 'string', 'max:10000'],
+            'meta_keywords' => ['nullable', 'string', 'max:255'],
             'categorias' => ['nullable', 'array', 'max:3'],
             'categorias.*' => ['integer', 'exists:categorias,id'],
         ];
@@ -63,6 +68,8 @@ class UpdateProductRequest extends FormRequest
             'name' => trim(strip_tags($this->name ?? '')),
             'meta_title' => $this->meta_title ? trim(strip_tags($this->meta_title)) : null,
             'meta_description' => $this->meta_description ? trim(strip_tags($this->meta_description)) : null,
+            'meta_keywords' => $this->meta_keywords ? trim(strip_tags($this->meta_keywords)) : null,
+            // schema_markup and google_tag_manager are INTENTIONALLY not sanitized - they accept JS/JSON code
         ]);
     }
 }

@@ -72,11 +72,6 @@ services:
     networks:
       - demanda-net-dev
 
-networks:
-  demanda-net-dev:
-    name: demanda-net-dev
-    driver: bridge
-
 volumes:
   demanda-psql-dev:
     name: demanda-psql-dev
@@ -84,3 +79,8 @@ volumes:
     name: demanda-psql-rep-dev
   demanda-redis-dev:
     name: demanda-redis-dev
+
+networks:
+  demanda-net-dev:
+    name: demanda-net-dev
+    driver: bridge

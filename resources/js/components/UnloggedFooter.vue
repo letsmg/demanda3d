@@ -21,9 +21,20 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
                     Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
                 </p>
 
-                <div
-                    class="flex items-center gap-6 text-sm text-amber-300"
-                >
+                <nav class="flex items-center gap-4 text-sm text-amber-300">
+                    <a
+                        :href="'/legal/terms'"
+                        class="transition-colors hover:text-amber-100"
+                    >
+                        Termos de Uso
+                    </a>
+                    <a
+                        :href="'/legal/privacy'"
+                        class="transition-colors hover:text-amber-100"
+                    >
+                        Política de Privacidade
+                    </a>
+                    <span class="hidden sm:inline text-amber-400/70">|</span>
                     <a
                         href="mailto:contato@demanda3d.com.br"
                         class="transition-colors hover:text-amber-100"
@@ -31,7 +42,7 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
                         contato@demanda3d.com.br
                     </a>
                     <span class="hidden sm:inline text-amber-400/70">3D Printing Solutions</span>
-                </div>
+                </nav>
             </div>
         </div>
     </footer>

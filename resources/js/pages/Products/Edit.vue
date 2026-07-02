@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Save, ArrowLeft, AlertCircle } from '@lucide/vue';
+import { ArrowLeft, AlertCircle, ChevronDown, Save } from '@lucide/vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -8,13 +9,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useTestData } from '@/composables/useTestData';
 import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
-import { useTestData } from '@/composables/useTestData';
 
 const { randomProductName, randomProductDescription, randomPrice } = useTestData();
 
-const props = defineProps<{ product: Product }>();
+const props = defineProps<{ product: Product & {
+    meta_title?: string;
+    meta_description?: string;
+    meta_keywords?: string;
+    canonical_url?: string;
+    og_image?: string;
+    schema_markup?: string;
+    google_tag_manager?: string;
+} }>();
+
+const seoOpen = ref(false);
 
 const form = useForm({
     name: props.product.name,
@@ -22,6 +33,14 @@ const form = useForm({
     sale_price: props.product.sale_price,
     is_active: props.product.is_active,
     image: null as File | null,
+    // SEO fields
+    meta_title: (props.product as any).meta_title || '',
+    meta_description: (props.product as any).meta_description || '',
+    meta_keywords: (props.product as any).meta_keywords || '',
+    canonical_url: (props.product as any).canonical_url || '',
+    og_image: (props.product as any).og_image || '',
+    schema_markup: (props.product as any).schema_markup || '',
+    google_tag_manager: (props.product as any).google_tag_manager || '',
 });
 
 function buildTestFields() {
@@ -108,6 +127,69 @@ const onFileChange = (e: Event) => {
                     </div>
                 </CardContent>
             </Card>
+
+            <!-- SEO Section -->
+            <Card class="mt-6">
+                <CardHeader class="cursor-pointer" @click="seoOpen = !seoOpen">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle class="text-lg">SEO — Otimização para Buscadores</CardTitle>
+                            <CardDescription>Configure meta tags, schema markup e Google Tag Manager</CardDescription>
+                        </div>
+                        <ChevronDown class="h-5 w-5 transition-transform" :class="{ 'rotate-180': seoOpen }" />
+                    </div>
+                </CardHeader>
+                <CardContent v-show="seoOpen" class="space-y-6">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="meta_title">Meta Title (máx. 120 caracteres)</Label>
+                            <Input id="meta_title" v-model="form.meta_title" placeholder="Título para SEO" maxlength="120"
+                                :class="{ 'border-destructive': form.errors.meta_title }" />
+                            <span v-if="form.errors.meta_title" class="text-sm text-destructive">{{ form.errors.meta_title }}</span>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="meta_keywords">Meta Keywords (máx. 255 caracteres)</Label>
+                            <Input id="meta_keywords" v-model="form.meta_keywords" placeholder="palavra-chave1, palavra-chave2"
+                                :class="{ 'border-destructive': form.errors.meta_keywords }" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="meta_description">Meta Description (máx. 320 caracteres)</Label>
+                        <Textarea id="meta_description" v-model="form.meta_description" placeholder="Descrição para mecanismos de busca" rows={3} maxlength="320"
+                            :class="{ 'border-destructive': form.errors.meta_description }" />
+                        <span v-if="form.errors.meta_description" class="text-sm text-destructive">{{ form.errors.meta_description }}</span>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="canonical_url">URL Canônica</Label>
+                            <Input id="canonical_url" v-model="form.canonical_url" type="url" placeholder="https://seu-dominio.com/produto"
+                                :class="{ 'border-destructive': form.errors.canonical_url }" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="og_image">URL da Imagem Open Graph</Label>
+                            <Input id="og_image" v-model="form.og_image" type="url" placeholder="https://seu-dominio.com/imagem.jpg"
+                                :class="{ 'border-destructive': form.errors.og_image }" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="schema_markup">Schema Markup (JSON-LD) — Aceita código JSON estruturado</Label>
+                        <Textarea id="schema_markup" v-model="form.schema_markup" placeholder='{"@context": "https://schema.org", ...}' rows={6}
+                            class="font-mono text-sm" />
+                        <p class="text-xs text-muted-foreground">Este campo aceita JSON/HTML para dados estruturados. Não será sanitizado.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="google_tag_manager">Google Tag Manager — Aceita código JS/HTML</Label>
+                        <Textarea id="google_tag_manager" v-model="form.google_tag_manager" placeholder="<!-- Google Tag Manager --> ..." rows={6}
+                            class="font-mono text-sm" />
+                        <p class="text-xs text-muted-foreground">Este campo aceita scripts de tracking. Não será sanitizado.</p>
+                    </div>
+                </CardContent>
+            </Card>
+
             <div class="mt-6 flex items-center justify-end gap-3">
                 <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
                 <Button type="submit" :disabled="form.processing"><Save class="mr-2 h-4 w-4" />{{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}</Button>

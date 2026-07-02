@@ -68,3 +68,4 @@ class ProductController extends Controller
             ->with('success', 'Produto excluído com sucesso.');
     }
 }
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

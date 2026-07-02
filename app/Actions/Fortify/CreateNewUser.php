@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Enums\UserAccessLevel;
 use App\Models\User;
 use App\Services\EncryptionService;
+use App\Services\LegalConsentService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,13 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
+            'accept_terms' => ['required', 'accepted'],
+            'accept_privacy' => ['required', 'accepted'],
+        ], [
+            'accept_terms.required' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'accept_terms.accepted' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'accept_privacy.required' => 'Você deve aceitar a Política de Privacidade para se cadastrar.',
+            'accept_privacy.accepted' => 'Você deve aceitar a Política de Privacidade para se cadastrar.',
         ])->validate();
 
         // Parse name for parity structure
@@ -43,7 +51,7 @@ class CreateNewUser implements CreatesNewUsers
         $firstNameData = EncryptionService::encryptWithHash($firstName);
         $lastNameData = EncryptionService::encryptWithHash($lastName);
 
-        return User::create([
+        $user = User::create([
             'email' => $input['email'],
             'display_name' => $input['name'],
             'first_name_encrypted' => $firstNameData['encrypted'],
@@ -53,5 +61,11 @@ class CreateNewUser implements CreatesNewUsers
             'password' => Hash::make($input['password']),
             'access_level' => UserAccessLevel::MANAGEMENT,
         ]);
+
+        // Registrar consentimentos legais
+        app(LegalConsentService::class)->recordBothAccepted(request(), userId: $user->id);
+
+        return $user;
     }
 }
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

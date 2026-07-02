@@ -38,10 +38,19 @@ class Tenant extends Model
         'rating_count',
     ];
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Review::class);
-    }
+    /**
+     * Atributos virtuais descriptografados para serialização JSON/Inertia.
+     */
+    protected $appends = [
+        'company_name',
+        'fantasy_name',
+        'document',
+        'phone',
+        'address',
+        'number',
+        'district',
+        'city',
+    ];
 
     protected function casts(): array
     {
@@ -49,14 +58,19 @@ class Tenant extends Model
             'active' => 'boolean',
             'rating_average' => 'decimal:2',
             'rating_count' => 'integer',
-            'document_encrypted' => 'encrypted',
-            'phone_encrypted' => 'encrypted',
+            // IMPORTANTE: NÃO usar cast 'encrypted' — isso causaria dupla descriptografia
+            // com os accessors manuais que usam EncryptionService::decrypt().
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function clients(): HasMany
@@ -74,19 +88,47 @@ class Tenant extends Model
         return $this->hasMany(Input::class);
     }
 
-    /**
-     * Get the decrypted document.
-     */
-    public function getDecryptedDocument(): ?string
+    // ── Accessors de descriptografia ────────────────────────────
+
+    public function getCompanyNameAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->company_name_encrypted);
+    }
+
+    public function getFantasyNameAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->fantasy_name_encrypted);
+    }
+
+    public function getDocumentAttribute(): ?string
     {
         return EncryptionService::decrypt($this->document_encrypted);
     }
 
-    /**
-     * Get the decrypted phone.
-     */
-    public function getDecryptedPhone(): ?string
+    public function getPhoneAttribute(): ?string
     {
         return EncryptionService::decrypt($this->phone_encrypted);
     }
+
+    public function getAddressAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->address_encrypted);
+    }
+
+    public function getNumberAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->number_encrypted);
+    }
+
+    public function getDistrictAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->district_encrypted);
+    }
+
+    public function getCityAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->city_encrypted);
+    }
 }
+
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

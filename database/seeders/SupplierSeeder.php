@@ -57,13 +57,18 @@ class SupplierSeeder extends Seeder
                 $docData = $encrypt($data['document']);
                 $contactData = $encrypt($data['contact']);
 
-                Supplier::create([
-                    'tenant_id' => $tenantId,
-                    'name' => $data['name'],
-                    'document_hash' => $docData['hash'],
-                    'document_encrypted' => $docData['encrypted'],
-                    'contact_encrypted' => $contactData['encrypted'],
-                ]);
+                // Idempotente: não cria duplicatas se executado múltiplas vezes
+                Supplier::withoutGlobalScopes()->firstOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'document_hash' => $docData['hash'],
+                    ],
+                    [
+                        'name' => $data['name'],
+                        'document_encrypted' => $docData['encrypted'],
+                        'contact_encrypted' => $contactData['encrypted'],
+                    ],
+                );
             }
 
             $this->command->info("  ✓ Tenant #{$tenantId}: " . count($suppliersData) . " fornecedores criados.");

@@ -1,8 +1,10 @@
 <?php
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
 namespace App\Models;
 
 use App\Scopes\TenantScope;
+use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +20,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Dispute extends Model
 {
+    /**
+     * Atributos virtuais descriptografados para serialização JSON/Inertia.
+     */
+    protected $appends = [
+        'description',
+    ];
+
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
@@ -41,5 +50,13 @@ class Dispute extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    /**
+     * Retorna a descrição descriptografada para exibição no frontend.
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->description_encrypted);
     }
 }
