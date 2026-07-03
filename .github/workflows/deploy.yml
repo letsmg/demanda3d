@@ -158,9 +158,19 @@ jobs:
             # 5. Migrations e Otimização
             cd "$NEW_RELEASE"
             
-            sudo -u www-data php artisan $MIGRATION_STRATEGY --force
+            # Identifica dinamicamente o nome do contêiner da aplicação que está rodando
+            APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1)
+            
+            # Se não achar pelo filtro específico, busca pelo padrão do compose no diretório shared
+            if [ -z "$APP_CONTAINER" ]; then
+                APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app 2>/dev/null)
+            fi
 
-            sudo -u www-data php artisan optimize
+            echo "🚀 Rodando Migrations dentro do contêiner: $APP_CONTAINER"
+            sudo docker exec -i "$APP_CONTAINER" php artisan $MIGRATION_STRATEGY --force
+
+            echo "⚡ Otimizando a aplicação..."
+            sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
             # 6. Ativar nova release
             sudo rm -f "$CURRENT"
