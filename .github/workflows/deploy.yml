@@ -58,7 +58,7 @@ jobs:
             COMPOSE_FILE="docker-compose-prod.yml"
             MIGRATION_STRATEGY="migrate"
           else
-            PROJECT_NAME="dev-demanda3d"
+            PROJECT_NAME="demanda3d-hom"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
             MIGRATION_STRATEGY="migrate:fresh --seed"
