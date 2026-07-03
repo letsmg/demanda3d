@@ -1,7 +1,7 @@
 # ==============================================================================
 # ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
 # Eles servem como documentação viva para o portfólio e explicam decisões técnicas 
-# complexas de infraestrutura que evitam a quebra do pipeline em atualizações futuras.
+# complexas de infraestrutura que evitam a quebra do pipeline em atualizações futures.
 # ==============================================================================
 
 name: 🚀 Deploy Demanda3D
@@ -58,7 +58,7 @@ jobs:
             COMPOSE_FILE="docker-compose-prod.yml"
             MIGRATION_STRATEGY="migrate"
           else
-            PROJECT_NAME="dev-demanda3d"
+            PROJECT_NAME="demanda3d-hom"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
             MIGRATION_STRATEGY="migrate:fresh --seed"
@@ -85,7 +85,12 @@ jobs:
             [ -d "$NEW_RELEASE/docker" ] && sudo cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
 
             # Copia o compose do ambiente para referência no shared
-            [ -f "$NEW_RELEASE/$COMPOSE_FILE" ] && sudo cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
+            if [ -f "$NEW_RELEASE/$COMPOSE_FILE" ]; then
+                sudo cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
+            fi
+            
+            # Remove fisicamente os arquivos de compose soltos da release para evitar conflito com links futuros
+            sudo rm -f "$NEW_RELEASE"/docker-compose*.yml
 
             # 2. Garantir containers rodando (idempotente)
             echo "🔄 Verificando containers..."
@@ -108,8 +113,16 @@ jobs:
             # 3. Links Simbólicos e Permissões (Deploy Atômico)
             echo "🔗 Criando links simbólicos..."
             sudo mkdir -p "$SHARED/storage/app/public"
+            
+            # Verificação prévia defensiva para evitar colisões ao criar os links
+            sudo rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/docker" "$NEW_RELEASE/docker-compose.yml"
+
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
+            
+            # Cria o link simbólico correto apontando o compose de shared para dentro da release
+            sudo ln -sfn "$SHARED/docker-compose.yml" "$NEW_RELEASE/docker-compose.yml"
+
             [ -d "$NEW_RELEASE/storage" ] && sudo rm -rf "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             sudo ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
@@ -141,6 +154,7 @@ jobs:
             sudo -u www-data php artisan optimize
 
             # 6. Ativar nova release
+            sudo rm -f "$CURRENT"
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
             sudo systemctl reload php8.5-fpm
 
