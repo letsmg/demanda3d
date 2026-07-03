@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\User;
 
@@ -34,6 +35,11 @@ return [
             'driver' => 'session',
             'provider' => 'clients',
         ],
+
+        'carriers' => [
+            'driver' => 'session',
+            'provider' => 'carriers',
+        ],
     ],
 
     /*
@@ -52,6 +58,11 @@ return [
         'clients' => [
             'driver' => 'eloquent',
             'model' => Client::class,
+        ],
+
+        'carriers' => [
+            'driver' => 'eloquent',
+            'model' => Carrier::class,
         ],
     ],
 

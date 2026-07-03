@@ -19,7 +19,8 @@ defineProps<{
 defineOptions({
     layout: {
         title: 'Criar conta de vendedor',
-        description: 'Preencha os dados abaixo para criar sua conta de vendedor',
+        description:
+            'Preencha os dados abaixo para criar sua conta de vendedor',
     },
 });
 
@@ -37,8 +38,16 @@ const acceptPrivacy = ref(true);
         class="flex flex-col gap-6"
     >
         <!-- Hidden inputs for consent (Fortify expects them as form fields) -->
-        <input type="hidden" name="accept_terms" :value="acceptTerms ? '1' : '0'" />
-        <input type="hidden" name="accept_privacy" :value="acceptPrivacy ? '1' : '0'" />
+        <input
+            type="hidden"
+            name="accept_terms"
+            :value="acceptTerms ? '1' : '0'"
+        />
+        <input
+            type="hidden"
+            name="accept_privacy"
+            :value="acceptPrivacy ? '1' : '0'"
+        />
 
         <div class="grid gap-6">
             <div class="grid gap-2">
@@ -98,8 +107,12 @@ const acceptPrivacy = ref(true);
             </div>
 
             <!-- Consentimento legal obrigatório -->
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
-                <p class="text-sm font-medium text-amber-900">Termos e Condições</p>
+            <div
+                class="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4"
+            >
+                <p class="text-sm font-medium text-amber-900">
+                    Termos e Condições
+                </p>
 
                 <div class="flex items-start gap-2">
                     <Checkbox
@@ -108,9 +121,15 @@ const acceptPrivacy = ref(true);
                         :tabindex="5"
                     />
                     <div class="grid gap-1">
-                        <Label for="accept_terms_vis" class="text-sm font-normal cursor-pointer">
+                        <Label
+                            for="accept_terms_vis"
+                            class="cursor-pointer text-sm font-normal"
+                        >
                             Li e aceito os
-                            <TextLink :href="'/legal/terms'" class="underline underline-offset-4">
+                            <TextLink
+                                :href="'/legal/terms'"
+                                class="underline underline-offset-4"
+                            >
                                 Termos de Uso
                             </TextLink>
                         </Label>
@@ -124,9 +143,15 @@ const acceptPrivacy = ref(true);
                         :tabindex="6"
                     />
                     <div class="grid gap-1">
-                        <Label for="accept_privacy_vis" class="text-sm font-normal cursor-pointer">
+                        <Label
+                            for="accept_privacy_vis"
+                            class="cursor-pointer text-sm font-normal"
+                        >
                             Li e aceito a
-                            <TextLink :href="'/legal/privacy'" class="underline underline-offset-4">
+                            <TextLink
+                                :href="'/legal/privacy'"
+                                class="underline underline-offset-4"
+                            >
                                 Política de Privacidade
                             </TextLink>
                         </Label>

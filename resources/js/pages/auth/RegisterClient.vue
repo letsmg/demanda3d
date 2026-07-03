@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 
 defineOptions({
@@ -65,12 +67,15 @@ function submit() {
         </p>
     </div>
 
-    <form
-        @submit.prevent="submit"
-        class="flex flex-col gap-6"
-    >
+    <form @submit.prevent="submit" class="flex flex-col gap-6">
         <div class="grid gap-6">
-            <FormTestHelper :form="form" :fields="testFields" label="Cadastro" @fill="handleFill" @clear="handleClear" />
+            <FormTestHelper
+                :form="form"
+                :fields="testFields"
+                label="Cadastro"
+                @fill="handleFill"
+                @clear="handleClear"
+            />
 
             <div class="grid gap-2">
                 <Label for="display_name">Nome / Empresa</Label>
@@ -128,8 +133,12 @@ function submit() {
             </div>
 
             <!-- Consentimento legal obrigatório -->
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
-                <p class="text-sm font-medium text-amber-900">Termos e Condições</p>
+            <div
+                class="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4"
+            >
+                <p class="text-sm font-medium text-amber-900">
+                    Termos e Condições
+                </p>
 
                 <div class="flex items-start gap-2">
                     <Checkbox
@@ -138,9 +147,15 @@ function submit() {
                         :tabindex="5"
                     />
                     <div class="grid gap-1">
-                        <Label for="accept_terms" class="text-sm font-normal cursor-pointer">
+                        <Label
+                            for="accept_terms"
+                            class="cursor-pointer text-sm font-normal"
+                        >
                             Li e aceito os
-                            <TextLink :href="'/legal/terms'" class="underline underline-offset-4">
+                            <TextLink
+                                :href="'/legal/terms'"
+                                class="underline underline-offset-4"
+                            >
                                 Termos de Uso
                             </TextLink>
                         </Label>
@@ -155,9 +170,15 @@ function submit() {
                         :tabindex="6"
                     />
                     <div class="grid gap-1">
-                        <Label for="accept_privacy" class="text-sm font-normal cursor-pointer">
+                        <Label
+                            for="accept_privacy"
+                            class="cursor-pointer text-sm font-normal"
+                        >
                             Li e aceito a
-                            <TextLink :href="'/legal/privacy'" class="underline underline-offset-4">
+                            <TextLink
+                                :href="'/legal/privacy'"
+                                class="underline underline-offset-4"
+                            >
                                 Política de Privacidade
                             </TextLink>
                         </Label>

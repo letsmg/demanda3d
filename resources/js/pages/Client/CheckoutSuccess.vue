@@ -20,7 +20,9 @@ defineProps<{
     <div class="min-h-screen bg-amber-50">
         <main class="mx-auto max-w-lg px-4 py-16 text-center">
             <CheckCircle2 class="mx-auto h-16 w-16 text-emerald-500" />
-            <h1 class="mt-6 text-2xl font-bold text-amber-900">Payment Successful!</h1>
+            <h1 class="mt-6 text-2xl font-bold text-amber-900">
+                Payment Successful!
+            </h1>
             <p class="mt-2 text-amber-600">
                 Your order has been confirmed. Thank you for your purchase!
             </p>
@@ -29,8 +31,8 @@ defineProps<{
                     <Button variant="outline">Back to Cart</Button>
                 </Link>
                 <Link href="/store">
-                    <Button class="bg-amber-500 hover:bg-amber-600 text-white">
-                        <ArrowRight class="h-4 w-4 mr-2" />
+                    <Button class="bg-amber-500 text-white hover:bg-amber-600">
+                        <ArrowRight class="mr-2 h-4 w-4" />
                         Continue Shopping
                     </Button>
                 </Link>

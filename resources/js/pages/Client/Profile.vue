@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import ClientHeader from '@/components/ClientHeader.vue';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     client: any;
@@ -60,16 +62,26 @@ function submit() {
         <ClientHeader :client="client" />
 
         <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-            <h1 class="mb-6 text-2xl font-bold tracking-tight text-amber-900">Meu Perfil</h1>
+            <h1 class="mb-6 text-2xl font-bold tracking-tight text-amber-900">
+                Meu Perfil
+            </h1>
 
             <Card>
                 <CardHeader>
                     <CardTitle>Informações Pessoais</CardTitle>
-                    <CardDescription>Atualize seus dados de cadastro</CardDescription>
+                    <CardDescription
+                        >Atualize seus dados de cadastro</CardDescription
+                    >
                 </CardHeader>
                 <form @submit.prevent="submit">
                     <CardContent class="space-y-4">
-                        <FormTestHelper :form="form" :fields="testFields" label="Perfil" @fill="handleFill" @clear="handleClear" />
+                        <FormTestHelper
+                            :form="form"
+                            :fields="testFields"
+                            label="Perfil"
+                            @fill="handleFill"
+                            @clear="handleClear"
+                        />
 
                         <div class="space-y-2">
                             <Label for="display_name">Nome / Empresa</Label>
@@ -79,7 +91,10 @@ function submit() {
                                 required
                                 placeholder="Seu nome ou empresa"
                             />
-                            <span v-if="form.errors.display_name" class="text-sm text-destructive">
+                            <span
+                                v-if="form.errors.display_name"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.display_name }}
                             </span>
                         </div>
@@ -92,7 +107,10 @@ function submit() {
                                 required
                                 placeholder="seu@email.com"
                             />
-                            <span v-if="form.errors.email" class="text-sm text-destructive">
+                            <span
+                                v-if="form.errors.email"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.email }}
                             </span>
                         </div>

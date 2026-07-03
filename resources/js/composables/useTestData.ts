@@ -27,8 +27,27 @@ const descricoesProdutos = [
     'Design paramétrico ajustável ao tamanho desejado pelo cliente.',
 ];
 
-const marcasInsumos = ['3DLab', 'eSun', 'Creality', 'SUNLU', 'Polymaker', 'FiloPrint', 'Anycubic', 'Elegoo', 'Voolt3D', 'PrintaLot'];
-const tiposFilamento = ['PLA', 'ABS', 'PETG', 'TPU', 'Nylon', 'PLA Silk', 'PETG Translúcido'];
+const marcasInsumos = [
+    '3DLab',
+    'eSun',
+    'Creality',
+    'SUNLU',
+    'Polymaker',
+    'FiloPrint',
+    'Anycubic',
+    'Elegoo',
+    'Voolt3D',
+    'PrintaLot',
+];
+const tiposFilamento = [
+    'PLA',
+    'ABS',
+    'PETG',
+    'TPU',
+    'Nylon',
+    'PLA Silk',
+    'PETG Translúcido',
+];
 
 function randomElement<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
@@ -36,7 +55,11 @@ function randomElement<T>(arr: T[]): T {
 
 export function useTestData() {
     function randomProductName(): string {
-        return randomElement(nomesProdutos) + ' ' + Math.floor(Math.random() * 900 + 100);
+        return (
+            randomElement(nomesProdutos) +
+            ' ' +
+            Math.floor(Math.random() * 900 + 100)
+        );
     }
 
     function randomProductDescription(): string {
@@ -44,11 +67,24 @@ export function useTestData() {
     }
 
     function randomPrice(): string {
-        return (Math.random() * 200 + 9.90).toFixed(2);
+        return (Math.random() * 200 + 9.9).toFixed(2);
     }
 
     function randomInputDescription(): string {
-        return randomElement(tiposFilamento) + ' ' + (Math.random() * 2 + 1).toFixed(1) + 'mm 1kg ' + randomElement(['Preto', 'Branco', 'Transparente', 'Cinza', 'Azul', 'Vermelho']);
+        return (
+            randomElement(tiposFilamento) +
+            ' ' +
+            (Math.random() * 2 + 1).toFixed(1) +
+            'mm 1kg ' +
+            randomElement([
+                'Preto',
+                'Branco',
+                'Transparente',
+                'Cinza',
+                'Azul',
+                'Vermelho',
+            ])
+        );
     }
 
     function randomBrand(): string {
@@ -72,7 +108,9 @@ export function useTestData() {
      * Retorna no formato 00.000.000/0001-00
      */
     function randomCNPJ(): string {
-        const n = Array.from({ length: 12 }, () => Math.floor(Math.random() * 9));
+        const n = Array.from({ length: 12 }, () =>
+            Math.floor(Math.random() * 9),
+        );
 
         // Raiz fixa: 0001 (filial)
         const raiz = [0, 0, 0, 1];
@@ -92,14 +130,18 @@ export function useTestData() {
         d2 = d2 % 11 < 2 ? 0 : 11 - (d2 % 11);
 
         const digits = [...cnpj, d1, d2];
-        return digits.join('').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        return digits
+            .join('')
+            .replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
     }
 
     /**
      * Gera um CPF aleatório válido com dígitos verificadores corretos.
      */
     function randomCPF(): string {
-        const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 9));
+        const n = Array.from({ length: 9 }, () =>
+            Math.floor(Math.random() * 9),
+        );
         let d1 = 0;
         let d2 = 0;
         for (let i = 0; i < 9; i++) {
@@ -111,7 +153,9 @@ export function useTestData() {
         d2 += d1 * 2;
         d2 = (d2 * 10) % 11;
         d2 = d2 >= 10 ? 0 : d2;
-        return [...n, d1, d2].join('').replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+        return [...n, d1, d2]
+            .join('')
+            .replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
     }
 
     return {

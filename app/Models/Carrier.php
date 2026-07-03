@@ -6,13 +6,15 @@ namespace App\Models;
 use App\Scopes\TenantScope;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'tenant_id', 'name', 'doc_type', 'ie',
+    'tenant_id', 'name', 'data_nascimento', 'doc_type', 'ie',
     'document_encrypted', 'document_hash',
     'address_encrypted', 'address_hash',
     'number_encrypted', 'number_hash',
@@ -23,20 +25,30 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'phone1_encrypted', 'phone1_hash',
     'contact2_encrypted', 'contact2_hash',
     'phone2_encrypted', 'phone2_hash',
-    'email', 'website', 'notes', 'is_active',
+    'email', 'password', 'website', 'notes', 'is_active',
+    'is_blocked', 'blocked_at', 'blocked_reason',
+    'state_id',
 ])]
-class Carrier extends Model
+class Carrier extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $appends = [
         'document', 'address', 'number', 'district', 'city',
         'contact1', 'phone1', 'contact2', 'phone2',
     ];
 
+    protected $hidden = ['password', 'remember_token'];
+
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active'         => 'boolean',
+            'is_blocked'        => 'boolean',
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
+            'data_nascimento'   => 'date',
+        ];
     }
 
     protected static function booted(): void
@@ -52,6 +64,12 @@ class Carrier extends Model
     public function freightContracts(): HasMany
     {
         return $this->hasMany(FreightContract::class);
+    }
+
+    public function states(): BelongsToMany
+    {
+        return $this->belongsToMany(State::class, 'carrier_state')
+            ->withTimestamps();
     }
 
     // ── Accessors ──────────────────────────────────────

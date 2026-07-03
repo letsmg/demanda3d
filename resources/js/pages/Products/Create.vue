@@ -5,14 +5,21 @@ import { ArrowLeft, AlertCircle, ChevronDown, Save } from '@lucide/vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTestData } from '@/composables/useTestData';
 import { index as productsIndex } from '@/routes/products';
 
-const { randomProductName, randomProductDescription, randomPrice } = useTestData();
+const { randomProductName, randomProductDescription, randomPrice } =
+    useTestData();
 
 const seoOpen = ref(false);
 
@@ -36,40 +43,65 @@ function generateGtm(name: string, price: string): string {
         event: 'product_detail_view',
         ecommerce: {
             detail: {
-                products: [{
-                    name: name,
-                    price: price,
-                }],
+                products: [
+                    {
+                        name: name,
+                        price: price,
+                    },
+                ],
             },
         },
     };
     const jsonStr = JSON.stringify(dataLayer, null, 2);
     const endTag = '</' + 'script>';
-    return '<!-- Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  dataLayer.push(' + jsonStr + ');\n' + endTag;
+    return (
+        '<!-- Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  dataLayer.push(' +
+        jsonStr +
+        ');\n' +
+        endTag
+    );
 }
 
-function generateSeoFromData(name: string, description: string): Record<string, string> {
+function generateSeoFromData(
+    name: string,
+    description: string,
+): Record<string, string> {
     const cleanDesc = description.replace(/<[^>]+>/g, '').trim();
-    const words = name.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    const words = name
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length >= 3);
 
     return {
         meta_title: name.substring(0, 120),
         meta_description: (cleanDesc || name).substring(0, 320),
-        meta_keywords: [name.toLowerCase(), ...words, 'impressão 3d', 'produto 3d', 'marketplace 3d'].join(', ').substring(0, 255),
+        meta_keywords: [
+            name.toLowerCase(),
+            ...words,
+            'impressão 3d',
+            'produto 3d',
+            'marketplace 3d',
+        ]
+            .join(', ')
+            .substring(0, 255),
         canonical_url: '',
         og_image: '',
-        schema_markup: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Product',
-            'name': name,
-            'description': cleanDesc || name,
-            'offers': {
-                '@type': 'Offer',
-                'price': form.sale_price || '0',
-                'priceCurrency': 'BRL',
-                'availability': 'https://schema.org/InStock',
+        schema_markup: JSON.stringify(
+            {
+                '@context': 'https://schema.org',
+                '@type': 'Product',
+                name: name,
+                description: cleanDesc || name,
+                offers: {
+                    '@type': 'Offer',
+                    price: form.sale_price || '0',
+                    priceCurrency: 'BRL',
+                    availability: 'https://schema.org/InStock',
+                },
             },
-        }, null, 2),
+            null,
+            2,
+        ),
         google_tag_manager: generateGtm(name, form.sale_price || '0'),
     };
 }
@@ -120,11 +152,17 @@ const onFileChange = (e: Event) => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="productsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
+                <Link :href="productsIndex()"
+                    ><ArrowLeft class="h-4 w-4"
+                /></Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Criar Produto</h1>
-                <p class="text-sm text-muted-foreground">Adicionar um novo produto à vitrine</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Criar Produto
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Adicionar um novo produto à vitrine
+                </p>
             </div>
         </div>
 
@@ -134,43 +172,89 @@ const onFileChange = (e: Event) => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper :form="form" :fields="buildTestFields()" label="Produto teste" @fill="handleFill" @clear="handleClear" />
+        <FormTestHelper
+            :form="form"
+            :fields="buildTestFields()"
+            label="Produto teste"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Produto</CardTitle>
-                    <CardDescription>Preencha os dados do produto</CardDescription>
+                    <CardDescription
+                        >Preencha os dados do produto</CardDescription
+                    >
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="name">Nome * (deve ser único)</Label>
-                            <Input id="name" v-model="form.name" placeholder="Nome do produto"
-                                :class="{ 'border-destructive': form.errors.name }" />
-                            <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
+                            <Input
+                                id="name"
+                                v-model="form.name"
+                                placeholder="Nome do produto"
+                                :class="{
+                                    'border-destructive': form.errors.name,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.name"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.name }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="sale_price">Preço de Venda *</Label>
-                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.sale_price }" />
-                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
+                            <Input
+                                id="sale_price"
+                                v-model="form.sale_price"
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.sale_price,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.sale_price"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.sale_price }}</span
+                            >
                         </div>
                     </div>
 
                     <div class="space-y-2">
                         <Label for="description">Descrição</Label>
-                        <Textarea id="description" v-model="form.description" placeholder="Descrição do produto" rows={4} />
+                        <Textarea
+                            id="description"
+                            v-model="form.description"
+                            placeholder="Descrição do produto"
+                            rows="{4}"
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <Label for="image">Imagem do Produto</Label>
-                        <Input id="image" type="file" accept="image/*" @input="onFileChange" />
+                        <Input
+                            id="image"
+                            type="file"
+                            accept="image/*"
+                            @input="onFileChange"
+                        />
                     </div>
 
                     <div class="flex items-center gap-2">
                         <Label for="is_active">Produto ativo na vitrine?</Label>
-                        <input id="is_active" type="checkbox" v-model="form.is_active" class="h-4 w-4" />
+                        <input
+                            id="is_active"
+                            type="checkbox"
+                            v-model="form.is_active"
+                            class="h-4 w-4"
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -180,65 +264,151 @@ const onFileChange = (e: Event) => {
                 <CardHeader class="cursor-pointer" @click="seoOpen = !seoOpen">
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle class="text-lg">SEO — Otimização para Buscadores</CardTitle>
-                            <CardDescription>Configure meta tags, schema markup e Google Tag Manager</CardDescription>
+                            <CardTitle class="text-lg"
+                                >SEO — Otimização para Buscadores</CardTitle
+                            >
+                            <CardDescription
+                                >Configure meta tags, schema markup e Google Tag
+                                Manager</CardDescription
+                            >
                         </div>
-                        <ChevronDown class="h-5 w-5 transition-transform" :class="{ 'rotate-180': seoOpen }" />
+                        <ChevronDown
+                            class="h-5 w-5 transition-transform"
+                            :class="{ 'rotate-180': seoOpen }"
+                        />
                     </div>
                 </CardHeader>
                 <CardContent v-show="seoOpen" class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="meta_title">Meta Title (máx. 120 caracteres)</Label>
-                            <Input id="meta_title" v-model="form.meta_title" placeholder="Título para SEO" maxlength="120"
-                                :class="{ 'border-destructive': form.errors.meta_title }" />
-                            <span v-if="form.errors.meta_title" class="text-sm text-destructive">{{ form.errors.meta_title }}</span>
+                            <Label for="meta_title"
+                                >Meta Title (máx. 120 caracteres)</Label
+                            >
+                            <Input
+                                id="meta_title"
+                                v-model="form.meta_title"
+                                placeholder="Título para SEO"
+                                maxlength="120"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.meta_title,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.meta_title"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.meta_title }}</span
+                            >
                         </div>
                         <div class="space-y-2">
-                            <Label for="meta_keywords">Meta Keywords (máx. 255 caracteres)</Label>
-                            <Input id="meta_keywords" v-model="form.meta_keywords" placeholder="palavra-chave1, palavra-chave2"
-                                :class="{ 'border-destructive': form.errors.meta_keywords }" />
+                            <Label for="meta_keywords"
+                                >Meta Keywords (máx. 255 caracteres)</Label
+                            >
+                            <Input
+                                id="meta_keywords"
+                                v-model="form.meta_keywords"
+                                placeholder="palavra-chave1, palavra-chave2"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.meta_keywords,
+                                }"
+                            />
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="meta_description">Meta Description (máx. 320 caracteres)</Label>
-                        <Textarea id="meta_description" v-model="form.meta_description" placeholder="Descrição para mecanismos de busca" rows={3} maxlength="320"
-                            :class="{ 'border-destructive': form.errors.meta_description }" />
-                        <span v-if="form.errors.meta_description" class="text-sm text-destructive">{{ form.errors.meta_description }}</span>
+                        <Label for="meta_description"
+                            >Meta Description (máx. 320 caracteres)</Label
+                        >
+                        <Textarea
+                            id="meta_description"
+                            v-model="form.meta_description"
+                            placeholder="Descrição para mecanismos de busca"
+                            rows="{3}"
+                            maxlength="320"
+                            :class="{
+                                'border-destructive':
+                                    form.errors.meta_description,
+                            }"
+                        />
+                        <span
+                            v-if="form.errors.meta_description"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.meta_description }}</span
+                        >
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="canonical_url">URL Canônica</Label>
-                            <Input id="canonical_url" v-model="form.canonical_url" type="url" placeholder="https://seu-dominio.com/produto"
-                                :class="{ 'border-destructive': form.errors.canonical_url }" />
+                            <Input
+                                id="canonical_url"
+                                v-model="form.canonical_url"
+                                type="url"
+                                placeholder="https://seu-dominio.com/produto"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.canonical_url,
+                                }"
+                            />
                         </div>
                         <div class="space-y-2">
-                            <Label for="og_image">URL da Imagem Open Graph</Label>
-                            <Input id="og_image" v-model="form.og_image" type="url" placeholder="https://seu-dominio.com/imagem.jpg"
-                                :class="{ 'border-destructive': form.errors.og_image }" />
+                            <Label for="og_image"
+                                >URL da Imagem Open Graph</Label
+                            >
+                            <Input
+                                id="og_image"
+                                v-model="form.og_image"
+                                type="url"
+                                placeholder="https://seu-dominio.com/imagem.jpg"
+                                :class="{
+                                    'border-destructive': form.errors.og_image,
+                                }"
+                            />
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="schema_markup">Schema Markup (JSON-LD) — Aceita código JSON estruturado</Label>
-                        <Textarea id="schema_markup" v-model="form.schema_markup" placeholder='{"@context": "https://schema.org", ...}' rows={6}
-                            class="font-mono text-sm" />
-                        <p class="text-xs text-muted-foreground">Este campo aceita JSON/HTML para dados estruturados. Não será sanitizado.</p>
+                        <Label for="schema_markup"
+                            >Schema Markup (JSON-LD) — Aceita código JSON
+                            estruturado</Label
+                        >
+                        <Textarea
+                            id="schema_markup"
+                            v-model="form.schema_markup"
+                            placeholder='{"@context": "https://schema.org", ...}'
+                            rows="{6}"
+                            class="font-mono text-sm"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Este campo aceita JSON/HTML para dados estruturados.
+                            Não será sanitizado.
+                        </p>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="google_tag_manager">Google Tag Manager — Aceita código JS/HTML</Label>
-                        <Textarea id="google_tag_manager" v-model="form.google_tag_manager" placeholder="<!-- Google Tag Manager --> ..." rows={6}
-                            class="font-mono text-sm" />
-                        <p class="text-xs text-muted-foreground">Este campo aceita scripts de tracking. Não será sanitizado.</p>
+                        <Label for="google_tag_manager"
+                            >Google Tag Manager — Aceita código JS/HTML</Label
+                        >
+                        <Textarea
+                            id="google_tag_manager"
+                            v-model="form.google_tag_manager"
+                            placeholder="<!-- Google Tag Manager --> ..."
+                            rows="{6}"
+                            class="font-mono text-sm"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Este campo aceita scripts de tracking. Não será
+                            sanitizado.
+                        </p>
                     </div>
                 </CardContent>
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
+                <Button variant="outline" as-child
+                    ><Link :href="productsIndex()">Cancelar</Link></Button
+                >
                 <Button type="submit" :disabled="form.processing">
                     <Save class="mr-2 h-4 w-4" />
                     {{ form.processing ? 'Salvando...' : 'Salvar Produto' }}

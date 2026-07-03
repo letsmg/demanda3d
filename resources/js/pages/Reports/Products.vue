@@ -9,7 +9,10 @@ defineProps<{
 }>();
 
 function formatPrice(value: string | number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
 }
 </script>
 
@@ -24,8 +27,12 @@ function formatPrice(value: string | number): string {
                 </Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Produtos Ativos</h1>
-                <p class="text-sm text-muted-foreground">Relatório de produtos disponíveis na vitrine</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Produtos Ativos
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Relatório de produtos disponíveis na vitrine
+                </p>
             </div>
         </div>
 
@@ -33,7 +40,8 @@ function formatPrice(value: string | number): string {
             <CardHeader>
                 <CardTitle class="flex items-center gap-2">
                     <ShoppingBag class="h-4 w-4" />
-                    {{ products.meta?.total || products.data?.length || 0 }} produtos ativos
+                    {{ products.meta?.total || products.data?.length || 0 }}
+                    produtos ativos
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -41,27 +49,64 @@ function formatPrice(value: string | number): string {
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="border-b">
-                                <th class="py-3 px-4 font-medium">Nome</th>
-                                <th class="py-3 px-4 font-medium">Material</th>
-                                <th class="py-3 px-4 font-medium">Peso (g)</th>
-                                <th class="py-3 px-4 font-medium">Impressão</th>
-                                <th class="py-3 px-4 font-medium">Pintura</th>
-                                <th class="py-3 px-4 font-medium">Custo</th>
-                                <th class="py-3 px-4 font-medium">Venda</th>
+                                <th class="px-4 py-3 font-medium">Nome</th>
+                                <th class="px-4 py-3 font-medium">Material</th>
+                                <th class="px-4 py-3 font-medium">Peso (g)</th>
+                                <th class="px-4 py-3 font-medium">Impressão</th>
+                                <th class="px-4 py-3 font-medium">Pintura</th>
+                                <th class="px-4 py-3 font-medium">Custo</th>
+                                <th class="px-4 py-3 font-medium">Venda</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="product in (Array.isArray(products) ? products : products.data)" :key="product.id" class="border-b hover:bg-muted/50">
-                                <td class="py-3 px-4 font-medium">{{ product.name }}</td>
-                                <td class="py-3 px-4">{{ product.material_type }}</td>
-                                <td class="py-3 px-4">{{ product.approximate_weight }}</td>
-                                <td class="py-3 px-4">{{ product.print_time }}min</td>
-                                <td class="py-3 px-4">{{ product.painting_time ? product.painting_time + 'min' : '—' }}</td>
-                                <td class="py-3 px-4">{{ formatPrice(product.approximate_cost) }}</td>
-                                <td class="py-3 px-4">{{ formatPrice(product.sale_price) }}</td>
+                            <tr
+                                v-for="product in Array.isArray(products)
+                                    ? products
+                                    : products.data"
+                                :key="product.id"
+                                class="border-b hover:bg-muted/50"
+                            >
+                                <td class="px-4 py-3 font-medium">
+                                    {{ product.name }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ product.material_type }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ product.approximate_weight }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ product.print_time }}min
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{
+                                        product.painting_time
+                                            ? product.painting_time + 'min'
+                                            : '—'
+                                    }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ formatPrice(product.approximate_cost) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ formatPrice(product.sale_price) }}
+                                </td>
                             </tr>
-                            <tr v-if="!(Array.isArray(products) ? products : products.data)?.length">
-                                <td colspan="7" class="py-8 text-center text-muted-foreground">Nenhum produto ativo encontrado.</td>
+                            <tr
+                                v-if="
+                                    !(
+                                        Array.isArray(products)
+                                            ? products
+                                            : products.data
+                                    )?.length
+                                "
+                            >
+                                <td
+                                    colspan="7"
+                                    class="py-8 text-center text-muted-foreground"
+                                >
+                                    Nenhum produto ativo encontrado.
+                                </td>
                             </tr>
                         </tbody>
                     </table>

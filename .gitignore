@@ -19,6 +19,7 @@ storage/*.key
 .env
 .env*
 !.env.docker.example
+!.env.example
 Homestead.yaml
 Homestead.json
 /.vagrant

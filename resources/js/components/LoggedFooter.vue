@@ -19,7 +19,8 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
                 </div>
 
                 <p class="text-xs text-muted-foreground/70">
-                    Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
+                    Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos
+                    reservados.
                 </p>
 
                 <div

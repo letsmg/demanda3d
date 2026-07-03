@@ -48,6 +48,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'website',
     'notes',
     'is_active',
+    'state_id',
 ])]
 class Supplier extends Model
 {
@@ -86,6 +87,11 @@ class Supplier extends Model
     public function inputs(): HasMany
     {
         return $this->hasMany(Input::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
     }
 
     public function accountsPayable(): HasMany

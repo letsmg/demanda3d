@@ -19,7 +19,10 @@ function applyFilter() {
     if (threshold.value) {
         params.threshold = threshold.value;
     }
-    router.get('/reports/inputs', params, { preserveState: true, replace: true });
+    router.get('/reports/inputs', params, {
+        preserveState: true,
+        replace: true,
+    });
 }
 
 function clearFilter() {
@@ -28,7 +31,10 @@ function clearFilter() {
 }
 
 function formatPrice(value: string | number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
 }
 
 function formatDate(value: string): string {
@@ -47,8 +53,12 @@ function formatDate(value: string): string {
                 </Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Insumos por Estoque</h1>
-                <p class="text-sm text-muted-foreground">Relatório de insumos com filtro de quantidade mínima</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Insumos por Estoque
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Relatório de insumos com filtro de quantidade mínima
+                </p>
             </div>
         </div>
 
@@ -61,11 +71,25 @@ function formatDate(value: string): string {
             <CardContent>
                 <div class="flex items-end gap-4">
                     <div class="space-y-2">
-                        <Label for="threshold">Quantidade máxima (exibe insumos abaixo deste valor)</Label>
-                        <Input id="threshold" v-model="threshold" type="number" placeholder="Ex: 500" class="w-48" />
+                        <Label for="threshold"
+                            >Quantidade máxima (exibe insumos abaixo deste
+                            valor)</Label
+                        >
+                        <Input
+                            id="threshold"
+                            v-model="threshold"
+                            type="number"
+                            placeholder="Ex: 500"
+                            class="w-48"
+                        />
                     </div>
                     <Button @click="applyFilter">Filtrar</Button>
-                    <Button v-if="filters.threshold" variant="ghost" @click="clearFilter">Limpar</Button>
+                    <Button
+                        v-if="filters.threshold"
+                        variant="ghost"
+                        @click="clearFilter"
+                        >Limpar</Button
+                    >
                 </div>
             </CardContent>
         </Card>
@@ -74,7 +98,8 @@ function formatDate(value: string): string {
             <CardHeader>
                 <CardTitle class="flex items-center gap-2">
                     <PackageOpen class="h-4 w-4" />
-                    {{ inputs.meta?.total || inputs.data?.length || 0 }} insumos encontrados
+                    {{ inputs.meta?.total || inputs.data?.length || 0 }} insumos
+                    encontrados
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -82,25 +107,54 @@ function formatDate(value: string): string {
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="border-b">
-                                <th class="py-3 px-4 font-medium">Descrição</th>
-                                <th class="py-3 px-4 font-medium">Marca</th>
-                                <th class="py-3 px-4 font-medium">Fornecedor</th>
-                                <th class="py-3 px-4 font-medium">Qtd</th>
-                                <th class="py-3 px-4 font-medium">Data</th>
-                                <th class="py-3 px-4 font-medium">Valor</th>
+                                <th class="px-4 py-3 font-medium">Descrição</th>
+                                <th class="px-4 py-3 font-medium">Marca</th>
+                                <th class="px-4 py-3 font-medium">
+                                    Fornecedor
+                                </th>
+                                <th class="px-4 py-3 font-medium">Qtd</th>
+                                <th class="px-4 py-3 font-medium">Data</th>
+                                <th class="px-4 py-3 font-medium">Valor</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="input in (Array.isArray(inputs) ? inputs : inputs.data)" :key="input.id" class="border-b hover:bg-muted/50">
-                                <td class="py-3 px-4 font-medium">{{ input.description }}</td>
-                                <td class="py-3 px-4">{{ input.brand }}</td>
-                                <td class="py-3 px-4">{{ input.supplier?.name || '—' }}</td>
-                                <td class="py-3 px-4">{{ input.quantity }}</td>
-                                <td class="py-3 px-4">{{ formatDate(input.purchase_date) }}</td>
-                                <td class="py-3 px-4">{{ formatPrice(input.cost_value) }}</td>
+                            <tr
+                                v-for="input in Array.isArray(inputs)
+                                    ? inputs
+                                    : inputs.data"
+                                :key="input.id"
+                                class="border-b hover:bg-muted/50"
+                            >
+                                <td class="px-4 py-3 font-medium">
+                                    {{ input.description }}
+                                </td>
+                                <td class="px-4 py-3">{{ input.brand }}</td>
+                                <td class="px-4 py-3">
+                                    {{ input.supplier?.name || '—' }}
+                                </td>
+                                <td class="px-4 py-3">{{ input.quantity }}</td>
+                                <td class="px-4 py-3">
+                                    {{ formatDate(input.purchase_date) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ formatPrice(input.cost_value) }}
+                                </td>
                             </tr>
-                            <tr v-if="!(Array.isArray(inputs) ? inputs : inputs.data)?.length">
-                                <td colspan="6" class="py-8 text-center text-muted-foreground">Nenhum insumo encontrado.</td>
+                            <tr
+                                v-if="
+                                    !(
+                                        Array.isArray(inputs)
+                                            ? inputs
+                                            : inputs.data
+                                    )?.length
+                                "
+                            >
+                                <td
+                                    colspan="6"
+                                    class="py-8 text-center text-muted-foreground"
+                                >
+                                    Nenhum insumo encontrado.
+                                </td>
                             </tr>
                         </tbody>
                     </table>

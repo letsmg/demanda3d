@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import ClientHeader from '@/components/ClientHeader.vue';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     client: any;
@@ -66,16 +68,27 @@ function submit() {
         <ClientHeader :client="client" />
 
         <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-            <h1 class="mb-6 text-2xl font-bold tracking-tight text-amber-900">Meus Endereços</h1>
+            <h1 class="mb-6 text-2xl font-bold tracking-tight text-amber-900">
+                Meus Endereços
+            </h1>
 
             <Card>
                 <CardHeader>
                     <CardTitle>Endereço de Entrega</CardTitle>
-                    <CardDescription>Defina seu endereço principal para receber pedidos</CardDescription>
+                    <CardDescription
+                        >Defina seu endereço principal para receber
+                        pedidos</CardDescription
+                    >
                 </CardHeader>
                 <form @submit.prevent="submit">
                     <CardContent class="space-y-4">
-                        <FormTestHelper :form="form" :fields="testFields" label="Endereço" @fill="handleFill" @clear="handleClear" />
+                        <FormTestHelper
+                            :form="form"
+                            :fields="testFields"
+                            label="Endereço"
+                            @fill="handleFill"
+                            @clear="handleClear"
+                        />
 
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div class="space-y-2 sm:col-span-2">
@@ -85,7 +98,10 @@ function submit() {
                                     v-model="form.address"
                                     placeholder="Rua, Avenida..."
                                 />
-                                <span v-if="form.errors.address" class="text-sm text-destructive">
+                                <span
+                                    v-if="form.errors.address"
+                                    class="text-sm text-destructive"
+                                >
                                     {{ form.errors.address }}
                                 </span>
                             </div>
@@ -96,7 +112,10 @@ function submit() {
                                     v-model="form.number"
                                     placeholder="Nº"
                                 />
-                                <span v-if="form.errors.number" class="text-sm text-destructive">
+                                <span
+                                    v-if="form.errors.number"
+                                    class="text-sm text-destructive"
+                                >
                                     {{ form.errors.number }}
                                 </span>
                             </div>
@@ -110,7 +129,10 @@ function submit() {
                                     v-model="form.city"
                                     placeholder="São Paulo"
                                 />
-                                <span v-if="form.errors.city" class="text-sm text-destructive">
+                                <span
+                                    v-if="form.errors.city"
+                                    class="text-sm text-destructive"
+                                >
                                     {{ form.errors.city }}
                                 </span>
                             </div>
@@ -122,7 +144,10 @@ function submit() {
                                     placeholder="SP"
                                     maxlength="2"
                                 />
-                                <span v-if="form.errors.state" class="text-sm text-destructive">
+                                <span
+                                    v-if="form.errors.state"
+                                    class="text-sm text-destructive"
+                                >
                                     {{ form.errors.state }}
                                 </span>
                             </div>
@@ -133,7 +158,10 @@ function submit() {
                                     v-model="form.zipcode"
                                     placeholder="00000-000"
                                 />
-                                <span v-if="form.errors.zipcode" class="text-sm text-destructive">
+                                <span
+                                    v-if="form.errors.zipcode"
+                                    class="text-sm text-destructive"
+                                >
                                     {{ form.errors.zipcode }}
                                 </span>
                             </div>

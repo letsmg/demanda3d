@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BarChart3, BookOpen, FolderGit2, LayoutGrid, Truck, Users, Package, ShoppingBag, Ship, Wrench } from '@lucide/vue';
+import {
+    BarChart3,
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    Truck,
+    Users,
+    Package,
+    ShoppingBag,
+    Ship,
+    Wrench,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';

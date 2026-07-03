@@ -21,15 +21,23 @@ let searchTimeout: ReturnType<typeof setTimeout>;
 
 const doSearch = (value: string) => {
     if (value.length >= 3) {
-        router.get('/products', { search: value }, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            '/products',
+            { search: value },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     } else if (value.length === 0) {
-        router.get('/products', {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            '/products',
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }
 };
 
@@ -62,8 +70,12 @@ const formatPrice = (value: string | number) => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Produtos</h1>
-                <p class="text-sm text-muted-foreground">Gerencie seus produtos para a vitrine</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Produtos
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Gerencie seus produtos para a vitrine
+                </p>
             </div>
             <Button as-child>
                 <Link :href="`/products/create`">
@@ -76,11 +88,18 @@ const formatPrice = (value: string | number) => {
         <Card>
             <CardHeader>
                 <CardTitle>Todos os Produtos</CardTitle>
-                <CardDescription>{{ products.meta?.total || products.data?.length || 0 }} produtos cadastrados</CardDescription>
+                <CardDescription
+                    >{{
+                        products.meta?.total || products.data?.length || 0
+                    }}
+                    produtos cadastrados</CardDescription
+                >
             </CardHeader>
             <CardContent>
                 <div class="relative mb-4 max-w-sm">
-                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search
+                        class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    />
                     <Input
                         v-model="search"
                         placeholder="Buscar produtos (mín. 3 letras)..."
@@ -93,34 +112,73 @@ const formatPrice = (value: string | number) => {
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="border-b">
-                                <th class="py-3 px-4 font-medium">Nome</th>
-                                <th class="py-3 px-4 font-medium">Preço</th>
-                                <th class="py-3 px-4 font-medium">Ativo</th>
-                                <th class="py-3 px-4 font-medium text-right">Ações</th>
+                                <th class="px-4 py-3 font-medium">Nome</th>
+                                <th class="px-4 py-3 font-medium">Preço</th>
+                                <th class="px-4 py-3 font-medium">Ativo</th>
+                                <th class="px-4 py-3 text-right font-medium">
+                                    Ações
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="product in (Array.isArray(products) ? products : products.data)" :key="product.id" class="border-b hover:bg-muted/50">
-                                <td class="py-3 px-4 font-medium">{{ product.name }}</td>
-                                <td class="py-3 px-4">{{ formatPrice(product.sale_price) }}</td>
-                                <td class="py-3 px-4">
-                                    <span :class="product.is_active ? 'text-green-600' : 'text-red-500'">
+                            <tr
+                                v-for="product in Array.isArray(products)
+                                    ? products
+                                    : products.data"
+                                :key="product.id"
+                                class="border-b hover:bg-muted/50"
+                            >
+                                <td class="px-4 py-3 font-medium">
+                                    {{ product.name }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ formatPrice(product.sale_price) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        :class="
+                                            product.is_active
+                                                ? 'text-green-600'
+                                                : 'text-red-500'
+                                        "
+                                    >
                                         {{ product.is_active ? 'Sim' : 'Não' }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right">
-                                    <Button variant="ghost" size="icon" as-child>
-                                        <Link :href="`/products/${product.id}/edit`">
+                                <td class="px-4 py-3 text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        as-child
+                                    >
+                                        <Link
+                                            :href="`/products/${product.id}/edit`"
+                                        >
                                             <Pencil class="h-4 w-4" />
                                         </Link>
                                     </Button>
-                                    <Button variant="ghost" size="icon" @click="deleteProduct(product.id)">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="deleteProduct(product.id)"
+                                    >
                                         <Trash2 class="h-4 w-4 text-red-500" />
                                     </Button>
                                 </td>
                             </tr>
-                             <tr v-if="!(Array.isArray(products) ? products : products.data)?.length">
-                                <td colspan="4" class="py-8 text-center text-muted-foreground">
+                            <tr
+                                v-if="
+                                    !(
+                                        Array.isArray(products)
+                                            ? products
+                                            : products.data
+                                    )?.length
+                                "
+                            >
+                                <td
+                                    colspan="4"
+                                    class="py-8 text-center text-muted-foreground"
+                                >
                                     Nenhum produto encontrado.
                                 </td>
                             </tr>

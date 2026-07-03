@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Box, Plus, Edit, Trash2, DollarSign, Gauge, Search } from '@lucide/vue';
+import {
+    Box,
+    Plus,
+    Edit,
+    Trash2,
+    DollarSign,
+    Gauge,
+    Search,
+} from '@lucide/vue';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,10 +57,14 @@ const onSearchInput = () => {
     }
 
     searchTimeout = setTimeout(() => {
-        router.get('/inputs', { search: searchQuery.value }, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            '/inputs',
+            { search: searchQuery.value },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }, 300);
 };
 
@@ -118,7 +130,9 @@ const formatDate = (dateStr: string) =>
         </div>
 
         <div class="relative">
-            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+                class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
                 v-model="searchQuery"
                 placeholder="Buscar por filamento (mín. 3 letras)..."
@@ -242,7 +256,11 @@ const formatDate = (dateStr: string) =>
                                 <Gauge class="h-3.5 w-3.5" />
                                 <span
                                     >Qtd: {{ input.quantity }}g | Frete:
-                                    {{ formatCurrency(Number(input.shipping_cost)) }}</span
+                                    {{
+                                        formatCurrency(
+                                            Number(input.shipping_cost),
+                                        )
+                                    }}</span
                                 >
                             </div>
                         </div>
