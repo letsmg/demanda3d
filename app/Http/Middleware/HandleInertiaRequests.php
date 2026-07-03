@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $clientUser ? $clientUser->toArray() : null,
             ],
             'cartCount' => $cartCount,
+            'csrf_token' => csrf_token(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

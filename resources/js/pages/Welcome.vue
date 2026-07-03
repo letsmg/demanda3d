@@ -195,7 +195,9 @@ const features = [
                             as-child
                             class="border-amber-300 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
                         >
-                            <Link :href="'/login_carrier'">Sou Transportadora</Link>
+                            <Link :href="'/login_carrier'"
+                                >Sou Transportadora</Link
+                            >
                         </Button>
                     </template>
                 </div>

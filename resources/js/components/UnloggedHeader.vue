@@ -17,6 +17,10 @@ const partnerLinks = [
 const clientLinks = [
     { name: 'Sou Cliente', href: '/login_cli', highlight: true },
 ];
+
+const carrierLinks = [
+    { name: 'Sou Transportadora', href: '/login_carrier', highlight: true },
+];
 </script>
 
 <template>
@@ -48,6 +52,19 @@ const clientLinks = [
                         size="sm"
                         as-child
                         class="hidden border-amber-500 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
+                    >
+                        <Link :href="item.href">{{ item.name }}</Link>
+                    </Button>
+                </template>
+
+                <!-- Carrier links (Sou Transportadora) -->
+                <template v-for="item in carrierLinks" :key="item.name">
+                    <Button
+                        v-if="item.highlight"
+                        variant="outline"
+                        size="sm"
+                        as-child
+                        class="hidden border-amber-400/50 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>

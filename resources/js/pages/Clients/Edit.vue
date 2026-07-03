@@ -38,7 +38,9 @@ const form = useForm({
     number: props.client.number || '',
     state: props.client.state || '',
     zipcode: props.client.zipcode || '',
+    state_id: null as number | null,
     city: props.client.city || '',
+    data_nascimento: props.client.data_nascimento || '',
     phone1: props.client.phone1 || '',
     phone2: props.client.phone2 || '',
     contact1: props.client.contact1 || '',
@@ -439,86 +441,24 @@ const submit = () => {
                             typeMismatchWarning
                         }}</AlertDescription>
                     </Alert>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="space-y-2 sm:col-span-2">
-                            <Label for="address">Endereço *</Label
-                            ><Input
-                                id="address"
-                                v-model="form.address"
-                                placeholder="Rua, Avenida..."
-                                :class="{
-                                    'border-destructive': form.errors.address,
-                                }"
-                            /><span
-                                v-if="form.errors.address"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.address }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="number">Número *</Label
-                            ><Input
-                                id="number"
-                                v-model="form.number"
-                                placeholder="123"
-                                :class="{
-                                    'border-destructive': form.errors.number,
-                                }"
-                            /><span
-                                v-if="form.errors.number"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.number }}</span
-                            >
-                        </div>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="space-y-2">
-                            <Label for="city">Cidade *</Label
-                            ><Input
-                                id="city"
-                                v-model="form.city"
-                                placeholder="São Paulo"
-                                :class="{
-                                    'border-destructive': form.errors.city,
-                                }"
-                            /><span
-                                v-if="form.errors.city"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.city }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="state">UF *</Label
-                            ><Input
-                                id="state"
-                                v-model="form.state"
-                                placeholder="SP"
-                                maxlength="2"
-                                :class="{
-                                    'border-destructive': form.errors.state,
-                                }"
-                            /><span
-                                v-if="form.errors.state"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.state }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="zipcode">CEP *</Label
-                            ><Input
-                                id="zipcode"
-                                v-model="form.zipcode"
-                                placeholder="00000-000"
-                                :class="{
-                                    'border-destructive': form.errors.zipcode,
-                                }"
-                            /><span
-                                v-if="form.errors.zipcode"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.zipcode }}</span
-                            >
-                        </div>
-                    </div>
+                    <AddressCepBlock
+                        :zipcode="form.zipcode"
+                        :state="form.state"
+                        :city="form.city"
+                        :address="form.address"
+                        :number="form.number"
+                        :zipcode-error="form.errors.zipcode"
+                        :state-error="form.errors.state"
+                        :city-error="form.errors.city"
+                        :address-error="form.errors.address"
+                        :number-error="form.errors.number"
+                        @update:zipcode="form.zipcode = $event"
+                        @update:state="form.state = $event"
+                        @update:state-id="form.state_id = $event"
+                        @update:city="form.city = $event"
+                        @update:address="form.address = $event"
+                        @update:number="form.number = $event"
+                    />
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="phone1">Telefone 1 *</Label

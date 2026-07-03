@@ -92,6 +92,8 @@ Route::middleware(['auth:clients', 'verify.user.exists'])->group(function () {
     Route::put('/perfil', [ClientProfileController::class, 'updateProfile'])->name('client.profile.update');
     Route::get('/perfil/enderecos', [ClientProfileController::class, 'addresses'])->name('client.addresses');
     Route::put('/perfil/enderecos', [ClientProfileController::class, 'updateAddress'])->name('client.addresses.update');
+    Route::get('/perfil/pedidos', [ClientProfileController::class, 'orders'])->name('client.orders');
+    Route::post('/perfil/pedidos/{order}/devolucao', [ClientProfileController::class, 'requestReturn'])->name('client.orders.return');
 });
 
 // Carrier dashboard routes (authenticated via carriers guard)

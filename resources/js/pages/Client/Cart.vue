@@ -19,7 +19,7 @@ import {
 import { setCartCount } from '@/stores/cartStore';
 
 defineOptions({
-    layout: () => import('@/layouts/WelcomeLayout.vue'),
+    layout: null, // Usa o layout padrão resolvido pelo app.ts (ClientPageLayout para Client/*)
 });
 
 const props = defineProps<{

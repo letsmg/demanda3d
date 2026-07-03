@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { AlertCircle, ArrowLeft, Save } from '@lucide/vue';
+import { AlertCircle, ArrowLeft, Lock, Save } from '@lucide/vue';
+import { useCep } from '@/composables/useCep';
 import FormTestHelper, {
     type TestField,
 } from '@/components/FormTestHelper.vue';
@@ -25,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { index as clientsIndex } from '@/routes/clients';
 
+const { loadingCep, isStateLocked, fetchCep, resetCep } = useCep();
+
 const form = useForm({
     first_name: '',
     last_name: '',
@@ -34,6 +37,7 @@ const form = useForm({
     address: '',
     number: '',
     state: '',
+    state_id: null as number | null,
     zipcode: '',
     city: '',
     phone1: '',
@@ -64,6 +68,7 @@ const firstNames = [
     'Daniel',
     'Natália',
 ];
+
 const lastNames = [
     'Silva',
     'Santos',
@@ -87,17 +92,22 @@ function rnd<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ── Gerador de CPF sempre válido e diferente ──────
 function generateValidCpf(): string {
     const digits: number[] = [];
-    for (let i = 0; i < 9; i++) digits.push(Math.floor(Math.random() * 10));
+    for (let i = 0; i < 9; i++) {
+        digits.push(Math.floor(Math.random() * 10));
+    }
     let sum = 0;
-    for (let i = 0; i < 9; i++) sum += digits[i] * (10 - i);
+    for (let i = 0; i < 9; i++) {
+        sum += digits[i] * (10 - i);
+    }
     let d1 = sum % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
     digits.push(d1);
     sum = 0;
-    for (let i = 0; i < 10; i++) sum += digits[i] * (11 - i);
+    for (let i = 0; i < 10; i++) {
+        sum += digits[i] * (11 - i);
+    }
     let d2 = sum % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
     digits.push(d2);
@@ -112,7 +122,6 @@ const testFields: TestField[] = [
     { key: 'doc', value: generateValidCpf() },
     { key: 'address', value: 'Rua das Flores' },
     { key: 'number', value: '123' },
-    { key: 'state', value: 'SP' },
     { key: 'zipcode', value: '01310-100' },
     { key: 'city', value: 'São Paulo' },
     { key: 'phone1', value: '(11) 99999-0000' },
@@ -128,12 +137,11 @@ function handleFill() {
     form.last_name = lastName;
     form.display_name = `${firstName} ${lastName}`;
     form.doc_type = 'CPF';
-    form.doc = generateValidCpf();
     form.doc = applyMask(generateValidCpf(), 'CPF');
     form.address = 'Rua das Flores';
     form.number = String(Math.floor(Math.random() * 9000) + 100);
-    form.state = 'SP';
     form.zipcode = '01310-100';
+    form.state = 'SP';
     form.city = 'São Paulo';
     form.phone1 =
         '(11) 9' +
@@ -148,9 +156,25 @@ function handleFill() {
 
 function handleClear(fields: TestField[]) {
     for (const f of fields) {
-        if (f.key in form) (form as any)[f.key] = '';
+        if (f.key in form) {
+            (form as any)[f.key] = '';
+        }
     }
+    resetCep();
     docError.value = '';
+}
+
+// ── CEP autocomplete ─────────────────────────────
+async function onCepBlur() {
+    const digits = (form.zipcode || '').replace(/\D/g, '');
+    if (digits.length < 8) {
+        return;
+    }
+    const data = await fetchCep(form.zipcode);
+    if (data.state_id) {
+        form.state_id = data.state_id;
+        form.state = data.uf || '';
+    }
 }
 
 // ── Tipo de documento ────────────────────────────
@@ -163,13 +187,15 @@ watch(docType, () => {
     typeMismatchWarning.value = '';
 });
 
-// ── Máscara via watch + nextTick ──────────────────
+// ── Máscara ──────────────────────────────────────
 function applyMask(raw: string, type: string): string {
     const digits = raw.replace(/\D/g, '');
-    if (!digits) return '';
+    if (!digits) {
+        return '';
+    }
     if (type === 'CPF') {
         let m = digits;
-        if (m.length > 9)
+        if (m.length > 9) {
             m =
                 m.slice(0, 3) +
                 '.' +
@@ -178,13 +204,15 @@ function applyMask(raw: string, type: string): string {
                 m.slice(6, 9) +
                 '-' +
                 m.slice(9, 11);
-        else if (m.length > 6)
+        } else if (m.length > 6) {
             m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
-        else if (m.length > 3) m = m.slice(0, 3) + '.' + m.slice(3);
+        } else if (m.length > 3) {
+            m = m.slice(0, 3) + '.' + m.slice(3);
+        }
         return m.slice(0, 14);
     }
     let m = digits;
-    if (m.length > 12)
+    if (m.length > 12) {
         m =
             m.slice(0, 2) +
             '.' +
@@ -195,7 +223,7 @@ function applyMask(raw: string, type: string): string {
             m.slice(8, 12) +
             '-' +
             m.slice(12, 14);
-    else if (m.length > 8)
+    } else if (m.length > 8) {
         m =
             m.slice(0, 2) +
             '.' +
@@ -204,21 +232,26 @@ function applyMask(raw: string, type: string): string {
             m.slice(5, 8) +
             '/' +
             m.slice(8);
-    else if (m.length > 5)
+    } else if (m.length > 5) {
         m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
-    else if (m.length > 2) m = m.slice(0, 2) + '.' + m.slice(2);
+    } else if (m.length > 2) {
+        m = m.slice(0, 2) + '.' + m.slice(2);
+    }
     return m.slice(0, 18);
 }
 
 watch(
     () => form.doc,
     (val: string) => {
-        if (!val) return;
+        if (!val) {
+            return;
+        }
         const masked = applyMask(val, form.doc_type);
-        if (masked !== val)
+        if (masked !== val) {
             nextTick(() => {
                 form.doc = masked;
             });
+        }
     },
 );
 
@@ -233,24 +266,16 @@ function detectedType(digits: string): 'CPF' | 'CNPJ' {
 function validateDoc(): boolean {
     const digits = (form.doc || '').replace(/\D/g, '');
     typeMismatchWarning.value = '';
-
     if (!digits) {
         docError.value = 'O documento é obrigatório.';
         return false;
     }
-
     const actual = detectedType(digits);
     const selected = form.doc_type;
-
-    // Alerta se digitou CPF mas tipo está CNPJ (ou vice-versa)
     if (actual !== selected) {
-        const expected = selected === 'CPF' ? 'CPF' : 'CNPJ';
-        const found = actual === 'CPF' ? 'CPF' : 'CNPJ';
-        typeMismatchWarning.value = `Você digitou um ${found}, mas o tipo selecionado é ${expected}. Altere o tipo para ${found} ou corrija o documento.`;
-        docError.value = '';
+        typeMismatchWarning.value = `Você digitou um ${actual}, mas o tipo selecionado é ${selected}. Altere o tipo para ${actual} ou corrija o documento.`;
         return false;
     }
-
     if (selected === 'CPF') {
         if (digits.length !== 11) {
             docError.value = 'CPF deve ter 11 dígitos.';
@@ -276,12 +301,18 @@ function validateDoc(): boolean {
 
 function isValidCpf(d: string): boolean {
     let s = 0;
-    for (let i = 0; i < 9; i++) s += parseInt(d[i]) * (10 - i);
+    for (let i = 0; i < 9; i++) {
+        s += parseInt(d[i]) * (10 - i);
+    }
     let d1 = s % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
-    if (d1 !== parseInt(d[9])) return false;
+    if (d1 !== parseInt(d[9])) {
+        return false;
+    }
     s = 0;
-    for (let i = 0; i < 10; i++) s += parseInt(d[i]) * (11 - i);
+    for (let i = 0; i < 10; i++) {
+        s += parseInt(d[i]) * (11 - i);
+    }
     let d2 = s % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
     return d2 === parseInt(d[10]);
@@ -291,12 +322,18 @@ function isValidCnpj(d: string): boolean {
     const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
     const w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
     let s = 0;
-    for (let i = 0; i < 12; i++) s += parseInt(d[i]) * w1[i];
+    for (let i = 0; i < 12; i++) {
+        s += parseInt(d[i]) * w1[i];
+    }
     let d1 = s % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
-    if (d1 !== parseInt(d[12])) return false;
+    if (d1 !== parseInt(d[12])) {
+        return false;
+    }
     s = 0;
-    for (let i = 0; i < 13; i++) s += parseInt(d[i]) * w2[i];
+    for (let i = 0; i < 13; i++) {
+        s += parseInt(d[i]) * w2[i];
+    }
     let d2 = s % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
     return d2 === parseInt(d[13]);
@@ -305,7 +342,9 @@ function isValidCnpj(d: string): boolean {
 const submit = () => {
     docError.value = '';
     typeMismatchWarning.value = '';
-    if (!validateDoc()) return;
+    if (!validateDoc()) {
+        return;
+    }
     form.post('/clients', { preserveScroll: true });
 };
 </script>
@@ -445,86 +484,145 @@ const submit = () => {
                             typeMismatchWarning
                         }}</AlertDescription>
                     </Alert>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="space-y-2 sm:col-span-2">
-                            <Label for="address">Endereço *</Label
-                            ><Input
-                                id="address"
-                                v-model="form.address"
-                                placeholder="Rua, Avenida..."
-                                :class="{
-                                    'border-destructive': form.errors.address,
-                                }"
-                            /><span
-                                v-if="form.errors.address"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.address }}</span
+
+                    <!-- ── ENDEREÇO: CEP PRIMEIRO ── -->
+                    <div class="rounded-lg border p-4">
+                        <p
+                            class="mb-4 text-sm font-medium text-muted-foreground"
+                        >
+                            Endereço
+                        </p>
+
+                        <!-- CEP (primeiro campo) -->
+                        <div class="mb-4">
+                            <Label for="zipcode" class="mb-1 block"
+                                >CEP *
+                                <span class="text-xs text-muted-foreground"
+                                    >(digite primeiro)</span
+                                ></Label
                             >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="number">Número *</Label
-                            ><Input
-                                id="number"
-                                v-model="form.number"
-                                placeholder="123"
-                                :class="{
-                                    'border-destructive': form.errors.number,
-                                }"
-                            /><span
-                                v-if="form.errors.number"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.number }}</span
-                            >
-                        </div>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div class="space-y-2">
-                            <Label for="city">Cidade *</Label
-                            ><Input
-                                id="city"
-                                v-model="form.city"
-                                placeholder="São Paulo"
-                                :class="{
-                                    'border-destructive': form.errors.city,
-                                }"
-                            /><span
-                                v-if="form.errors.city"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.city }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="state">UF *</Label
-                            ><Input
-                                id="state"
-                                v-model="form.state"
-                                placeholder="SP"
-                                maxlength="2"
-                                :class="{
-                                    'border-destructive': form.errors.state,
-                                }"
-                            /><span
-                                v-if="form.errors.state"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.state }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="zipcode">CEP *</Label
-                            ><Input
-                                id="zipcode"
-                                v-model="form.zipcode"
-                                placeholder="00000-000"
-                                :class="{
-                                    'border-destructive': form.errors.zipcode,
-                                }"
-                            /><span
+                            <div class="flex gap-2">
+                                <Input
+                                    id="zipcode"
+                                    v-model="form.zipcode"
+                                    placeholder="00000-000"
+                                    maxlength="9"
+                                    :class="{
+                                        'border-destructive':
+                                            form.errors.zipcode,
+                                        'flex-1': true,
+                                    }"
+                                    :disabled="false"
+                                    @blur="onCepBlur"
+                                />
+                                <span
+                                    v-if="loadingCep"
+                                    class="mt-2 text-xs text-muted-foreground"
+                                    >🔍 Buscando...</span
+                                >
+                            </div>
+                            <span
                                 v-if="form.errors.zipcode"
                                 class="text-sm text-destructive"
                                 >{{ form.errors.zipcode }}</span
                             >
                         </div>
+
+                        <!-- Estado (bloqueado após CEP preenchido) -->
+                        <div class="mb-4">
+                            <Label for="state">UF *</Label>
+                            <div class="relative">
+                                <Input
+                                    id="state"
+                                    v-model="form.state"
+                                    placeholder="SP"
+                                    maxlength="2"
+                                    :disabled="isStateLocked"
+                                    :class="{
+                                        'border-destructive': form.errors.state,
+                                        'bg-muted': isStateLocked,
+                                    }"
+                                />
+                                <Lock
+                                    v-if="isStateLocked"
+                                    class="absolute top-2.5 right-3 h-4 w-4 text-muted-foreground"
+                                />
+                            </div>
+                            <span
+                                v-if="form.errors.state"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.state }}</span
+                            >
+                            <p
+                                v-if="isStateLocked"
+                                class="mt-1 text-xs text-muted-foreground"
+                            >
+                                Estado preenchido automaticamente pelo CEP. Para
+                                alterar, corrija o CEP.
+                            </p>
+                        </div>
+
+                        <!-- Cidade, Endereço e Número (só habilitados após CEP válido) -->
+                        <div class="grid gap-4 sm:grid-cols-3">
+                            <div class="space-y-2">
+                                <Label for="city">Cidade *</Label
+                                ><Input
+                                    id="city"
+                                    v-model="form.city"
+                                    placeholder="São Paulo"
+                                    :disabled="!isStateLocked"
+                                    :class="{
+                                        'border-destructive': form.errors.city,
+                                        'bg-muted opacity-50': !isStateLocked,
+                                    }"
+                                /><span
+                                    v-if="form.errors.city"
+                                    class="text-sm text-destructive"
+                                    >{{ form.errors.city }}</span
+                                >
+                            </div>
+                            <div class="space-y-2 sm:col-span-2">
+                                <Label for="address">Endereço *</Label
+                                ><Input
+                                    id="address"
+                                    v-model="form.address"
+                                    placeholder="Rua, Avenida..."
+                                    :disabled="!isStateLocked"
+                                    :class="{
+                                        'border-destructive':
+                                            form.errors.address,
+                                        'bg-muted opacity-50': !isStateLocked,
+                                    }"
+                                /><span
+                                    v-if="form.errors.address"
+                                    class="text-sm text-destructive"
+                                    >{{ form.errors.address }}</span
+                                >
+                            </div>
+                        </div>
+                        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                            <div class="space-y-2">
+                                <Label for="number">Número *</Label
+                                ><Input
+                                    id="number"
+                                    v-model="form.number"
+                                    placeholder="123"
+                                    :disabled="!isStateLocked"
+                                    :class="{
+                                        'border-destructive':
+                                            form.errors.number,
+                                        'bg-muted opacity-50': !isStateLocked,
+                                    }"
+                                /><span
+                                    v-if="form.errors.number"
+                                    class="text-sm text-destructive"
+                                    >{{ form.errors.number }}</span
+                                >
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- ── TELEFONES ── -->
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="phone1">Telefone 1 *</Label

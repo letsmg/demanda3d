@@ -130,7 +130,7 @@ function logout() {
                             >
                                 <Link href="/perfil" class="cursor-pointer">
                                     <User class="mr-2 h-4 w-4" />
-                                    <span>My Profile</span>
+                                    <span>Meu Perfil</span>
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -142,7 +142,7 @@ function logout() {
                                     class="cursor-pointer"
                                 >
                                     <MapPin class="mr-2 h-4 w-4" />
-                                    <span>My Addresses</span>
+                                    <span>Meus Endereços</span>
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator class="bg-amber-100" />

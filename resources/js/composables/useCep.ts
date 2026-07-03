@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export interface CepData {
     state_id: number | null;
@@ -10,7 +10,13 @@ export interface CepData {
 
 export function useCep() {
     const loadingCep = ref(false);
-    const cepData = ref<CepData>({ state_id: null, uf: null, state_name: null });
+    const cepData = ref<CepData>({
+        state_id: null,
+        uf: null,
+        state_name: null,
+    });
+
+    const isStateLocked = computed(() => cepData.value.state_id !== null);
 
     async function fetchCep(cep: string): Promise<CepData> {
         const digits = cep.replace(/\D/g, '');
@@ -39,5 +45,9 @@ export function useCep() {
         }
     }
 
-    return { loadingCep, cepData, fetchCep };
+    function resetCep(): void {
+        cepData.value = { state_id: null, uf: null, state_name: null };
+    }
+
+    return { loadingCep, cepData, isStateLocked, fetchCep, resetCep };
 }
