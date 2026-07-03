@@ -8,7 +8,9 @@ LABEL maintainer="luiztsilva@protonmail"
 LABEL description="Demanda3D — Laravel Application Container"
 
 # ── System dependencies ──────────────────────
-RUN apk add --no-cache \
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf \
+    && apk update \
+    && apk add --no-cache \
     bash \
     curl \
     postgresql-dev \
