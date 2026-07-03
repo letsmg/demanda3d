@@ -108,7 +108,7 @@ class ProductService
      * Get all active products for the public store.
      * Uses withoutGlobalScopes so all tenants' products are visible.
      */
-    public function listActiveForStore(array $filters = [])
+    public function listActiveForStore(array $filters = [], bool $canViewAdult = false)
     {
         $searchTerm = $filters['search'] ?? '';
         $minPrice = $filters['min_price'] ?? null;
@@ -116,9 +116,10 @@ class ProductService
         $sortField = $filters['sort'] ?? 'name';
         $sortDir = $filters['sort_dir'] ?? 'asc';
 
-        // --- Cache strategy for search-only queries (no price/sort filters) ---
+        // Cache apenas quando NÃO há filtro de categoria, preço ou sort customizado
         $useCache = !empty($searchTerm) && strlen($searchTerm) >= 3
                     && empty($minPrice) && empty($maxPrice)
+                    && empty($filters['categoria'])
                     && $sortField === 'name' && $sortDir === 'asc';
 
         if ($useCache) {
@@ -140,7 +141,12 @@ class ProductService
                     });
                 });
             })
-            ->with(['images', 'tenant.user']);
+            ->with(['images', 'tenant.user', 'categorias']);
+
+        // Filtro de conteúdo adulto
+        if (! $canViewAdult) {
+            $query->withoutAdultCategories();
+        }
 
         if (!empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
@@ -262,9 +268,9 @@ class ProductService
         $categoriaNames = [];
 
         if ($categoriaIds !== null && is_array($categoriaIds)) {
-            $categoriaNames = \App\Models\Categoria::whereIn('id', $categoriaIds)->pluck('nome')->toArray();
+            $categoriaNames = \App\Models\Categoria::whereIn('id', $categoriaIds)->pluck('name')->toArray();
         } elseif ($existing) {
-            $categoriaNames = $existing->categorias()->pluck('nome')->toArray();
+            $categoriaNames = $existing->categorias()->pluck('name')->toArray();
         }
 
         $categoriaString = implode(', ', $categoriaNames);

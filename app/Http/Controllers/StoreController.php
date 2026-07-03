@@ -24,12 +24,24 @@ class StoreController extends Controller
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'categoria'   => 'nullable|string|exists:categorias,slug',
+            'categoria'   => 'nullable|string|exists:categories,slug',
         ]);
 
-        $products = $this->productService->listActiveForStore($filters);
+        // Verifica se o usuário pode ver conteúdo adulto (18+)
+        $canViewAdult = false;
+        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('clients')->user();
+        if ($user && method_exists($user, 'canAccessAdultContent')) {
+            $canViewAdult = $user->canAccessAdultContent();
+        }
 
-        $categorias = Categoria::orderBy('nome')->get(['slug', 'nome']);
+        $products = $this->productService->listActiveForStore($filters, $canViewAdult);
+
+        // Filtra categorias visíveis: sem "adulto" para menores
+        $categoriasQuery = Categoria::orderBy('name');
+        if (! $canViewAdult) {
+            $categoriasQuery->where('is_adult', false);
+        }
+        $categorias = $categoriasQuery->get(['slug', 'name']);
 
         return Inertia::render('Store/Index', [
             'products'   => $products,

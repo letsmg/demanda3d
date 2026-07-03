@@ -9,16 +9,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('categoria_produto', function (Blueprint $table) {
-            $table->foreignId('categoria_id')->constrained('categorias')->cascadeOnDelete();
-            $table->foreignId('produto_id')->constrained('products')->cascadeOnDelete();
-            $table->primary(['categoria_id', 'produto_id']);
+        Schema::create('category_product', function (Blueprint $table) {
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->primary(['category_id', 'product_id']);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('categoria_produto');
+        Schema::dropIfExists('category_product');
     }
 };

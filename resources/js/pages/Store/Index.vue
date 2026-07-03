@@ -45,7 +45,7 @@ defineOptions({
 
 const props = defineProps<{
     products: any[];
-    categorias: Array<{ slug: string; nome: string }>;
+    categorias: Array<{ slug: string; name: string }>;
     filters: {
         search?: string;
         min_price?: number;
@@ -452,7 +452,7 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                         :class="activeCategoria === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
                         @click="activeCategoria = cat.slug; applyFilters()"
                     >
-                        {{ cat.nome }}
+                        {{ cat.name }}
                     </button>
                 </div>
             </div>

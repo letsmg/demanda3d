@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('coupons', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
-            $table->foreignId('category_id')->nullable()->constrained('categorias')->nullOnDelete();
+            $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->string('code', 50)->unique();
             $table->string('type', 20)->default('percentage'); // percentage | fixed
             $table->decimal('value', 12, 2);
