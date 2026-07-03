@@ -19,8 +19,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 120s
+      retries: 3
+      start_period: 10s
     networks:
       - demanda-net-dev
 
@@ -47,8 +47,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 60s
+      retries: 3
+      start_period: 10s
     networks:
       - demanda-net-dev
 
@@ -68,37 +68,8 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 3
       start_period: 10s
-    networks:
-      - demanda-net-dev
-
-  # =============================================
-  # Laravel Application (Octane / PHP-FPM) - DEV
-  # =============================================
-  demanda-app-dev:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    container_name: demanda-app-dev
-    restart: unless-stopped
-    env_file:
-      - .env.docker
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/var/www/demanda3d
-    depends_on:
-      demanda-psql-dev:
-        condition: service_healthy
-      demanda-redis-dev:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "php artisan --version 2>/dev/null || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
     networks:
       - demanda-net-dev
 
