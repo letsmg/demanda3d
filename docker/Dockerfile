@@ -1,19 +1,14 @@
-# ─────────────────────────────────────────────
-# Dockerfile — Demanda3D Application
-# Laravel 11 + PHP 8.3 FPM (Alpine)
-# ─────────────────────────────────────────────
-FROM php:8.5-fpm-alpine
+# ── Base Image ────────────────────────────────
+FROM php:8.5-fpm-bookworm
 
 LABEL maintainer="luiztsilva@protonmail"
-LABEL description="Demanda3D — Laravel Application Container"
 
 # ── System dependencies ──────────────────────
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf \
-    && apk update \
-    && apk add --no-cache \
+# O Debian gerencia o DNS automaticamente, sem erros de "Read-only"
+RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     curl \
-    postgresql-dev \
+    libpq-dev \
     libzip-dev \
     zip \
     unzip \
@@ -23,19 +18,13 @@ RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf \
     pdo_pgsql \
     pgsql \
     zip \
-    opcache
-    
-
-# ── zip extension (via libzip) ────────────────
-RUN docker-php-ext-configure zip \
-    && docker-php-ext-install -j$(nproc) zip
+    opcache \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ── Redis extension ──────────────────────────
-RUN apk add --no-cache --virtual .build-deps \
-    $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
+# No Debian, usamos pecl diretamente
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # ── Composer ─────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
