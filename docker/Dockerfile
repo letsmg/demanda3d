@@ -2,7 +2,7 @@
 # Dockerfile — Demanda3D Application
 # Laravel 11 + PHP 8.3 FPM (Alpine)
 # ─────────────────────────────────────────────
-FROM php:8.3-fpm-alpine
+FROM php:8.5-fpm-alpine
 
 LABEL maintainer="luiztsilva@protonmail"
 LABEL description="Demanda3D — Laravel Application Container"
@@ -13,15 +13,16 @@ RUN apk add --no-cache \
     curl \
     libpq-dev \
     libzip-dev \
-    zip \
-    unzip \
     nginx \
     supervisor \
     && docker-php-ext-install -j$(nproc) \
     pdo_pgsql \
     pgsql \
-    zip \
     opcache
+
+# ── zip extension (via libzip) ────────────────
+RUN docker-php-ext-configure zip \
+    && docker-php-ext-install -j$(nproc) zip
 
 # ── Redis extension ──────────────────────────
 RUN apk add --no-cache --virtual .build-deps \
