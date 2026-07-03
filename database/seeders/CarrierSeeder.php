@@ -125,5 +125,18 @@ class CarrierSeeder extends Seeder
                 $carrier->states()->sync($data['state_ids']);
             }
         }
+
+        // Vincula transportadoras aos vendedores (usuários staff que possuem tenant)
+        $staffUsers = \App\Models\User::whereIn('access_level', [0, 1, 10])->has('tenant')->get();
+        $allCarriers = Carrier::all();
+
+        foreach ($staffUsers as $user) {
+            foreach ($allCarriers as $carrier) {
+                \App\Models\VendorCarrier::firstOrCreate(
+                    ['user_id' => $user->id, 'carrier_id' => $carrier->id],
+                    ['status' => 'approved', 'responded_at' => now()],
+                );
+            }
+        }
     }
 }

@@ -20,6 +20,11 @@ Route::prefix('produtos')->name('api.produtos.')->group(function () {
 // Consulta de CEP — retorna estado baseado na faixa de CEP
 Route::get('/cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
 
+// Validação de cupom de desconto
+Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'check'])
+    ->middleware('auth:clients')
+    ->name('api.coupons.validate');
+
 Route::middleware(['auth', 'verified'])->name('api.')->group(function () {
     // Clients API
     Route::apiResource('clients', ClientController::class);

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('last_name_encrypted')->nullable();
             $table->string('last_name_hash', 64)->nullable();
             $table->string('display_name', 255)->nullable();
+            $table->date('data_nascimento')->nullable()->after('display_name');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->unsignedTinyInteger('access_level')->default(5)->comment('0=operational,1=management,5=customer,10=admin');

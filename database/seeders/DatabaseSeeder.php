@@ -35,18 +35,27 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             LegalDocumentSeeder::class,
+            StateSeeder::class,
             CategoriaSeeder::class,
             SeoSettingSeeder::class,
             SupplierSeeder::class,
             ClientSeeder::class,
+            CarrierSeeder::class,
             ProductSeeder::class,
             InputSeeder::class,
             OrderSeeder::class,
             ThreadSeeder::class,
             MessageSeeder::class,
             DisputeSeeder::class,
+            CouponSeeder::class,
         ]);
 
+        $this->command->info('');
+        $this->command->info('╔══════════════════════════════════════════╗');
+        $this->command->info('║  ✓ SEED COMPLETO COM SUCESSO!           ║');
+        $this->command->info('╠══════════════════════════════════════════╣');
+        $this->command->info('║  Carriers: 3 (com estados vinculados)   ║');
+        $this->command->info('║  Coupons: BEMVINDO10, FRETE50, CATEGORIA20 ║');
         $this->command->info('');
         $this->command->info('╔══════════════════════════════════════════╗');
         $this->command->info('║  ✓ SEED COMPLETO COM SUCESSO!           ║');

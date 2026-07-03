@@ -6,15 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name', 255);
+            $table->string('slug')->nullable()->after('name');
             $table->text('description')->nullable();
             $table->integer('height')->nullable()->comment('Altura em mm');
             $table->integer('width')->nullable()->comment('Largura em mm');
@@ -31,6 +29,19 @@ return new class extends Migration
             $table->decimal('approximate_cost', 12, 2)->nullable()->comment('Custo total calculado');
             $table->decimal('sale_price', 12, 2)->comment('Valor final de venda');
             $table->boolean('is_active')->default(true);
+            // SEO fields
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_keywords')->nullable();
+            $table->string('h1_text')->nullable();
+            $table->text('schema_markup')->nullable();
+            $table->string('canonical_url')->nullable();
+            $table->string('og_image')->nullable();
+            $table->text('google_tag_manager')->nullable();
+            // Moderation
+            $table->string('moderation_status')->default('pending')->comment('pending, approved, rejected');
+            $table->text('moderation_notes')->nullable();
+            $table->integer('adult_category')->default(0)->comment('0=normal, 1=+18');
             $table->timestamps();
 
             $table->index('tenant_id');
@@ -38,9 +49,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('products');

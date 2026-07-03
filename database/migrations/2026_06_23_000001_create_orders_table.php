@@ -24,6 +24,8 @@ return new class extends Migration
             $table->text('contracted_description_encrypted')->nullable();
             $table->string('contracted_description_hash', 64)->nullable();
             $table->string('stripe_session_id')->nullable()->unique();
+            $table->decimal('amount_total', 12, 2)->nullable();
+            $table->string('currency', 3)->nullable()->default('brl');
             $table->string('status')->default('pending');
             $table->timestamps();
 

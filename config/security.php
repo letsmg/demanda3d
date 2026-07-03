@@ -17,6 +17,11 @@
  */
 
 return [
+    'limits' => [
+        'max_product_price' => 500.00,
+        'max_cart_total'    => 1500.00,
+    ],
+
     'tiers' => [
         'tier_1' => [
             'price_max'     => 100.00,
