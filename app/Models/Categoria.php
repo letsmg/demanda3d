@@ -8,29 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Categoria extends Model
 {
-    protected $table = 'categorias';
+    protected $table = 'categories';
 
-    protected $fillable = [
-        'nome',
-        'slug',
-        'maior_de_idade',
-    ];
+    protected $fillable = ['name', 'slug', 'is_adult'];
 
     protected function casts(): array
     {
-        return [
-            'maior_de_idade' => 'boolean',
-        ];
+        return ['is_adult' => 'boolean'];
     }
 
-    public function produtos(): BelongsToMany
+    public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'categoria_produto', 'categoria_id', 'produto_id')
+        return $this->belongsToMany(Product::class, 'category_product', 'category_id', 'product_id')
             ->withTimestamps();
     }
 
     public function scopeWhereAdultContent($query, bool $isAdult = true)
     {
-        return $query->where('maior_de_idade', $isAdult);
+        return $query->where('is_adult', $isAdult);
     }
 }

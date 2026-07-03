@@ -89,7 +89,7 @@ class Product extends Model
 
     public function categorias(): BelongsToMany
     {
-        return $this->belongsToMany(Categoria::class, 'categoria_produto', 'produto_id', 'categoria_id')
+        return $this->belongsToMany(Categoria::class, 'category_product', 'product_id', 'category_id')
             ->withTimestamps();
     }
 

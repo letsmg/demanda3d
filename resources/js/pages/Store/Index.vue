@@ -45,14 +45,18 @@ defineOptions({
 
 const props = defineProps<{
     products: any[];
+    categorias: Array<{ slug: string; name: string }>;
     filters: {
         search?: string;
         min_price?: number;
         max_price?: number;
         sort?: string;
         sort_dir?: string;
+        categoria?: string;
     };
 }>();
+
+const activeCategoria = ref(props.filters.categoria || '');
 
 const page = usePage();
 const authClient = computed(() => (page.props as any).auth_client?.user);
@@ -254,6 +258,9 @@ function applyFilters(): void {
     if (maxPrice.value) {
         params.max_price = maxPrice.value;
     }
+    if (activeCategoria.value) {
+        params.categoria = activeCategoria.value;
+    }
     params.sort = sort.value;
     params.sort_dir = sortDir.value;
 
@@ -426,6 +433,27 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     >
                         <X class="mr-1 h-4 w-4" />Limpar filtros
                     </Button>
+                </div>
+
+                <!-- Categorias -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <label class="text-sm font-medium text-amber-700">Categorias:</label>
+                    <button
+                        class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                        :class="!activeCategoria ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        @click="activeCategoria = ''; applyFilters()"
+                    >
+                        Todas
+                    </button>
+                    <button
+                        v-for="cat in props.categorias"
+                        :key="cat.slug"
+                        class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                        :class="activeCategoria === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        @click="activeCategoria = cat.slug; applyFilters()"
+                    >
+                        {{ cat.name }}
+                    </button>
                 </div>
             </div>
 

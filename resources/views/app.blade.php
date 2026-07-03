@@ -97,8 +97,6 @@
 
         <link rel="icon" href="/logo.jpg" sizes="any">
         <link rel="apple-touch-icon" href="/logo.jpg">
-        <link rel="canonical" href="{{ config('app.url') }}">
-
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])

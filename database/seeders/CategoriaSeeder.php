@@ -5,35 +5,28 @@ namespace Database\Seeders;
 
 use App\Models\Categoria;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class CategoriaSeeder extends Seeder
 {
-    /**
-     * Seed das categorias do marketplace.
-     */
     public function run(): void
     {
         $categorias = [
-            ['nome' => 'Escritório', 'slug' => 'escritorio', 'maior_de_idade' => false],
-            ['nome' => 'Cozinha', 'slug' => 'cozinha', 'maior_de_idade' => false],
-            ['nome' => 'Banho', 'slug' => 'banho', 'maior_de_idade' => false],
-            ['nome' => 'Decorativo', 'slug' => 'decorativo', 'maior_de_idade' => false],
-            ['nome' => 'Adulto', 'slug' => 'adulto', 'maior_de_idade' => true],
-            ['nome' => 'Personagens', 'slug' => 'personagens', 'maior_de_idade' => false],
-            ['nome' => 'Animais', 'slug' => 'animais', 'maior_de_idade' => false],
-            ['nome' => 'Utilitários', 'slug' => 'utilitarios', 'maior_de_idade' => false],
-            ['nome' => 'Hidráulico', 'slug' => 'hidraulico', 'maior_de_idade' => false],
-            ['nome' => 'Automotivo', 'slug' => 'automotivo', 'maior_de_idade' => false],
+            ['name' => 'Escritório', 'slug' => 'escritorio', 'is_adult' => false],
+            ['name' => 'Cozinha', 'slug' => 'cozinha', 'is_adult' => false],
+            ['name' => 'Banho', 'slug' => 'banho', 'is_adult' => false],
+            ['name' => 'Decorativo', 'slug' => 'decorativo', 'is_adult' => false],
+            ['name' => 'Adulto', 'slug' => 'adulto', 'is_adult' => true],
+            ['name' => 'Personagens', 'slug' => 'personagens', 'is_adult' => false],
+            ['name' => 'Animais', 'slug' => 'animais', 'is_adult' => false],
+            ['name' => 'Utilitários', 'slug' => 'utilitarios', 'is_adult' => false],
+            ['name' => 'Hidráulico', 'slug' => 'hidraulico', 'is_adult' => false],
+            ['name' => 'Automotivo', 'slug' => 'automotivo', 'is_adult' => false],
         ];
 
         foreach ($categorias as $cat) {
             Categoria::firstOrCreate(
                 ['slug' => $cat['slug']],
-                [
-                    'nome' => $cat['nome'],
-                    'maior_de_idade' => $cat['maior_de_idade'],
-                ]
+                ['name' => $cat['name'], 'is_adult' => $cat['is_adult']],
             );
         }
     }

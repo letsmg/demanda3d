@@ -26,10 +26,8 @@ class ProductResource extends JsonResource
             ?: SeoSetting::getValue('meta_description_default', config('app.seo.default_description', 'Marketplace de impressão 3D sob demanda.'));
         $metaKeywords = $this->meta_keywords
             ?: SeoSetting::getValue('meta_keywords_default', 'impressão 3D, marketplace, demanda 3D');
-        $canonicalUrl = $this->canonical_url
-            ?: SeoSetting::getValue('canonical_url_default', route('api.produtos.show', ['slug' => $this->slug]));
-        $ogImage = $this->og_image
-            ?: SeoSetting::getValue('og_image_default', asset('images/og-default.jpg'));
+        $canonicalUrl = route('store.detail', ['slug' => $this->slug]);
+        $ogImage = SeoSetting::getValue('og_image_default', asset('images/og-default.jpg'));
         // schema_markup and google_tag_manager are raw code - no fallback needed
         $schemaMarkup = $this->schema_markup;
         $googleTagManager = $this->google_tag_manager;
@@ -66,9 +64,9 @@ class ProductResource extends JsonResource
             'categorias' => $this->whenLoaded('categorias', function () {
                 return $this->categorias->map(fn ($cat) => [
                     'id' => $cat->id,
-                    'nome' => $cat->nome,
+                    'name' => $cat->name,
                     'slug' => $cat->slug,
-                    'maior_de_idade' => $cat->maior_de_idade,
+                    'is_adult' => $cat->is_adult,
                 ]);
             }),
 
