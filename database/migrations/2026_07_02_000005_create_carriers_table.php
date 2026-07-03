@@ -7,18 +7,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Tabela de transportadoras — estrutura similar ao suppliers expandido.
-     *
-     * Paridade LGPD: dados sensíveis em *_encrypted + *_hash.
-     * Texto puro: state, zipcode, email, website, notes, doc_type, ie, is_active.
-     */
     public function up(): void
     {
         Schema::create('carriers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name', 255);
+            $table->date('data_nascimento')->nullable()->after('name');
             $table->string('doc_type', 4)->default('CNPJ');
             $table->string('ie', 20)->nullable();
 
@@ -36,28 +31,33 @@ return new class extends Migration
             $table->string('district_hash', 64)->nullable();
             $table->text('city_encrypted')->nullable();
             $table->string('city_hash', 64)->nullable();
-
-            // State e zipcode (texto puro)
             $table->string('state', 2)->nullable();
             $table->string('zipcode', 9)->nullable();
+            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
 
-            // Contato 1
+            // Contato
             $table->text('contact1_encrypted')->nullable();
             $table->string('contact1_hash', 64)->nullable();
             $table->text('phone1_encrypted')->nullable();
             $table->string('phone1_hash', 64)->nullable();
-
-            // Contato 2
             $table->text('contact2_encrypted')->nullable();
             $table->string('contact2_hash', 64)->nullable();
             $table->text('phone2_encrypted')->nullable();
             $table->string('phone2_hash', 64)->nullable();
 
-            // Dados públicos
+            // Auth
             $table->string('email', 255)->nullable();
+            $table->string('password')->nullable()->after('email');
+            $table->timestamp('email_verified_at')->nullable()->after('password');
+            $table->rememberToken()->after('email_verified_at');
+
+            // Dados públicos + bloqueio
             $table->string('website', 255)->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_blocked')->default(false);
+            $table->timestamp('blocked_at')->nullable();
+            $table->text('blocked_reason')->nullable();
 
             $table->timestamps();
             $table->index('tenant_id');

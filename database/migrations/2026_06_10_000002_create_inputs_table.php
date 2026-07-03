@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
             $table->string('description');
             $table->string('brand');
-            $table->date('purchase_date');
             $table->integer('quantity')->comment('Gramas ou unidades');
             $table->decimal('shipping_cost', 12, 2)->comment('Valor do frete rateado');
             $table->decimal('cost_value', 12, 2)->comment('Valor pago no insumo');

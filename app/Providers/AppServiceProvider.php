@@ -5,7 +5,9 @@ namespace App\Providers;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 use App\Models\Review;
+use App\Observers\ProductObserver;
 use App\Observers\ReviewObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         Review::observe(ReviewObserver::class);
+        Product::observe(ProductObserver::class);
     }
 
     /**

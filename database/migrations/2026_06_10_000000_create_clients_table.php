@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('display_name', 255)->nullable();
-            $table->string('email')->nullable();
+            $table->date('data_nascimento')->nullable()->after('display_name');
+            $table->string('email')->nullable()->unique();
             $table->string('password')->nullable();
             $table->string('doc_type', 4)->default('CPF');
             $table->text('first_name_encrypted')->nullable();
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->string('zipcode_hash', 64)->nullable();
             $table->text('city_encrypted')->nullable();
             $table->string('city_hash', 64)->nullable();
+            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
             $table->text('phone1_encrypted')->nullable();
             $table->string('phone1_hash', 64)->nullable();
             $table->text('phone2_encrypted')->nullable();

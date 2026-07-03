@@ -143,6 +143,13 @@ class ProductService
         // --- Build query ---
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
+            ->whereHas('tenant', function ($q) {
+                $q->whereHas('user', function ($sq) {
+                    $sq->whereHas('vendorCarriers', function ($vc) {
+                        $vc->where('status', 'approved');
+                    });
+                });
+            })
             ->with(['images', 'tenant.user']);
 
         if (!empty($searchTerm)) {

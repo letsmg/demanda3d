@@ -128,18 +128,7 @@ async function clearCart() {
 }
 
 function goToCheckout() {
-    router.post(
-        '/checkout',
-        {},
-        {
-            onSuccess: (response) => {
-                const url = (response as any).props?.stripe_url;
-                if (url) {
-                    window.location.href = url;
-                }
-            },
-        },
-    );
+    router.visit('/checkout');
 }
 
 function formatPrice(value: string | number): string {
@@ -324,7 +313,7 @@ function formatPrice(value: string | number): string {
                             @click="goToCheckout"
                         >
                             <CreditCard class="mr-2 h-5 w-5" />
-                            Checkout
+                            Finalizar Compra
                         </Button>
                     </CardFooter>
                 </Card>
