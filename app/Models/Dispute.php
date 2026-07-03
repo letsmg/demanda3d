@@ -7,6 +7,7 @@ use App\Scopes\TenantScope;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Dispute extends Model
 {
+    use HasFactory;
+
     /**
      * Atributos virtuais descriptografados para serialização JSON/Inertia.
      */

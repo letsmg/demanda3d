@@ -157,12 +157,12 @@ const formatDoc = (doc: string) => {
             <Search
                 class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             />
-                <Input
-                    v-model="searchQuery"
-                    placeholder="Buscar por nome do cliente (mín. 3 letras)..."
-                    class="pl-10"
-                    @input="onSearchInput"
-                />
+            <Input
+                v-model="searchQuery"
+                placeholder="Buscar por nome do cliente (mín. 3 letras)..."
+                class="pl-10"
+                @input="onSearchInput"
+            />
         </div>
 
         <!-- Empty State -->
@@ -211,7 +211,9 @@ const formatDoc = (doc: string) => {
                             class="border-b transition-colors last:border-0 hover:bg-muted/30"
                         >
                             <td class="px-6 py-4">
-                                <div class="font-medium">{{ getClientDisplayName(client) }}</div>
+                                <div class="font-medium">
+                                    {{ getClientDisplayName(client) }}
+                                </div>
                                 <div class="text-sm text-muted-foreground">
                                     {{ formatDoc(client.doc) }}
                                 </div>
@@ -370,7 +372,10 @@ const formatDoc = (doc: string) => {
         </template>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+        <Dialog
+            :open="showDeleteDialog"
+            @update:open="showDeleteDialog = $event"
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Excluir Cliente</DialogTitle>
@@ -385,10 +390,7 @@ const formatDoc = (doc: string) => {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button
-                        variant="outline"
-                        @click="showDeleteDialog = false"
-                    >
+                    <Button variant="outline" @click="showDeleteDialog = false">
                         Cancelar
                     </Button>
                     <Button

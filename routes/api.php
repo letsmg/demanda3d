@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductApiController;
 use App\Http\Controllers\CarrierApiController;
 use App\Http\Controllers\SupplierApiController;
+use App\Http\Controllers\Api\CepController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas públicas (acessíveis sem autenticação, mas com verificação de idade)
@@ -15,6 +16,9 @@ Route::prefix('produtos')->name('api.produtos.')->group(function () {
         ->middleware(['check.age'])
         ->name('show');
 });
+
+// Consulta de CEP — retorna estado baseado na faixa de CEP
+Route::get('/cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
 
 Route::middleware(['auth', 'verified'])->name('api.')->group(function () {
     // Clients API

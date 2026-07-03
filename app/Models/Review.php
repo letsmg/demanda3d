@@ -5,6 +5,7 @@ namespace App\Models;
 
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Review extends Model
 {
+    use HasFactory;
+
     /**
      * Atributos virtuais descriptografados para serialização JSON/Inertia.
      */

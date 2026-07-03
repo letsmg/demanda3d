@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as ordersIndex } from '@/routes/orders';
 import type { Order, Client } from '@/types';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     order: Order;
@@ -33,7 +35,10 @@ const testFields: TestField[] = [
     { key: 'order_date', value: '2026-07-01' },
     { key: 'delivery_date', value: '2026-07-15' },
     { key: 'price', value: '350.00' },
-    { key: 'contracted_description', value: 'Impressão 3D de peças personalizadas em PLA - 20 unidades' },
+    {
+        key: 'contracted_description',
+        value: 'Impressão 3D de peças personalizadas em PLA - 20 unidades',
+    },
 ];
 
 function handleFill(fields: TestField[]) {
@@ -80,7 +85,13 @@ const submit = () => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper :form="form" :fields="testFields" label="Editar Pedido" @fill="handleFill" @clear="handleClear" />
+        <FormTestHelper
+            :form="form"
+            :fields="testFields"
+            label="Editar Pedido"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>

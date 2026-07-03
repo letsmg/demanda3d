@@ -18,6 +18,7 @@ use Illuminate\Notifications\Notifiable;
     'email',
     'password',
     'display_name',
+    'data_nascimento',
     'doc_type',
     'first_name_encrypted',
     'first_name_hash',
@@ -35,6 +36,7 @@ use Illuminate\Notifications\Notifiable;
     'zipcode_hash',
     'city_encrypted',
     'city_hash',
+    'state_id',
     'phone1_encrypted',
     'phone1_hash',
     'phone2_encrypted',
@@ -92,6 +94,11 @@ class Client extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
     }
 
     public function orders(): HasMany

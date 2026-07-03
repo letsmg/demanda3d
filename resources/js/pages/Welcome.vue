@@ -46,7 +46,8 @@ let imageInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
     imageInterval = setInterval(() => {
-        currentImageIndex.value = (currentImageIndex.value + 1) % heroImages.length;
+        currentImageIndex.value =
+            (currentImageIndex.value + 1) % heroImages.length;
     }, 4000);
 });
 
@@ -113,7 +114,7 @@ const features = [
     </Head>
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden min-h-[600px] flex items-center">
+    <section class="relative flex min-h-[600px] items-center overflow-hidden">
         <!-- Rotating background images with overlay -->
         <div
             v-for="(img, idx) in heroImages"
@@ -123,18 +124,29 @@ const features = [
             :class="idx === currentImageIndex ? 'opacity-100' : 'opacity-0'"
         />
         <div class="absolute inset-0 bg-amber-950/80" />
-        <div class="relative container mx-auto px-4 py-20 md:px-8 md:py-32 z-10">
+        <div
+            class="relative z-10 container mx-auto px-4 py-20 md:px-8 md:py-32"
+        >
             <div class="mx-auto max-w-3xl text-center">
-                <Badge variant="secondary" class="mb-4 px-3 py-1 text-sm bg-amber-500/20 text-amber-200 border-amber-400/30">
+                <Badge
+                    variant="secondary"
+                    class="mb-4 border-amber-400/30 bg-amber-500/20 px-3 py-1 text-sm text-amber-200"
+                >
                     🚀 Sistema de Gestão de Impressão 3D
                 </Badge>
-                <h1 class="mb-6 text-4xl font-bold tracking-tight text-white md:text-6xl drop-shadow-lg">
+                <h1
+                    class="mb-6 text-4xl font-bold tracking-tight text-white drop-shadow-lg md:text-6xl"
+                >
                     Gerencie seu
-                    <span class="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow">
+                    <span
+                        class="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow"
+                    >
                         Negócio de Impressão 3D
                     </span>
                 </h1>
-                <p class="mb-8 text-lg text-amber-100/90 md:text-xl drop-shadow">
+                <p
+                    class="mb-8 text-lg text-amber-100/90 drop-shadow md:text-xl"
+                >
                     Solução completa para gerenciar clientes, pedidos e
                     materiais para sua manufatura de impressão 3D. Otimize seu
                     fluxo de trabalho do pedido à entrega.
@@ -143,19 +155,49 @@ const features = [
                     class="flex flex-col items-center justify-center gap-4 sm:flex-row"
                 >
                     <template v-if="auth?.user">
-                        <Button size="lg" as-child class="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">
-                            <Link :href="dashboard.url()">Ir para o Painel</Link>
+                        <Button
+                            size="lg"
+                            as-child
+                            class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
+                        >
+                            <Link :href="dashboard.url()"
+                                >Ir para o Painel</Link
+                            >
                         </Button>
                     </template>
                     <template v-else>
-                        <Button size="lg" as-child class="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">
+                        <Button
+                            size="lg"
+                            as-child
+                            class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
+                        >
                             <Link :href="register.url()">Começar Agora</Link>
                         </Button>
-                        <Button size="lg" variant="outline" as-child class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50">
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            as-child
+                            class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
+                        >
                             <Link :href="login.url()">Sou Parceiro</Link>
                         </Button>
-                        <Button size="lg" variant="secondary" as-child class="bg-amber-700 text-amber-100 hover:bg-amber-600">
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            as-child
+                            class="bg-amber-700 text-amber-100 hover:bg-amber-600"
+                        >
                             <Link :href="'/login_cli'">Sou Cliente</Link>
+                        </Button>
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            as-child
+                            class="border-amber-300 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
+                        >
+                            <Link :href="'/login_carrier'"
+                                >Sou Transportadora</Link
+                            >
                         </Button>
                     </template>
                 </div>
@@ -165,7 +207,11 @@ const features = [
                         v-for="(img, idx) in heroImages"
                         :key="img"
                         class="h-2 w-2 rounded-full transition-all"
-                        :class="idx === currentImageIndex ? 'bg-amber-400 w-6' : 'bg-amber-600/50 hover:bg-amber-500/70'"
+                        :class="
+                            idx === currentImageIndex
+                                ? 'w-6 bg-amber-400'
+                                : 'bg-amber-600/50 hover:bg-amber-500/70'
+                        "
                         @click="currentImageIndex = idx"
                     />
                 </div>
@@ -181,25 +227,19 @@ const features = [
                     <p class="text-3xl font-bold text-amber-700">
                         {{ stats.clients_count }}
                     </p>
-                    <p class="text-sm text-amber-600">
-                        Total de Clientes
-                    </p>
+                    <p class="text-sm text-amber-600">Total de Clientes</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-amber-700">
                         {{ stats.orders_count }}
                     </p>
-                    <p class="text-sm text-amber-600">
-                        Total de Pedidos
-                    </p>
+                    <p class="text-sm text-amber-600">Total de Pedidos</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-amber-700">
                         {{ stats.inputs_count }}
                     </p>
-                    <p class="text-sm text-amber-600">
-                        Tipos de Insumos
-                    </p>
+                    <p class="text-sm text-amber-600">Tipos de Insumos</p>
                 </div>
                 <div class="text-center">
                     <p class="text-3xl font-bold text-amber-700">
@@ -221,13 +261,20 @@ const features = [
     <section class="py-20">
         <div class="container mx-auto px-4 md:px-8">
             <div class="mb-12 text-center">
-                <Button variant="outline" size="lg" as-child class="mb-8 border-amber-300 text-amber-700 hover:bg-amber-50">
+                <Button
+                    variant="outline"
+                    size="lg"
+                    as-child
+                    class="mb-8 border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
                     <Link href="/store">
                         <ShoppingBag class="mr-2 h-5 w-5" />
                         Ver Loja de Produtos
                     </Link>
                 </Button>
-                <h2 class="mb-4 text-3xl font-bold text-amber-900">Tudo que Você Precisa</h2>
+                <h2 class="mb-4 text-3xl font-bold text-amber-900">
+                    Tudo que Você Precisa
+                </h2>
                 <p class="text-lg text-amber-600">
                     Ferramentas completas para gerenciar seu negócio de
                     impressão 3D
@@ -248,8 +295,12 @@ const features = [
                         >
                             {{ feature.icon }}
                         </div>
-                        <CardTitle class="mt-4 text-amber-900">{{ feature.title }}</CardTitle>
-                        <CardDescription class="text-amber-600">{{ feature.description }}</CardDescription>
+                        <CardTitle class="mt-4 text-amber-900">{{
+                            feature.title
+                        }}</CardTitle>
+                        <CardDescription class="text-amber-600">{{
+                            feature.description
+                        }}</CardDescription>
                     </CardHeader>
                 </Card>
             </div>
@@ -259,27 +310,48 @@ const features = [
     <!-- CTA Section -->
     <section class="bg-amber-950 py-16">
         <div class="container mx-auto px-4 text-center md:px-8">
-            <h2 class="mb-4 text-3xl font-bold text-amber-100">Pronto para Começar?</h2>
+            <h2 class="mb-4 text-3xl font-bold text-amber-100">
+                Pronto para Começar?
+            </h2>
             <p class="mb-8 text-lg text-amber-300/80">
                 Junte-se a nós e otimize seu fluxo de trabalho de impressão 3D
             </p>
-            <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Button size="lg" variant="outline" as-child class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50">
+            <div
+                class="flex flex-col items-center justify-center gap-4 sm:flex-row"
+            >
+                <Button
+                    size="lg"
+                    variant="outline"
+                    as-child
+                    class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
+                >
                     <Link href="/store">
                         <ShoppingBag class="mr-2 h-5 w-5" />
                         Ver Loja de Produtos
                     </Link>
                 </Button>
                 <template v-if="auth?.user">
-                    <Button size="lg" as-child class="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">
+                    <Button
+                        size="lg"
+                        as-child
+                        class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
+                    >
                         <Link :href="dashboard.url()">Ir para o Painel</Link>
                     </Button>
                 </template>
                 <template v-else>
-                    <Button size="lg" as-child class="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold">
+                    <Button
+                        size="lg"
+                        as-child
+                        class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
+                    >
                         <Link :href="login.url()">Sou Parceiro</Link>
                     </Button>
-                    <Button size="lg" as-child class="bg-amber-600 hover:bg-amber-500 text-amber-50">
+                    <Button
+                        size="lg"
+                        as-child
+                        class="bg-amber-600 text-amber-50 hover:bg-amber-500"
+                    >
                         <Link :href="'/login_cli'">Sou Cliente</Link>
                     </Button>
                 </template>
@@ -287,7 +359,10 @@ const features = [
             <div class="mt-6 text-center">
                 <p class="text-sm text-amber-400/60">
                     Já é cliente?
-                    <Link :href="'/login_cli'" class="font-medium text-amber-300 underline underline-offset-4 hover:text-amber-200">
+                    <Link
+                        :href="'/login_cli'"
+                        class="font-medium text-amber-300 underline underline-offset-4 hover:text-amber-200"
+                    >
                         Acesse sua conta para comprar na loja
                     </Link>
                 </p>

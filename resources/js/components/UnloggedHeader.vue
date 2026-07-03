@@ -17,10 +17,16 @@ const partnerLinks = [
 const clientLinks = [
     { name: 'Sou Cliente', href: '/login_cli', highlight: true },
 ];
+
+const carrierLinks = [
+    { name: 'Sou Transportadora', href: '/login_carrier', highlight: true },
+];
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
+    <header
+        class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md"
+    >
         <div class="container mx-auto flex h-16 items-center px-4 md:px-8">
             <Link :href="welcome.url()" class="flex items-center gap-2">
                 <AppLogo class="brightness-0 invert" />
@@ -45,7 +51,20 @@ const clientLinks = [
                         variant="outline"
                         size="sm"
                         as-child
-                        class="hidden sm:flex border-amber-500 text-amber-200 hover:bg-amber-800 hover:text-amber-50"
+                        class="hidden border-amber-500 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
+                    >
+                        <Link :href="item.href">{{ item.name }}</Link>
+                    </Button>
+                </template>
+
+                <!-- Carrier links (Sou Transportadora) -->
+                <template v-for="item in carrierLinks" :key="item.name">
+                    <Button
+                        v-if="item.highlight"
+                        variant="outline"
+                        size="sm"
+                        as-child
+                        class="hidden border-amber-400/50 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
@@ -57,7 +76,7 @@ const clientLinks = [
                         v-if="item.highlight"
                         size="sm"
                         as-child
-                        class="hidden sm:flex bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold"
+                        class="hidden bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400 sm:flex"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>

@@ -33,12 +33,18 @@ defineProps<{
                 </Button>
             </div>
 
-            <div class="rounded-xl bg-white p-6 shadow-sm border border-amber-100 sm:p-8">
+            <div
+                class="rounded-xl border border-amber-100 bg-white p-6 shadow-sm sm:p-8"
+            >
                 <div class="mb-4 text-sm text-amber-500">
-                    Versão {{ document.version }} — Atualizado em {{ document.published_at }}
+                    Versão {{ document.version }} — Atualizado em
+                    {{ document.published_at }}
                 </div>
                 <!-- eslint-disable-next-line vue/no-v-html -->
-                <div class="legal-content text-amber-900" v-html="document.content" />
+                <div
+                    class="legal-content text-amber-900"
+                    v-html="document.content"
+                />
             </div>
         </div>
     </div>

@@ -1,7 +1,9 @@
 <?php
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
+use App\Http\Controllers\Auth\LoginCarrierController;
 use App\Http\Controllers\Auth\LoginClientController;
+use App\Http\Controllers\Auth\RegisterCarrierController;
 use App\Http\Controllers\Auth\RegisterClientController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ClientProfileController;
@@ -40,7 +42,9 @@ Route::post('/legal/accept', [LegalConsentController::class, 'accept'])->name('l
 Route::post('/legal/decline', [LegalConsentController::class, 'decline'])->name('legal.decline');
 Route::post('/legal/accept-both', [LegalConsentController::class, 'acceptBoth'])->name('legal.acceptBoth');
 
-// Client auth (customers) — separate from staff auth
+// ─────────────────────────────────────────────────
+// Client auth (customers)
+// ─────────────────────────────────────────────────
 Route::post('/logout_cli', [LoginClientController::class, 'destroy'])->name('logout.client');
 
 Route::middleware(['redirect_if_authenticated'])->group(function () {
@@ -50,6 +54,19 @@ Route::middleware(['redirect_if_authenticated'])->group(function () {
     // Client registration
     Route::get('/register_cli', [RegisterClientController::class, 'create'])->name('register.client');
     Route::post('/register_cli', [RegisterClientController::class, 'store'])->name('register.client.store');
+});
+
+// ─────────────────────────────────────────────────
+// Carrier auth (transportadoras)
+// ─────────────────────────────────────────────────
+Route::post('/logout_carrier', [LoginCarrierController::class, 'destroy'])->name('logout.carrier');
+
+Route::middleware(['redirect_if_authenticated:carriers'])->group(function () {
+    Route::get('/login_carrier', [LoginCarrierController::class, 'create'])->name('login.carrier');
+    Route::post('/login_carrier', [LoginCarrierController::class, 'store'])->name('login.carrier.store');
+
+    Route::get('/register_carrier', [RegisterCarrierController::class, 'create'])->name('register.carrier');
+    Route::post('/register_carrier', [RegisterCarrierController::class, 'store'])->name('register.carrier.store');
 });
 
 // Client cart — Inertia page
@@ -75,6 +92,15 @@ Route::middleware(['auth:clients', 'verify.user.exists'])->group(function () {
     Route::put('/perfil', [ClientProfileController::class, 'updateProfile'])->name('client.profile.update');
     Route::get('/perfil/enderecos', [ClientProfileController::class, 'addresses'])->name('client.addresses');
     Route::put('/perfil/enderecos', [ClientProfileController::class, 'updateAddress'])->name('client.addresses.update');
+    Route::get('/perfil/pedidos', [ClientProfileController::class, 'orders'])->name('client.orders');
+    Route::post('/perfil/pedidos/{order}/devolucao', [ClientProfileController::class, 'requestReturn'])->name('client.orders.return');
+});
+
+// Carrier dashboard routes (authenticated via carriers guard)
+Route::middleware(['auth:carriers'])->group(function () {
+    Route::get('/carrier/dashboard', function () {
+        return inertia('Carriers/Dashboard');
+    })->name('carrier.dashboard');
 });
 
 Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->group(function () {
@@ -149,6 +175,16 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::get('{contract}/edit', [InertiaFreightContractController::class, 'edit'])->name('edit');
         Route::put('{contract}', [InertiaFreightContractController::class, 'update'])->name('update');
         Route::delete('{contract}', [InertiaFreightContractController::class, 'destroy'])->name('destroy');
+    });
+
+    // Tools (admin only)
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/tools/security', [\App\Http\Controllers\Admin\ToolsController::class, 'index'])
+            ->name('tools.security');
+        Route::post('/tools/security', [\App\Http\Controllers\Admin\ToolsController::class, 'updateSecurityLevels'])
+            ->name('tools.security.update');
+        Route::get('/orders/{order}/label', [\App\Http\Controllers\Admin\ToolsController::class, 'generateLabel'])
+            ->name('orders.label');
     });
 
     // Tools

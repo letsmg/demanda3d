@@ -28,7 +28,9 @@ function clearForm() {
 </script>
 
 <template>
-    <div class="flex items-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+    <div
+        class="flex items-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3"
+    >
         <span class="text-xs font-medium text-muted-foreground">
             🧪 {{ label || 'Testes rápidos' }}
         </span>

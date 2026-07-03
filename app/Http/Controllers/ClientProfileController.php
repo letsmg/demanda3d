@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Order;
+use App\Models\ReturnRequest;
+use App\Services\EncryptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,6 +50,21 @@ class ClientProfileController extends Controller
         return back()->with('success', 'Perfil atualizado com sucesso!');
     }
 
+    public function orders()
+    {
+        $client = $this->guardClient();
+
+        $orders = \App\Models\Order::with('product:id,name,slug')
+            ->where('client_id', $client->id)
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return Inertia::render('Client/Orders', [
+            'client' => $client,
+            'orders' => $orders,
+        ]);
+    }
+
     public function addresses()
     {
         $client = $this->guardClient();
@@ -70,5 +88,43 @@ class ClientProfileController extends Controller
         $client->update($validated);
 
         return back()->with('success', 'Endereço atualizado com sucesso!');
+    }
+
+    /**
+     * Solicita devolução de um pedido (até 7 dias após entrega).
+     */
+    public function requestReturn(Request $request, Order $order)
+    {
+        $client = $this->guardClient();
+
+        if ($order->client_id !== $client->id) {
+            abort(403);
+        }
+
+        // Verifica se já existe solicitação
+        $exists = ReturnRequest::where('order_id', $order->id)->exists();
+        if ($exists) {
+            return back()->with('error', 'Já existe uma solicitação de devolução para este pedido.');
+        }
+
+        // Verifica prazo de 7 dias após entrega
+        if (! $order->delivery_date || now()->diffInDays($order->delivery_date) > 7) {
+            return back()->with('error', 'O prazo de 7 dias para solicitar devolução expirou.');
+        }
+
+        $reasonData = EncryptionService::encryptWithHash(
+            $request->input('reason', 'Devolução solicitada pelo cliente.')
+        );
+
+        ReturnRequest::create([
+            'order_id'          => $order->id,
+            'client_id'         => $client->id,
+            'status'            => 'requested',
+            'reason_encrypted'  => $reasonData['encrypted'],
+            'reason_hash'       => $reasonData['hash'],
+            'requested_at'      => now(),
+        ]);
+
+        return back()->with('success', 'Solicitação de devolução registrada. Você tem até 3 dias para postar o produto.');
     }
 }

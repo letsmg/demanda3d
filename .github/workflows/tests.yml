@@ -1,103 +1,109 @@
-# name: Tests
+name: Tests
 
-# on:
-#   push:
-#     branches:
-#       - develop
-#       - main
+on:
+  push:
+    branches:
+      - develop
+      - main
 
-#   pull_request:
-#     branches:
-#       - develop
-#       - main
+  pull_request:
+    branches:
+      - develop
+      - main
 
-# jobs:
+jobs:
 
-#   tests:
+  tests:
 
-#     runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-#     services:
+    services:
 
-#       postgres:
-#         image: postgres:16
+      postgres:
+        image: postgres:16
 
-#         env:
-#           POSTGRES_DB: demanda3d_test
-#           POSTGRES_USER: postgres
-#           POSTGRES_PASSWORD: postgres
+        env:
+          POSTGRES_DB: demanda3d_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
 
-#         ports:
-#           - 5432:5432
+        ports:
+          - 5432:5432
 
-#         options: >-
-#           --health-cmd pg_isready
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-#       redis:
-#         image: redis:7
+      redis:
+        image: redis:7
 
-#         ports:
-#           - 6379:6379
+        ports:
+          - 6379:6379
 
-#     strategy:
-#       matrix:
-#         php-version:
-#           - '8.4'
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-#     env:
+    strategy:
+      matrix:
+        php-version:
+          - '8.4'
 
-#       APP_ENV: testing
+    env:
 
-#       DB_CONNECTION: pgsql
-#       DB_HOST: 127.0.0.1
-#       DB_PORT: 5432
-#       DB_DATABASE: demanda3d_test
-#       DB_USERNAME: postgres
-#       DB_PASSWORD: postgres
+      APP_ENV: testing
 
-#       CACHE_DRIVER: redis
-#       SESSION_DRIVER: array
-#       QUEUE_CONNECTION: sync
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: demanda3d_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
 
-#       REDIS_HOST: 127.0.0.1
-#       REDIS_PORT: 6379
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
 
-#     steps:
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
 
-#       - uses: actions/checkout@v5
+    steps:
 
-#       - name: Setup PHP
-#         uses: shivammathur/setup-php@v2
-#         with:
-#           php-version: '8.4'
-#           extensions: pdo_pgsql, redis, bcmath
+      - uses: actions/checkout@v5
 
-#       - name: Setup Node
-#         uses: actions/setup-node@v5
-#         with:
-#           node-version: 22
-#           cache: npm
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, redis, bcmath
 
-#       - name: Install Composer
-#         run: composer install --no-interaction --prefer-dist
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
 
-#       - name: Install NPM
-#         run: npm ci
+      - name: Install Composer
+        run: composer install --no-interaction --prefer-dist
 
-#       - name: Prepare Laravel
-#         run: |
-#           cp .env.example .env
-#           php artisan key:generate
-#           php artisan migrate --force
+      - name: Install NPM
+        run: npm ci
 
-#       - name: Build Assets
-#         run: npm run build
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
 
-#       - name: Type Check
-#         run: npm run types:check
+      - name: Build Assets
+        run: npm run build
 
-#       - name: Run Tests
-#         run: php artisan test
+      - name: Type Check
+        run: npm run types:check
+
+      - name: Run Tests
+        run: php artisan test

@@ -36,9 +36,17 @@ const password = ref('');
 
 const testAccounts: TestAccount[] = [
     { label: 'Admin Master', email: 'admin@demanda3d.com', role: 'Admin' },
-    { label: 'Tech3D Soluções', email: 'tech3d@demanda3d.com.br', role: 'Partner' },
+    {
+        label: 'Tech3D Soluções',
+        email: 'tech3d@demanda3d.com.br',
+        role: 'Partner',
+    },
     { label: 'Maker Lab 3D', email: 'maker@demanda3d.com.br', role: 'Partner' },
-    { label: 'Prototype Fast', email: 'prototype@demanda3d.com.br', role: 'Partner' },
+    {
+        label: 'Prototype Fast',
+        email: 'prototype@demanda3d.com.br',
+        role: 'Partner',
+    },
 ];
 
 function fillTestCredentials(acc: TestAccount) {
@@ -58,7 +66,9 @@ function fillTestCredentials(acc: TestAccount) {
     </div>
 
     <!-- Test accounts -->
-    <div class="mb-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+    <div
+        class="mb-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3"
+    >
         <p class="mb-2 text-center text-xs font-medium text-muted-foreground">
             🧪 Contas de teste (senha: <strong>Mudar@123</strong>)
         </p>
@@ -72,7 +82,10 @@ function fillTestCredentials(acc: TestAccount) {
             >
                 <span class="font-medium">{{ acc.label }}</span>
                 <span class="text-muted-foreground">{{ acc.email }}</span>
-                <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{{ acc.role }}</span>
+                <span
+                    class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                    >{{ acc.role }}</span
+                >
             </button>
         </div>
     </div>

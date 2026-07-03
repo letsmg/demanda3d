@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as ordersIndex } from '@/routes/orders';
 import type { Client } from '@/types';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 
 const { clients } = defineProps<{
     clients: Client[];
@@ -32,7 +34,10 @@ const testFields: TestField[] = [
     { key: 'order_date', value: '2026-06-22' },
     { key: 'delivery_date', value: '2026-07-06' },
     { key: 'price', value: '450.00' },
-    { key: 'contracted_description', value: 'Impressão 3D de protótipo funcional em ABS - 10 unidades' },
+    {
+        key: 'contracted_description',
+        value: 'Impressão 3D de protótipo funcional em ABS - 10 unidades',
+    },
 ];
 
 function handleFill(fields: TestField[]) {

@@ -38,6 +38,7 @@ beforeEach(function () {
 test('management can create supplier with lgpd parity', function () {
     $response = actingAs($this->management)->postJson('/api/suppliers', [
         'name' => 'Fornecedor Teste Ltda',
+        'doc_type' => 'CNPJ',
         'document' => '12.345.678/0001-90',
         'contact' => '(11) 99999-0000 / contato@teste.com',
     ]);
@@ -54,6 +55,7 @@ test('management can create supplier with lgpd parity', function () {
 test('customer cannot create supplier', function () {
     $response = actingAs($this->customer)->postJson('/api/suppliers', [
         'name' => 'Fornecedor',
+        'doc_type' => 'CNPJ',
         'document' => '12.345.678/0001-90',
         'contact' => '(11) 99999-0000',
     ]);

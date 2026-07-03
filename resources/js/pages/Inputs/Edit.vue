@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as inputsIndex } from '@/routes/inputs';
 import type { Input as InputType } from '@/types';
-import FormTestHelper, { type TestField } from '@/components/FormTestHelper.vue';
+import FormTestHelper, {
+    type TestField,
+} from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     input: InputType;
@@ -83,13 +85,21 @@ const submit = () => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper :form="form" :fields="testFields" label="Editar Insumo" @fill="handleFill" @clear="handleClear" />
+        <FormTestHelper
+            :form="form"
+            :fields="testFields"
+            label="Editar Insumo"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Insumo</CardTitle>
-                    <CardDescription>Edite os dados do material abaixo</CardDescription>
+                    <CardDescription
+                        >Edite os dados do material abaixo</CardDescription
+                    >
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="space-y-2">
@@ -98,9 +108,15 @@ const submit = () => {
                             id="description"
                             v-model="form.description"
                             placeholder="Ex: PLA 1.75mm"
-                            :class="{ 'border-destructive': form.errors.description }"
+                            :class="{
+                                'border-destructive': form.errors.description,
+                            }"
                         />
-                        <span v-if="form.errors.description" class="text-sm text-destructive">{{ form.errors.description }}</span>
+                        <span
+                            v-if="form.errors.description"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.description }}</span
+                        >
                     </div>
 
                     <div class="space-y-2">
@@ -111,7 +127,11 @@ const submit = () => {
                             placeholder="Ex: 3DLab, Creality"
                             :class="{ 'border-destructive': form.errors.brand }"
                         />
-                        <span v-if="form.errors.brand" class="text-sm text-destructive">{{ form.errors.brand }}</span>
+                        <span
+                            v-if="form.errors.brand"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.brand }}</span
+                        >
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -121,9 +141,16 @@ const submit = () => {
                                 id="purchase_date"
                                 type="date"
                                 v-model="form.purchase_date"
-                                :class="{ 'border-destructive': form.errors.purchase_date }"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.purchase_date,
+                                }"
                             />
-                            <span v-if="form.errors.purchase_date" class="text-sm text-destructive">{{ form.errors.purchase_date }}</span>
+                            <span
+                                v-if="form.errors.purchase_date"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.purchase_date }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="cost_value">Custo de Compra *</Label>
@@ -133,9 +160,16 @@ const submit = () => {
                                 step="0.01"
                                 v-model="form.cost_value"
                                 placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.cost_value }"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.cost_value,
+                                }"
                             />
-                            <span v-if="form.errors.cost_value" class="text-sm text-destructive">{{ form.errors.cost_value }}</span>
+                            <span
+                                v-if="form.errors.cost_value"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.cost_value }}</span
+                            >
                         </div>
                     </div>
 
@@ -148,9 +182,15 @@ const submit = () => {
                                 step="1"
                                 v-model="form.quantity"
                                 placeholder="0"
-                                :class="{ 'border-destructive': form.errors.quantity }"
+                                :class="{
+                                    'border-destructive': form.errors.quantity,
+                                }"
                             />
-                            <span v-if="form.errors.quantity" class="text-sm text-destructive">{{ form.errors.quantity }}</span>
+                            <span
+                                v-if="form.errors.quantity"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.quantity }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="shipping_cost">Frete *</Label>
@@ -160,9 +200,16 @@ const submit = () => {
                                 step="0.01"
                                 v-model="form.shipping_cost"
                                 placeholder="0.00"
-                                :class="{ 'border-destructive': form.errors.shipping_cost }"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.shipping_cost,
+                                }"
                             />
-                            <span v-if="form.errors.shipping_cost" class="text-sm text-destructive">{{ form.errors.shipping_cost }}</span>
+                            <span
+                                v-if="form.errors.shipping_cost"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.shipping_cost }}</span
+                            >
                         </div>
                     </div>
                 </CardContent>

@@ -56,7 +56,9 @@ function submit() {
     </div>
 
     <!-- Test client accounts -->
-    <div class="mb-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+    <div
+        class="mb-6 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3"
+    >
         <p class="mb-2 text-center text-xs font-medium text-muted-foreground">
             🧪 Contas de teste (senha: <strong>password</strong>)
         </p>
@@ -74,10 +76,7 @@ function submit() {
         </div>
     </div>
 
-    <form
-        @submit.prevent="submit"
-        class="flex flex-col gap-6"
-    >
+    <form @submit.prevent="submit" class="flex flex-col gap-6">
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="email">E-mail</Label>
@@ -98,11 +97,7 @@ function submit() {
             <div class="grid gap-2">
                 <div class="flex items-center justify-between">
                     <Label for="password">Senha</Label>
-                    <TextLink
-                        :href="request()"
-                        class="text-sm"
-                        :tabindex="5"
-                    >
+                    <TextLink :href="request()" class="text-sm" :tabindex="5">
                         Esqueceu sua senha?
                     </TextLink>
                 </div>
@@ -120,7 +115,12 @@ function submit() {
 
             <div class="flex items-center justify-between">
                 <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" v-model:checked="form.remember" :tabindex="3" />
+                    <Checkbox
+                        id="remember"
+                        name="remember"
+                        v-model:checked="form.remember"
+                        :tabindex="3"
+                    />
                     <span>Lembrar de mim</span>
                 </Label>
             </div>
@@ -139,12 +139,17 @@ function submit() {
 
         <div class="text-center text-sm text-muted-foreground">
             Não tem uma conta?
-            <TextLink :href="'/register_cli'" :tabindex="5">Cadastre-se</TextLink>
+            <TextLink :href="'/register_cli'" :tabindex="5"
+                >Cadastre-se</TextLink
+            >
         </div>
 
         <div class="text-center text-xs text-muted-foreground">
             <span>É um parceiro?</span>
-            <Link :href="'/login'" class="ml-1 font-medium text-primary hover:underline">
+            <Link
+                :href="'/login'"
+                class="ml-1 font-medium text-primary hover:underline"
+            >
                 Acesse como Parceiro
             </Link>
         </div>
