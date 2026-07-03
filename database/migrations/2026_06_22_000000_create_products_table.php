@@ -35,7 +35,6 @@ return new class extends Migration
             $table->string('meta_keywords')->nullable();
             $table->string('h1_text')->nullable();
             $table->text('schema_markup')->nullable();
-            $table->string('canonical_url')->nullable();
             $table->string('og_image')->nullable();
             $table->text('google_tag_manager')->nullable();
             // Moderation

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,18 +19,22 @@ class StoreController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->validate([
-            'search' => 'nullable|string|min:3|max:255',
-            'min_price' => 'nullable|numeric|min:0',
-            'max_price' => 'nullable|numeric|min:0',
-            'sort' => 'nullable|in:name,sale_price,created_at',
-            'sort_dir' => 'nullable|in:asc,desc',
+            'search'      => 'nullable|string|min:3|max:255',
+            'min_price'   => 'nullable|numeric|min:0',
+            'max_price'   => 'nullable|numeric|min:0',
+            'sort'        => 'nullable|in:name,sale_price,created_at',
+            'sort_dir'    => 'nullable|in:asc,desc',
+            'categoria'   => 'nullable|string|exists:categorias,slug',
         ]);
 
         $products = $this->productService->listActiveForStore($filters);
 
+        $categorias = Categoria::orderBy('nome')->get(['slug', 'nome']);
+
         return Inertia::render('Store/Index', [
-            'products' => $products,
-            'filters' => $filters,
+            'products'   => $products,
+            'categorias' => $categorias,
+            'filters'    => $filters,
         ]);
     }
 }

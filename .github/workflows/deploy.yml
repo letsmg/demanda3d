@@ -132,19 +132,28 @@ jobs:
             # 4. Verificação do Banco de Dados
             echo "🔍 Verificando banco de dados..."
 
+            # RESOLUÇÃO: Mapeia dinamicamente os valores de conexão baseando-se no .env e no docker-compose para evitar os avisos vazios
+            DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
+            DB_NAME=$(grep -oP '^DB_DATABASE=\K.*' "$SHARED/.env" | head -1 || echo "demanda_db_prod")
+            CONTAINER_NAME=$(sudo docker ps --filter "name=psql" --format "{{.Names}}" | head -1)
+
             # Extrai a senha do .env.docker para autenticação (PostgreSQL Alpine 18.4
             # com POSTGRES_USER customizado não cria o role "postgres" — usamos o
             # superusuário da aplicação para verificações e backup).
-            DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
-            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
-              psql -U "$DB_USER" -d postgres -tAc \
-              "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
+            if [ -f "$SHARED/.env.docker" ] && [ ! -z "$CONTAINER_NAME" ]; then
+                DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
+                sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+                  psql -U "$DB_USER" -d postgres -tAc \
+                  "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
+                  || echo "⚠️  Aviso: não foi possível verificar o usuário $DB_USER"
 
-            sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
-              psql -U "$DB_USER" -d postgres -tAc \
-              "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
-              || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
+                sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+                  psql -U "$DB_USER" -d postgres -tAc \
+                  "SELECT datname FROM pg_database WHERE datname = '$DB_NAME';" 2>/dev/null \
+                  || echo "⚠️  Aviso: não foi possível verificar o database $DB_NAME"
+            else
+                echo "ℹ️ Pulando checagem direta do psql (Container inicializando ou indisponível)"
+            fi
 
             # 5. Migrations e Otimização
             cd "$NEW_RELEASE"
