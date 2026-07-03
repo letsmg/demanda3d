@@ -134,29 +134,37 @@ function submitCheckout() {
             Finalizar Compra
         </h1>
 
-        <!-- Steps indicator -->
+        <!-- Steps indicator (clicável para voltar) -->
         <div class="mb-8 flex items-center gap-2">
-            <div v-for="s in 3" :key="s" class="flex items-center gap-2">
-                <div
-                    :class="[
-                        'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold',
-                        step >= s
-                            ? 'border-amber-600 bg-amber-600 text-white'
-                            : 'border-amber-300 text-amber-400',
-                    ]"
+            <template v-for="s in 3" :key="s">
+                <button
+                    type="button"
+                    class="flex items-center gap-2"
+                    :class="step >= s ? 'cursor-pointer' : 'cursor-not-allowed'"
+                    :disabled="step <= s"
+                    @click="step = s"
                 >
-                    <Check v-if="step > s" class="h-4 w-4" />
-                    <span v-else>{{ s }}</span>
-                </div>
-                <span class="hidden text-sm text-amber-600 sm:inline">{{
-                    s === 1
-                        ? 'Endereço'
-                        : s === 2
-                          ? 'Cupom & Frete'
-                          : 'Pagamento'
-                }}</span>
+                    <div
+                        :class="[
+                            'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
+                            step >= s
+                                ? 'border-amber-600 bg-amber-600 text-white hover:bg-amber-700'
+                                : 'border-amber-300 text-amber-400',
+                        ]"
+                    >
+                        <Check v-if="step > s" class="h-4 w-4" />
+                        <span v-else>{{ s }}</span>
+                    </div>
+                    <span class="hidden text-sm text-amber-600 sm:inline">{{
+                        s === 1
+                            ? 'Endereço'
+                            : s === 2
+                              ? 'Cupom & Frete'
+                              : 'Pagamento'
+                    }}</span>
+                </button>
                 <div v-if="s < 3" class="h-0.5 w-8 bg-amber-200" />
-            </div>
+            </template>
         </div>
 
         <!-- STEP 1 -->

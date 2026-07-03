@@ -17,7 +17,7 @@ class CouponController extends Controller
      *
      * Valida e calcula o desconto de um cupom para os itens do carrinho.
      */
-    public function validate(Request $request): JsonResponse
+    public function check(Request $request): JsonResponse
     {
         $client = Auth::guard('clients')->user();
         if (! $client) {

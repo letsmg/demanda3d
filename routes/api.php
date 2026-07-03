@@ -21,7 +21,7 @@ Route::prefix('produtos')->name('api.produtos.')->group(function () {
 Route::get('/cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
 
 // Validação de cupom de desconto
-Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'validate'])
+Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'check'])
     ->middleware('auth:clients')
     ->name('api.coupons.validate');
 
