@@ -11,14 +11,18 @@ LABEL description="Demanda3D — Laravel Application Container"
 RUN apk add --no-cache \
     bash \
     curl \
-    libpq-dev \
+    postgresql-dev \
     libzip-dev \
+    zip \
+    unzip \
     nginx \
     supervisor \
     && docker-php-ext-install -j$(nproc) \
     pdo_pgsql \
     pgsql \
+    zip \
     opcache
+    
 
 # ── zip extension (via libzip) ────────────────
 RUN docker-php-ext-configure zip \
