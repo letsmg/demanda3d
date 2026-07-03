@@ -115,8 +115,8 @@ jobs:
             sudo mkdir -p "$SHARED/storage/app/public"
             
             # Verificação prévia defensiva para evitar colisões ao criar os links
-            sudo rm -f "$NEW_RELEASE/.env" "$NEW_RELEASE/docker" "$NEW_RELEASE/docker-compose.yml"
-            
+            sudo rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/docker" "$NEW_RELEASE/docker-compose.yml"
+
             sudo ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             sudo ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
             
