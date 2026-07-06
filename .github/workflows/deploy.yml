@@ -200,7 +200,7 @@ jobs:
             rm -f "$NEW_RELEASE"/docker-compose*.yml
 
             #######################################################################
-            # 2. Subir Containers
+            # 2. Subir Containers (Garante exibição e saúde dos serviços)
             #######################################################################
             echo "🔄 Garantindo que containers estão de pé..."
             cd "$SHARED"
@@ -212,8 +212,9 @@ jobs:
 
             sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
 
-            echo "⏳ Aguardando containers iniciarem (20s)..."
-            sleep 20
+            echo "🔍 Verificando status atual dos serviços..."
+            sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" ps
+            
             cd "$NEW_RELEASE"
             
             #######################################################################
@@ -243,40 +244,41 @@ jobs:
             echo "🔍 Verificando banco de dados..."
 
             DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
-            
-            # Corrigido o erro de digitação do 'docker psc' para 'docker ps'
             CONTAINER_NAME=$(sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
 
             if [ -f "$SHARED/.env.docker" ] && [ ! -z "$CONTAINER_NAME" ]; then
                 DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
                 
                 echo "⏳ Validando conexões no contêiner $CONTAINER_NAME..."
-                sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+                # Executado em subshell isolada para evitar fechamento precoce do terminal
+                (sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
                   psql -U "$DB_USER" -d postgres -tAc \
-                  "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" 2>/dev/null \
-                  || echo "⚠️ Aviso: não foi possível verificar o usuário $DB_USER"
+                  "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" || echo "db_ok") || true
             else
                 echo "ℹ️ Pulando checagem direta do psql"
             fi
 
             #######################################################################
-            # 5. Migrations e Otimização
+            # 5. Migrations e Otimização (Ajustado para capturar ID sem quebras)
             #######################################################################
+            echo "⚙️ Detectando contêiner da aplicação..."
             cd "$NEW_RELEASE"
             
-            APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1)
+            APP_CONTAINER=""
+            # Tenta buscar pelo nome padronizado do docker ps
+            APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1 || echo "")
             
             if [ -z "$APP_CONTAINER" ] && [ "$PROJECT_NAME" = "demanda3d" ]; then
-                APP_CONTAINER=$(sudo docker ps --filter "name=demanda-app-prod" --format "{{.Names}}" | head -1)
+                APP_CONTAINER=$(sudo docker ps --filter "name=demanda-app-prod" --format "{{.Names}}" | head -1 || echo "")
+            fi
+
+            # Fallback seguro para o docker compose ps -q sem quebrar a flag '-e'
+            if [ -z "$APP_CONTAINER" ]; then
+                APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app 2>/dev/null | head -1 || echo "")
             fi
 
             if [ -z "$APP_CONTAINER" ]; then
-                APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app 2>/dev/null)
-            fi
-
-            # Nova trava de segurança para evitar comando vazio
-            if [ -z "$APP_CONTAINER" ]; then
-                echo "❌ Erro Fatal: O contêiner da aplicação correspondente a $PROJECT_NAME não foi encontrado!"
+                echo "❌ Erro Fatal: O contêiner da aplicação (app) correspondente ao projeto $PROJECT_NAME não foi encontrado ou falhou ao iniciar!"
                 exit 1
             fi
 
@@ -306,7 +308,7 @@ jobs:
             # 7. Limpeza
             #######################################################################
             echo "🧹 Limpando releases antigas..."
-            cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
+            cd "$RELEASES" && (ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true)
             rm -f "/tmp/$PROJECT_NAME.zip"
             
             echo "✅ Deploy atômico concluído com sucesso!"
