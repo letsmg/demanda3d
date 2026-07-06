@@ -65,13 +65,13 @@ const authClient = computed(() => (page.props as any).auth_client?.user);
 // Lazy loading state ("Mostrar mais")
 // ============================================================
 const products = ref<any[]>([...props.products]);
-const hasMoreProducts = ref(props.products.length >= 10);
+const hasMoreProducts = ref(props.products.length >= 8);
 const currentPage = ref(1);
 const loadingMore = ref(false);
 
 function resetProducts(): void {
     products.value = [...props.products];
-    hasMoreProducts.value = props.products.length >= 10;
+    hasMoreProducts.value = props.products.length >= 8;
     currentPage.value = 1;
 }
 
@@ -88,10 +88,10 @@ async function loadMore(): Promise<void> {
         if (minPrice.value) params.set('min_price', minPrice.value);
         if (maxPrice.value) params.set('max_price', maxPrice.value);
         if (activeCategory.value) params.set('category', activeCategory.value);
-        params.set('sort', sort.value);
-        params.set('sort_dir', sortDir.value);
+        params.set('sort', storeSort.value);
+        params.set('sort_dir', storeSortDir.value);
 
-        const res = await fetch(`/store/products?${params.toString()}`, {
+        const res = await fetch(`/api/store/products?${params.toString()}`, {
             headers: { Accept: 'application/json' },
         });
 
@@ -110,8 +110,8 @@ async function loadMore(): Promise<void> {
 const search = ref(props.filters.search || '');
 const minPrice = ref(props.filters.min_price?.toString() || '');
 const maxPrice = ref(props.filters.max_price?.toString() || '');
-const sort = ref(props.filters.sort || 'name');
-const sortDir = ref(props.filters.sort_dir || 'asc');
+const  storeSort = ref(props.filters.sort || 'name');
+const  storeSortDir = ref(props.filters.sort_dir || 'asc');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -120,7 +120,7 @@ watch(
     () => props.products,
     (newProducts) => {
         products.value = [...newProducts];
-        hasMoreProducts.value = newProducts.length >= 10;
+        hasMoreProducts.value = newProducts.length >= 8;
         currentPage.value = 1;
     }
 );
@@ -316,8 +316,8 @@ function applyFilters(): void {
     if (activeCategory.value) {
         params.category = activeCategory.value;
     }
-    params.sort = sort.value;
-    params.sort_dir = sortDir.value;
+    params.sort = storeSort.value;
+    params.sort_dir = storeSortDir.value;
 
     router.get('/store', params, {
         preserveState: true,
@@ -330,8 +330,8 @@ function clearFilters(): void {
     search.value = '';
     minPrice.value = '';
     maxPrice.value = '';
-    sort.value = 'name';
-    sortDir.value = 'asc';
+    storeSort.value = 'name';
+    storeSortDir.value = 'asc';
     applyFilters();
 }
 
@@ -340,8 +340,8 @@ const hasActiveFilters = computed(() => {
         search.value ||
         minPrice.value ||
         maxPrice.value ||
-        sort.value !== 'name' ||
-        sortDir.value !== 'asc'
+        storeSort.value !== 'name' ||
+        storeSortDir.value !== 'asc'
     );
 });
 
@@ -356,13 +356,13 @@ const sortOptions = [
 
 function onSortChange(value: string): void {
     const [field, dir] = value.split('_');
-    sort.value = field;
-    sortDir.value = dir;
+    storeSort.value = field;
+    storeSortDir.value = dir;
     applyFilters();
 }
 
 function getCurrentSortValue(): string {
-    return `${sort.value}_${sortDir.value}`;
+    return `${storeSort.value}_${storeSortDir.value}`;
 }
 
 function formatPrice(value: string | number): string {

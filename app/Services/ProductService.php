@@ -175,7 +175,7 @@ class ProductService
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }
 
-        $results = $query->get();
+        $results = $query->take(8)->get();
 
         // --- Store in cache for future searches ---
         if ($useCache && isset($cacheKey)) {

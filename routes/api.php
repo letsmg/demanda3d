@@ -9,6 +9,11 @@ use App\Http\Controllers\SupplierApiController;
 use App\Http\Controllers\Api\CepController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\StoreController;
+
+// Store lazy-loading — carrega mais produtos ("Mostrar mais")
+Route::get('/store/products', [StoreController::class, 'moreProducts'])->name('api.store.more-products');
+
 // Rotas públicas (acessíveis sem autenticação, mas com verificação de idade)
 Route::prefix('produtos')->name('api.produtos.')->group(function () {
     Route::get('/', [ProductApiController::class, 'index'])->name('index');

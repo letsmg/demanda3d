@@ -29,8 +29,6 @@ Route::inertia('/home', 'Dashboard')->name('home');
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
-// API: lazy-load more store products ("mostrar mais") — MUST be before /store/{slug}
-Route::get('/store/products', [StoreController::class, 'moreProducts'])->name('store.more-products');
 
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])

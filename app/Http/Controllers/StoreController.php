@@ -59,13 +59,13 @@ class StoreController extends Controller
     public function moreProducts(Request $request): JsonResponse
     {
         $filters = $request->validate([
-            'search'      => 'nullable|string|min:3|max:255',
+            'search'      => 'nullable|string|max:255',
             'min_price'   => 'nullable|numeric|min:0',
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'category'   => 'nullable|string|exists:categories,slug',
-            'page'       => 'required|integer|min:1',
+            'category'    => 'nullable|string|exists:categories,slug',
+            'page'        => 'required|integer|min:1',
         ]);
 
         $page = (int) ($filters['page'] ?? 1);
@@ -77,7 +77,7 @@ class StoreController extends Controller
             $canViewAdult = $user->canAccessAdultContent();
         }
 
-        $result = $this->productService->paginateActiveForStore($filters, $canViewAdult, $page, 10);
+        $result = $this->productService->paginateActiveForStore($filters, $canViewAdult, $page, 8);
 
         return response()->json([
             'data'     => $result['data'],
