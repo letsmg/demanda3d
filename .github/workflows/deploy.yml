@@ -160,7 +160,6 @@ jobs:
             deploy.zip \
             ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
 
-          # A variável RUN_NUMBER foi adicionada na chamada SSH para evitar colisão
           ssh \
             -o StrictHostKeyChecking=accept-new \
             ubuntu@${{ secrets.SERVER_IP }} \
@@ -174,12 +173,16 @@ jobs:
             CURRENT="$ROOT/current"
             BACKUPS="$ROOT/backups"
             
-            # Anti-colisão: Usa o número de execução do Github Actions
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)-${RUN_NUMBER}"
 
-            echo "📂 Criando estrutura de diretórios base..."
-            mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
+            echo "📂 Criando estrutura base (Operação via Sudo pois o ROOT é root:root)..."
+            sudo mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
             
+            echo "🔧 Aplicando permissões iniciais do padrão solicitado..."
+            sudo chown ubuntu:www-data "$RELEASES" "$SHARED"
+            sudo chown ubuntu:ubuntu "$BACKUPS"
+            sudo chown ubuntu:www-data "$NEW_RELEASE"
+
             echo "📦 Extraindo arquivos..."
             unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
@@ -214,24 +217,26 @@ jobs:
             cd "$NEW_RELEASE"
             
             #######################################################################
-            # 3. Links Simbólicos Internos e Permissões
+            # 3. Links Simbólicos Internos e Permissões Estritas do Laravel
             #######################################################################
-            echo "🔗 Configurando links de ambiente e storage..."
+            echo "🔗 Configurando links de ambiente, storage e bootstrap/cache..."
             mkdir -p "$SHARED/storage/app/public"
+            mkdir -p "$SHARED/bootstrap/cache"
             
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/docker" "$NEW_RELEASE/docker-compose.yml"
+            rm -rf "$NEW_RELEASE/storage"
+            rm -rf "$NEW_RELEASE/bootstrap/cache"
 
             ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             ln -sfn "$SHARED/docker" "$NEW_RELEASE/docker"
             ln -sfn "$SHARED/docker-compose.yml" "$NEW_RELEASE/docker-compose.yml"
-
-            [ -d "$NEW_RELEASE/storage" ] && rm -rf "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
+            ln -sfn "$SHARED/bootstrap/cache" "$NEW_RELEASE/bootstrap/cache"
             
-            # Repassa permissão restrita apenas onde o PHP/Nginx precisa escrever
-            sudo chown -R ubuntu:www-data "$NEW_RELEASE" "$SHARED/storage"
-            sudo chmod -R 775 "$SHARED/storage"
+            # Garante o padrão solicitado: releases, shared/storage e shared/bootstrap/cache como ubuntu:www-data
+            sudo chown -R ubuntu:www-data "$NEW_RELEASE" "$SHARED/storage" "$SHARED/bootstrap/cache"
+            sudo chmod -R 775 "$NEW_RELEASE" "$SHARED/storage" "$SHARED/bootstrap/cache"
 
             #######################################################################
             # 4. Verificação de Banco de Dados
@@ -239,9 +244,8 @@ jobs:
             echo "🔍 Verificando banco de dados..."
 
             DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
-            DB_NAME=$(grep -oP '^DB_DATABASE=\K.*' "$SHARED/.env" | head -1 || echo "demanda_db_prod")
             
-            CONTAINER_NAME=$(sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
+            CONTAINER_NAME=$(sudo docker psc --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1 || sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
 
             if [ -f "$SHARED/.env.docker" ] && [ ! -z "$CONTAINER_NAME" ]; then
                 DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
@@ -277,11 +281,14 @@ jobs:
             sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
             #######################################################################
-            # 6. Ativação (Deploy Atômico) e Correção de Volumes
+            # 6. Ativação (Deploy Atômico via Sudo para contornar permissão do ROOT pai)
             #######################################################################
             echo "🔄 Atualizando link simbólico principal (current)..."
-            rm -rf "$CURRENT"
-            ln -s "$NEW_RELEASE" "$CURRENT"
+            sudo rm -rf "$CURRENT"
+            sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+            
+            # 🔥 Seta o dono do LINK SIMBÓLICO em si para o usuário ubuntu (flag -h)
+            sudo chown -h ubuntu:ubuntu "$CURRENT"
             
             echo "🔍 Auditando o status do link atual:"
             echo "NEW_RELEASE=$NEW_RELEASE"
@@ -298,6 +305,5 @@ jobs:
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
             
-            echo "✅ Deploy atômico concluído com sucesso!"
+            echo "✅ Deploy atômico concluído com sucesso dentro do padrão estrito!"
           DEPLOY_SCRIPT
-          
