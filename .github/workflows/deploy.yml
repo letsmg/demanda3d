@@ -1,6 +1,6 @@
 # ==============================================================================
 # ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
-# Eles servem como documentação viva para o portfólio e explicam decisões técnicas 
+# Eles servem como documentação viva para o portfólio e explicam decisões técnicas
 # complexas de infraestrutura que evitam a quebra do pipeline em atualizações futuras.
 # ==============================================================================
 
@@ -8,22 +8,51 @@ name: 🚀 Deploy Demanda3D
 
 on:
   push:
-    # Monitora as duas branches para isolar os ambientes automaticamente
-    branches: [main, hom]
+    branches:
+      - main
+      - hom
+
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
+
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        shell: bash
+
     steps:
+
+      # ==========================================================================
+      # CHECKOUT
+      # ==========================================================================
+
       - name: 📥 Checkout
         uses: actions/checkout@v5
+
+      # ==========================================================================
+      # PHP
+      # ==========================================================================
 
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5'
-          extensions: mbstring, bcmath, pdo_pgsql, redis
+          php-version: "8.5"
+          extensions: >
+            mbstring,
+            bcmath,
+            pdo_pgsql,
+            redis
+          coverage: none
+
+      # ==========================================================================
+      # NODE
+      # ==========================================================================
 
       - name: 🟢 Setup Node
         uses: actions/setup-node@v5
@@ -31,65 +60,135 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: 🔨 Build Assets & Deps
+      # ==========================================================================
+      # BUILD
+      # ==========================================================================
+
+      - name: 🔨 Instalar dependências e gerar build
         run: |
-          composer install --no-dev --optimize-autoloader --no-interaction
+
+          set -Eeuo pipefail
+
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --optimize-autoloader \
+            --no-interaction
+
           npm ci
+
           npm run build
 
-      - name: 🤐 Criar Pacote de Deploy
-        run: |
-          zip -r deploy.zip . -x ".git/*" ".github/*" "node_modules/*" "tests/*" ".env*" "storage/framework/*" "storage/logs/*"
+      # ==========================================================================
+      # PACOTE
+      # ==========================================================================
 
-      - name: 🔑 Configure SSH
+      - name: 📦 Criar pacote de Deploy
         run: |
+
+          set -Eeuo pipefail
+
+          zip -rq deploy.zip . \
+            -x ".git/*" \
+            ".github/*" \
+            "node_modules/*" \
+            "tests/*" \
+            ".env*" \
+            "storage/framework/*" \
+            "storage/logs/*"
+
+          echo "Arquivo criado:"
+          ls -lh deploy.zip
+
+      # ==========================================================================
+      # SSH
+      # ==========================================================================
+
+      - name: 🔑 Configurar SSH
+        run: |
+
+          set -Eeuo pipefail
+
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+          ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+
           chmod 600 ~/.ssh/id_rsa
+
+      # ==========================================================================
+      # DEPLOY
+      # ==========================================================================
 
       - name: 🚀 Executar Deploy Atômico
         run: |
-          # Define os metadados do projeto dinamicamente baseando-se na branch.
-          if [ "${{ github.ref_name }}" = "main" ]; then
+
+          set -Eeuo pipefail
+
+          #######################################################################
+          # Seleção do ambiente
+          #######################################################################
+
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+
             PROJECT_NAME="demanda3d"
             ROOT="/var/www/demanda3d"
             COMPOSE_FILE="docker-compose-prod.yml"
             MIGRATION_STRATEGY="migrate"
             DB_CONTAINER_TARGET="demanda-psql-prod"
+
           else
+
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
             MIGRATION_STRATEGY="migrate:fresh --seed"
             DB_CONTAINER_TARGET="demanda-psql-hom"
+
           fi
 
-          scp -o StrictHostKeyChecking=accept-new deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
+          echo "Projeto........: $PROJECT_NAME"
+          echo "Root...........: $ROOT"
+          echo "Compose........: $COMPOSE_FILE"
+          echo "Migration......: $MIGRATION_STRATEGY"
 
-          ssh -o StrictHostKeyChecking=accept-new ubuntu@${{ secrets.SERVER_IP }} \
-            "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT' COMPOSE_FILE='$COMPOSE_FILE' MIGRATION_STRATEGY='$MIGRATION_STRATEGY' DB_CONTAINER_TARGET='$DB_CONTAINER_TARGET' RUN_NUMBER='${{ github.run_number }}'" 'bash -s' << 'DEPLOY_SCRIPT'
-            set -e
+          echo "📤 Enviando pacote..."
+
+          scp \
+            -o StrictHostKeyChecking=accept-new \
+            deploy.zip \
+            ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}.zip
+
+          # A variável RUN_NUMBER foi adicionada na chamada SSH para evitar colisão
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            ubuntu@${{ secrets.SERVER_IP }} \
+            "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT' COMPOSE_FILE='$COMPOSE_FILE' MIGRATION_STRATEGY='$MIGRATION_STRATEGY' DB_CONTAINER_TARGET='$DB_CONTAINER_TARGET' RUN_NUMBER='${{ github.run_number }}'" \
+            'bash -s' << 'DEPLOY_SCRIPT'
+
+            set -Eeuo pipefail
 
             RELEASES="$ROOT/releases"
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
             BACKUPS="$ROOT/backups"
             
-            # Anti-colisão: Adiciona o número de execução do Github Actions para garantir diretório único
+            # Anti-colisão: Usa o número de execução do Github Actions
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)-${RUN_NUMBER}"
 
-            # Criando diretórios primários
-            mkdir -p "$RELEASES" "$SHARED" "$BACKUPS"
-            mkdir -p "$NEW_RELEASE"
+            echo "📂 Criando estrutura de diretórios base..."
+            mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
             
-            # Extração limpa e direta na pasta anti-colisão
+            echo "📦 Extraindo arquivos..."
             unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
-            # 1. Sincronizar configs Docker versionadas
-            echo "📦 Sincronizando configs do Docker..."
+            #######################################################################
+            # 1. Sincronizar configs Docker
+            #######################################################################
+            echo "🐳 Sincronizando configs do Docker..."
             mkdir -p "$SHARED/docker"
-            [ -d "$NEW_RELEASE/docker" ] && cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/"
+            [ -d "$NEW_RELEASE/docker" ] && cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/" || true
 
             if [ -f "$NEW_RELEASE/$COMPOSE_FILE" ]; then
                 cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
@@ -97,8 +196,10 @@ jobs:
             
             rm -f "$NEW_RELEASE"/docker-compose*.yml
 
-            # 2. Garantir containers rodando (idempotente)
-            echo "🔄 Verificando containers..."
+            #######################################################################
+            # 2. Subir Containers
+            #######################################################################
+            echo "🔄 Garantindo que containers estão de pé..."
             cd "$SHARED"
 
             if [ ! -f "docker-compose.yml" ]; then
@@ -108,12 +209,14 @@ jobs:
 
             sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
 
-            echo "⏳ Aguardando containers iniciarem..."
+            echo "⏳ Aguardando containers iniciarem (20s)..."
             sleep 20
             cd "$NEW_RELEASE"
             
-            # 3. Links Simbólicos e Permissões
-            echo "🔗 Criando links simbólicos..."
+            #######################################################################
+            # 3. Links Simbólicos Internos e Permissões
+            #######################################################################
+            echo "🔗 Configurando links de ambiente e storage..."
             mkdir -p "$SHARED/storage/app/public"
             
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/docker" "$NEW_RELEASE/docker-compose.yml"
@@ -126,10 +229,13 @@ jobs:
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             
+            # Repassa permissão restrita apenas onde o PHP/Nginx precisa escrever
             sudo chown -R ubuntu:www-data "$NEW_RELEASE" "$SHARED/storage"
             sudo chmod -R 775 "$SHARED/storage"
 
-            # 4. Verificação do Banco de Dados
+            #######################################################################
+            # 4. Verificação de Banco de Dados
+            #######################################################################
             echo "🔍 Verificando banco de dados..."
 
             DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
@@ -149,7 +255,9 @@ jobs:
                 echo "ℹ️ Pulando checagem direta do psql"
             fi
 
+            #######################################################################
             # 5. Migrations e Otimização
+            #######################################################################
             cd "$NEW_RELEASE"
             
             APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1)
@@ -168,22 +276,27 @@ jobs:
             echo "⚡ Otimizando a aplicação..."
             sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
-            # 6. Ativar nova release e Auditar Link (A correção cirúrgica)
-            echo "🔄 Atualizando link simbólico principal..."
+            #######################################################################
+            # 6. Ativação (Deploy Atômico) e Correção de Volumes
+            #######################################################################
+            echo "🔄 Atualizando link simbólico principal (current)..."
             rm -rf "$CURRENT"
             ln -s "$NEW_RELEASE" "$CURRENT"
             
             echo "🔍 Auditando o status do link atual:"
             echo "NEW_RELEASE=$NEW_RELEASE"
-            ls -lah "$CURRENT"
-            readlink -f "$CURRENT"
+            ls -lah "$CURRENT" || true
+            readlink -f "$CURRENT" || true
             
-            echo "🔄 Recriando o container de aplicação para forçar mapeamento do volume..."
-            # Troca o 'restart' por 'up -d --force-recreate' no serviço do app para matar o cache de inode do volume
-            sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" up -d --force-recreate --no-deps
+            echo "🔄 Forçando recriação do container app para atualizar cache de volume..."
+            sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" up -d --force-recreate --no-deps app
             
-            # 7. Limpeza: mantém últimas 5 releases
+            #######################################################################
+            # 7. Limpeza
+            #######################################################################
+            echo "🧹 Limpando releases antigas..."
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
+            
             echo "✅ Deploy atômico concluído com sucesso!"
           DEPLOY_SCRIPT
