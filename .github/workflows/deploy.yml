@@ -300,3 +300,4 @@ jobs:
             
             echo "✅ Deploy atômico concluído com sucesso!"
           DEPLOY_SCRIPT
+          
