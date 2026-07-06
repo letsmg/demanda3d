@@ -175,10 +175,10 @@ jobs:
             
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)-${RUN_NUMBER}"
 
-            echo "📂 Criando estrutura base (Operação via Sudo pois o ROOT é root:root)..."
+            echo "📂 Criando estrutura base..."
             sudo mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
             
-            echo "🔧 Aplicando permissões iniciais do padrão solicitado..."
+            echo "🔧 Aplicando permissões iniciais..."
             sudo chown ubuntu:www-data "$RELEASES" "$SHARED"
             sudo chown ubuntu:ubuntu "$BACKUPS"
             sudo chown ubuntu:www-data "$NEW_RELEASE"
@@ -234,7 +234,6 @@ jobs:
             ln -sfn "$SHARED/storage/app/public" "$NEW_RELEASE/public/storage"
             ln -sfn "$SHARED/bootstrap/cache" "$NEW_RELEASE/bootstrap/cache"
             
-            # Garante o padrão solicitado: releases, shared/storage e shared/bootstrap/cache como ubuntu:www-data
             sudo chown -R ubuntu:www-data "$NEW_RELEASE" "$SHARED/storage" "$SHARED/bootstrap/cache"
             sudo chmod -R 775 "$NEW_RELEASE" "$SHARED/storage" "$SHARED/bootstrap/cache"
 
@@ -245,7 +244,8 @@ jobs:
 
             DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
             
-            CONTAINER_NAME=$(sudo docker psc --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1 || sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
+            # Corrigido o erro de digitação do 'docker psc' para 'docker ps'
+            CONTAINER_NAME=$(sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
 
             if [ -f "$SHARED/.env.docker" ] && [ ! -z "$CONTAINER_NAME" ]; then
                 DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
@@ -274,6 +274,12 @@ jobs:
                 APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app 2>/dev/null)
             fi
 
+            # Nova trava de segurança para evitar comando vazio
+            if [ -z "$APP_CONTAINER" ]; then
+                echo "❌ Erro Fatal: O contêiner da aplicação correspondente a $PROJECT_NAME não foi encontrado!"
+                exit 1
+            fi
+
             echo "🚀 Rodando Migrations dentro do contêiner: $APP_CONTAINER"
             sudo docker exec -i "$APP_CONTAINER" php artisan $MIGRATION_STRATEGY --force
 
@@ -281,13 +287,11 @@ jobs:
             sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
             #######################################################################
-            # 6. Ativação (Deploy Atômico via Sudo para contornar permissão do ROOT pai)
+            # 6. Ativação (Deploy Atômico)
             #######################################################################
             echo "🔄 Atualizando link simbólico principal (current)..."
             sudo rm -rf "$CURRENT"
             sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
-            
-            # 🔥 Seta o dono do LINK SIMBÓLICO em si para o usuário ubuntu (flag -h)
             sudo chown -h ubuntu:ubuntu "$CURRENT"
             
             echo "🔍 Auditando o status do link atual:"
@@ -305,5 +309,5 @@ jobs:
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
             rm -f "/tmp/$PROJECT_NAME.zip"
             
-            echo "✅ Deploy atômico concluído com sucesso dentro do padrão estrito!"
+            echo "✅ Deploy atômico concluído com sucesso!"
           DEPLOY_SCRIPT
