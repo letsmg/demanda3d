@@ -265,26 +265,25 @@ jobs:
                   sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -tAc "SELECT 1;" > /dev/null 2>&1
               fi
 
-              # 5. Migrations (Nova lógica de identificação)
-              echo "🚀 Detectando contêiner de aplicação (serviço PHP)..."
+              # 5. Migrations
+              echo "🚀 Rodando Migrations..."
               cd "$NEW_RELEASE"
               
-              # Tenta buscar qualquer contêiner rodando no projeto que não seja banco ou redis
-              APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps --services --filter "status=running" | grep -vE "psql|redis|postgres|db" | head -1)
-              
-              # Se achou o nome do serviço, pega o ID real do contêiner
-              if [ ! -z "$APP_CONTAINER" ]; then
-                  APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q "$APP_CONTAINER" | head -1)
-              fi
+              # Tenta identificar o container pelo nome do projeto, filtrando os de infraestrutura conhecidos
+              # Isso pegará qualquer serviço que não seja banco/redis/db
+              APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps --format json | \
+                              grep -vE "psql|redis|postgres|db" | \
+                              grep -oP '"Name":"\K[^"]+' | head -1)
 
+              # Se ainda assim não achar, faz um backup listando todos para debug
               if [ -z "$APP_CONTAINER" ]; then 
-                  echo "❌ Erro: Não foi possível identificar o contêiner da aplicação."
-                  echo "Contêineres ativos no projeto:"
+                  echo "❌ Erro: Contêiner de aplicação não identificado."
+                  echo "Lista de containers ativos no projeto:"
                   sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps
                   exit 1
               fi
               
-              echo "✅ Contêiner detectado: $APP_CONTAINER"
+              echo "✅ Usando o contêiner: $APP_CONTAINER"
               sudo docker exec -i "$APP_CONTAINER" php artisan $MIGRATION_STRATEGY --force
               sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
