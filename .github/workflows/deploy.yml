@@ -265,28 +265,29 @@ jobs:
                   sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -tAc "SELECT 1;" > /dev/null 2>&1
               fi
 
-              # 5. Migrations
-              echo "🚀 Rodando Migrations..."
+              # 5. Migrations (Executando nativamente no host)
+              echo "🚀 Rodando Migrations nativamente no servidor..."
               cd "$NEW_RELEASE"
               
-              # Tenta identificar o container pelo nome do projeto, filtrando os de infraestrutura conhecidos
-              # Isso pegará qualquer serviço que não seja banco/redis/db
-              APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps --format json | \
-                              grep -vE "psql|redis|postgres|db" | \
-                              grep -oP '"Name":"\K[^"]+' | head -1)
+              # Rodar comandos PHP direto no host
+              # Certifique-se de que o usuário 'ubuntu' tenha permissão para rodar o comando php
+              php artisan $MIGRATION_STRATEGY --force
+              php artisan optimize
 
-              # Se ainda assim não achar, faz um backup listando todos para debug
-              if [ -z "$APP_CONTAINER" ]; then 
-                  echo "❌ Erro: Contêiner de aplicação não identificado."
-                  echo "Lista de containers ativos no projeto:"
-                  sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps
-                  exit 1
-              fi
+              # 6. Ativação Atômica
+              echo "🔄 Atualizando link atual..."
+              sudo rm -rf "$CURRENT"
+              sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+              sudo chown -h ubuntu:ubuntu "$CURRENT"
               
-              echo "✅ Usando o contêiner: $APP_CONTAINER"
-              sudo docker exec -i "$APP_CONTAINER" php artisan $MIGRATION_STRATEGY --force
-              sudo docker exec -i "$APP_CONTAINER" php artisan optimize
-
+              # Se você usava o supervisor ou um serviço de fila, reinicie-o aqui:
+              # sudo systemctl restart supervisor 
+              
+              # 7. Limpeza
+              echo "🧹 Limpando..."
+              cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
+              rm -f "/tmp/$PROJECT_NAME.zip"
+              echo "✅ Deploy concluído com sucesso!"
               # 6. Ativação Atômica
               echo "🔄 Atualizando link atual..."
               sudo rm -rf "$CURRENT"
