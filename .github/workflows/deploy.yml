@@ -265,11 +265,26 @@ jobs:
                   sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -tAc "SELECT 1;" > /dev/null 2>&1
               fi
 
-              # 5. Migrations
-              echo "🚀 Rodando Migrations..."
+              # 5. Migrations (Nova lógica de identificação)
+              echo "🚀 Detectando contêiner de aplicação (serviço PHP)..."
               cd "$NEW_RELEASE"
-              APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1 || sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app | head -1)
-              if [ -z "$APP_CONTAINER" ]; then echo "❌ Erro: Contêiner app não encontrado"; exit 1; fi
+              
+              # Tenta buscar qualquer contêiner rodando no projeto que não seja banco ou redis
+              APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps --services --filter "status=running" | grep -vE "psql|redis|postgres|db" | head -1)
+              
+              # Se achou o nome do serviço, pega o ID real do contêiner
+              if [ ! -z "$APP_CONTAINER" ]; then
+                  APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q "$APP_CONTAINER" | head -1)
+              fi
+
+              if [ -z "$APP_CONTAINER" ]; then 
+                  echo "❌ Erro: Não foi possível identificar o contêiner da aplicação."
+                  echo "Contêineres ativos no projeto:"
+                  sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps
+                  exit 1
+              fi
+              
+              echo "✅ Contêiner detectado: $APP_CONTAINER"
               sudo docker exec -i "$APP_CONTAINER" php artisan $MIGRATION_STRATEGY --force
               sudo docker exec -i "$APP_CONTAINER" php artisan optimize
 
