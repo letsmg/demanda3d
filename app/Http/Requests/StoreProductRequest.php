@@ -36,8 +36,8 @@ class StoreProductRequest extends FormRequest
             // IMPORTANT: google_tag_manager accepts HTML/JS - must NOT be sanitized
             'google_tag_manager' => ['nullable', 'string', 'max:10000'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
-            'categorias' => ['nullable', 'array', 'max:3'],
-            'categorias.*' => ['integer', 'exists:categorias,id'],
+            'categories' => ['nullable', 'array', 'max:3'],
+            'categories.*' => ['integer', 'exists:categories,id'],
         ];
     }
 
@@ -49,8 +49,8 @@ class StoreProductRequest extends FormRequest
             'sale_price.min' => 'O preço deve ser maior que zero.',
             'image.image' => 'O arquivo deve ser uma imagem.',
             'image.max' => 'A imagem deve ter no máximo 2MB.',
-            'categorias.max' => 'O produto pode ter no máximo 3 categorias.',
-            'categorias.*.exists' => 'Uma ou mais categorias selecionadas são inválidas.',
+            'categories.max' => 'O produto pode ter no máximo 3 categorias.',
+            'categories.*.exists' => 'Uma ou mais categorias selecionadas são inválidas.',
             'meta_title.max' => 'O meta título deve ter no máximo 120 caracteres.',
             'meta_description.max' => 'A meta descrição deve ter no máximo 320 caracteres.',
         ];

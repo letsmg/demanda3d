@@ -29,6 +29,7 @@ Route::inertia('/home', 'Dashboard')->name('home');
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
+
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
     ->middleware(['check.age'])

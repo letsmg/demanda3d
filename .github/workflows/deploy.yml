@@ -1,17 +1,22 @@
 # ==============================================================================
 # ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
 #
-# HISTÓRICO DE INFRAESTRUTURA:
-# - O pipeline utiliza 'set -Eeuo pipefail'. Qualquer falha interrompe o deploy.
+# ARQUITETURA DE INFRAESTRUTURA:
+# - Banco de Dados e Redis rodam em containers (Docker).
+# - PHP/Laravel roda NATIVAMENTE no sistema operacional (Host Ubuntu), fora de
+#   containers. NÃO ALTERE para 'docker exec' nos passos de artisan/migrations.
+# - O pipeline usa 'set -Eeuo pipefail' em todo bloco de shell. Qualquer falha
+#   interrompe o deploy (fail-fast).
 #
-# LEMBRETE DE FUNCIONAMENTO (PADRÃO):
-# - O Banco de Dados e o Redis rodam em containers (Docker).
-# - O PHP/Laravel roda NATIVAMENTE no sistema operacional (Host Ubuntu).
-# - O deploy realiza as migrations e otimizações executando 'php artisan' 
-#   diretamente no servidor, fora de containers. NÃO TENTE ALTERAR PARA 
-#   'docker exec' pois a aplicação não está conteinerizada.
+# HISTÓRICO DE CORREÇÕES RELEVANTES:
+# - Adicionado wait-loop para o Postgres antes de rodar migrations (evitava
+#   falha intermitente logo após 'docker compose up -d').
+# - chown -R agora roda DEPOIS do unzip (antes só o diretório topo recebia
+#   o dono correto, os arquivos extraídos ficavam com grupo errado).
+# - Detecção de container do banco tem fallback explícito com erro claro
+#   caso o nome não seja encontrado, em vez de pular a checagem em silêncio.
 #
-# Estes comentários servem como documentação viva para evitar que futuras 
+# Estes comentários servem como documentação viva para evitar que futuras
 # otimizações quebrem a resiliência do deploy atômico.
 # ==============================================================================
 
@@ -154,7 +159,8 @@ jobs:
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
-            MIGRATION_STRATEGY="migrate:fresh --seed"
+            #MIGRATION_STRATEGY="migrate:fresh --seed"
+            MIGRATION_STRATEGY="migrate:fresh"
             DB_CONTAINER_TARGET="demanda-psql-hom"
 
           fi
@@ -183,19 +189,34 @@ jobs:
             SHARED="$ROOT/shared"
             CURRENT="$ROOT/current"
             BACKUPS="$ROOT/backups"
-            
+
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)-${RUN_NUMBER}"
 
             echo "📂 Criando estrutura base..."
             sudo mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
-            
+
+            sudo chown -R ubuntu:ubuntu "$SHARED"
+
             echo "🔧 Aplicando permissões iniciais..."
             sudo chown ubuntu:www-data "$RELEASES" "$SHARED"
             sudo chown ubuntu:ubuntu "$BACKUPS"
             sudo chown ubuntu:www-data "$NEW_RELEASE"
 
+            #######################################################################
+            # Pré-requisito: .env compartilhado precisa existir antes do 1º deploy
+            #######################################################################
+            if [ ! -f "$SHARED/.env" ]; then
+                echo "❌ Erro: $SHARED/.env não encontrado."
+                echo "   Crie o .env compartilhado manualmente antes do primeiro deploy."
+                exit 1
+            fi
+
             echo "📦 Extraindo arquivos..."
             unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
+
+            # Corrige dono/grupo de TODO o conteúdo recém-extraído (o unzip
+            # criava arquivos com grupo do processo, não www-data).
+            sudo chown -R ubuntu:www-data "$NEW_RELEASE"
 
             #######################################################################
             # 1. Sincronizar configs Docker
@@ -207,7 +228,7 @@ jobs:
             if [ -f "$NEW_RELEASE/$COMPOSE_FILE" ]; then
                 cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
             fi
-            
+
             rm -f "$NEW_RELEASE"/docker-compose*.yml
 
             #######################################################################
@@ -217,49 +238,78 @@ jobs:
             cd "$SHARED"
 
             if [ ! -f "docker-compose.yml" ]; then
-                echo "⚠️ Erro: docker-compose.yml não encontrado em $SHARED"
+                echo "❌ Erro: docker-compose.yml não encontrado em $SHARED"
                 exit 1
             fi
 
             sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
-            
+
             cd "$NEW_RELEASE"
-            
+
             #######################################################################
             # 3. Links Simbólicos e Permissões
             #######################################################################
             echo "🔗 Configurando links de ambiente, storage e bootstrap/cache..."
-            
+
             sudo mkdir -p "$SHARED/storage/framework/cache/data"
             sudo mkdir -p "$SHARED/storage/framework/views"
             sudo mkdir -p "$SHARED/storage/framework/sessions"
             sudo mkdir -p "$SHARED/bootstrap/cache"
-            
+
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/storage" "$NEW_RELEASE/bootstrap/cache"
 
             ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/bootstrap/cache" "$NEW_RELEASE/bootstrap/cache"
-            
+
             sudo chown -R ubuntu:www-data "$SHARED/storage" "$SHARED/bootstrap/cache"
             sudo chmod -R 775 "$SHARED/storage" "$SHARED/bootstrap/cache"
-            
+
             echo "✅ Permissões aplicadas."
-            
+
             #######################################################################
-            # 4, 5, 6 e 7. Execução protegida (Migrations, Link e Limpeza)
+            # 4, 5, 6 e 7. Execução protegida (Banco, Migrations, Link e Limpeza)
             #######################################################################
             (
               set -Eeuo pipefail
-              
-              # 4. Banco
-              echo "🔍 Verificando banco de dados..."
-              DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
+
+              # 4a. Localizar container do banco
+              echo "🔍 Localizando container do banco de dados..."
               CONTAINER_NAME=$(sudo docker ps --filter "name=$DB_CONTAINER_TARGET" --format "{{.Names}}" | head -1)
-              if [ -f "$SHARED/.env.docker" ] && [ ! -z "$CONTAINER_NAME" ]; then
-                  DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
-                  sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -tAc "SELECT 1;" > /dev/null 2>&1
+
+              if [ -z "$CONTAINER_NAME" ]; then
+                  echo "❌ Erro: nenhum container encontrado com nome contendo '$DB_CONTAINER_TARGET'."
+                  echo "   Verifique se 'container_name' no compose corresponde a esse valor."
+                  exit 1
               fi
+
+              DB_USER=$(grep -oP '^DB_USERNAME=\K.*' "$SHARED/.env" | head -1 || echo "postgres")
+
+              if [ -f "$SHARED/.env.docker" ]; then
+                  DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
+              else
+                  echo "⚠️ Aviso: $SHARED/.env.docker não encontrado. Assumindo autenticação sem senha (trust/peer)."
+                  DB_PASS=""
+              fi
+
+              # 4b. Esperar o Postgres aceitar conexões (evita falha logo após 'up -d')
+              echo "⏳ Aguardando banco de dados ficar pronto..."
+              DB_READY=0
+              for i in $(seq 1 30); do
+                  if sudo docker exec -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" pg_isready -U "$DB_USER" > /dev/null 2>&1; then
+                      DB_READY=1
+                      break
+                  fi
+                  echo "   ainda não está pronto... ($i/30)"
+                  sleep 2
+              done
+
+              if [ "$DB_READY" -ne 1 ]; then
+                  echo "❌ Erro: banco de dados não respondeu a tempo."
+                  exit 1
+              fi
+
+              echo "✅ Banco de dados pronto."
 
               # 5. Migrations
               echo "🚀 Rodando Migrations nativamente no servidor..."
@@ -272,7 +322,7 @@ jobs:
               sudo rm -rf "$CURRENT"
               sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
               sudo chown -h ubuntu:ubuntu "$CURRENT"
-              
+
               # 7. Limpeza
               echo "🧹 Limpando..."
               cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true

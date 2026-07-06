@@ -25,7 +25,7 @@ class StoreDetailController extends Controller
         $product = Product::withoutGlobalScopes()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->with(['images', 'categorias', 'tenant.user'])
+            ->with(['images', 'categories', 'tenant.user'])
             ->firstOrFail();
 
         // Defesa em profundidade: validação explícita para produto adulto
@@ -56,9 +56,9 @@ class StoreDetailController extends Controller
      */
     private function getRelatedProducts(Product $product, Request $request)
     {
-        $categoriaIds = $product->categorias()->pluck('categoria_id')->toArray();
+        $categoryIds = $product->categories()->pluck('id')->toArray();
 
-        if (empty($categoriaIds)) {
+        if (empty($categoryIds)) {
             return collect();
         }
 
@@ -69,10 +69,10 @@ class StoreDetailController extends Controller
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
             ->where('id', '!=', $product->id)
-            ->whereHas('categorias', function ($q) use ($categoriaIds) {
-                $q->whereIn('categoria_id', $categoriaIds);
+            ->whereHas('categories', function ($q) use ($categoryIds) {
+                $q->whereIn('id', $categoryIds);
             })
-            ->with(['images', 'categorias'])
+            ->with(['images', 'categories'])
             ->limit(4);
 
         if (!$canViewAdult) {

@@ -3,14 +3,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Categoria;
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 
-class CategoriaSeeder extends Seeder
+class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $categorias = [
+        $categories = [
             ['name' => 'Escritório', 'slug' => 'escritorio', 'is_adult' => false],
             ['name' => 'Cozinha', 'slug' => 'cozinha', 'is_adult' => false],
             ['name' => 'Banho', 'slug' => 'banho', 'is_adult' => false],
@@ -23,8 +23,8 @@ class CategoriaSeeder extends Seeder
             ['name' => 'Automotivo', 'slug' => 'automotivo', 'is_adult' => false],
         ];
 
-        foreach ($categorias as $cat) {
-            Categoria::firstOrCreate(
+        foreach ($categories as $cat) {
+            Category::firstOrCreate(
                 ['slug' => $cat['slug']],
                 ['name' => $cat['name'], 'is_adult' => $cat['is_adult']],
             );

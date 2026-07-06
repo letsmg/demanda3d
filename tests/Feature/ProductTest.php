@@ -202,9 +202,9 @@ test('product SEO fields update correctly when name changes', function () {
 });
 
 test('product seeder generates valid schema markup and GTM', function () {
-    // Needs CategoriaSeeder first
-    $categoriaSeeder = new \Database\Seeders\CategoriaSeeder();
-    $categoriaSeeder->run();
+    // Needs CategorySeeder first
+    $categorySeeder = new \Database\Seeders\CategorySeeder();
+    $categorySeeder->run();
 
     $seeder = new \Database\Seeders\ProductSeeder();
     $seeder->run();

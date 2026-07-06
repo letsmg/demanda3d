@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Models\Category;
 use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,7 +25,7 @@ class StoreController extends Controller
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'categoria'   => 'nullable|string|exists:categories,slug',
+            'category'   => 'nullable|string|exists:categories,slug',
         ]);
 
         // Verifica se o usuário pode ver conteúdo adulto (18+)
@@ -37,16 +38,50 @@ class StoreController extends Controller
         $products = $this->productService->listActiveForStore($filters, $canViewAdult);
 
         // Filtra categorias visíveis: sem "adulto" para menores
-        $categoriasQuery = Categoria::orderBy('name');
+        $categoriesQuery = Category::orderBy('name');
         if (! $canViewAdult) {
-            $categoriasQuery->where('is_adult', false);
+            $categoriesQuery->where('is_adult', false);
         }
-        $categorias = $categoriasQuery->get(['slug', 'name']);
+        $categories = $categoriesQuery->get(['slug', 'name']);
 
         return Inertia::render('Store/Index', [
             'products'   => $products,
-            'categorias' => $categorias,
+            'categories' => $categories,
             'filters'    => $filters,
+        ]);
+    }
+
+    /**
+     * API endpoint for lazy-loading more products ("mostrar mais").
+     *
+     * Returns a JSON response with paginated products + has_more flag.
+     */
+    public function moreProducts(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'search'      => 'nullable|string|max:255',
+            'min_price'   => 'nullable|numeric|min:0',
+            'max_price'   => 'nullable|numeric|min:0',
+            'sort'        => 'nullable|in:name,sale_price,created_at',
+            'sort_dir'    => 'nullable|in:asc,desc',
+            'category'    => 'nullable|string|exists:categories,slug',
+            'page'        => 'required|integer|min:1',
+        ]);
+
+        $page = (int) ($filters['page'] ?? 1);
+        unset($filters['page']);
+
+        $canViewAdult = false;
+        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('clients')->user();
+        if ($user && method_exists($user, 'canAccessAdultContent')) {
+            $canViewAdult = $user->canAccessAdultContent();
+        }
+
+        $result = $this->productService->paginateActiveForStore($filters, $canViewAdult, $page, 8);
+
+        return response()->json([
+            'data'     => $result['data'],
+            'has_more' => $result['has_more'],
         ]);
     }
 }

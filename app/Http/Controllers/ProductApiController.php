@@ -24,7 +24,7 @@ class ProductApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['search', 'min_price', 'max_price', 'sort', 'sort_dir', 'categoria']);
+        $filters = $request->only(['search', 'min_price', 'max_price', 'sort', 'sort_dir', 'category']);
 
         /** @var \App\Models\User|null $user */
         $user = $request->user();
@@ -49,7 +49,7 @@ class ProductApiController extends Controller
     {
         $product = Product::withoutGlobalScopes()
             ->where('slug', $slug)
-            ->with(['images', 'categorias', 'tenant.user'])
+            ->with(['images', 'categories', 'tenant.user'])
             ->firstOrFail();
 
         // Validação explícita para produto adulto (defesa em profundidade)
@@ -77,9 +77,9 @@ class ProductApiController extends Controller
      */
     private function getRelatedProducts(Product $product, Request $request)
     {
-        $categoriaIds = $product->categorias()->pluck('categoria_id')->toArray();
+        $categoryIds = $product->categories()->pluck('id')->toArray();
 
-        if (empty($categoriaIds)) {
+        if (empty($categoryIds)) {
             return collect();
         }
 
@@ -90,10 +90,10 @@ class ProductApiController extends Controller
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
             ->where('id', '!=', $product->id)
-            ->whereHas('categorias', function ($q) use ($categoriaIds) {
-                $q->whereIn('categoria_id', $categoriaIds);
+            ->whereHas('categories', function ($q) use ($categoryIds) {
+                $q->whereIn('id', $categoryIds);
             })
-            ->with(['images', 'categorias'])
+            ->with(['images', 'categories'])
             ->limit(4);
 
         // Filtro de conteúdo adulto para usuários sem permissão

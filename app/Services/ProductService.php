@@ -55,16 +55,16 @@ class ProductService
     {
         $data['tenant_id'] = auth()->user()->tenant->id;
 
-        $categorias = $data['categorias'] ?? [];
-        unset($data['categorias']);
+        $categories = $data['categories'] ?? [];
+        unset($data['categories']);
 
         // Auto-generate SEO fields based on name, description and categories
         $data = $this->autoGenerateSeoFields($data, null);
 
         $product = Product::create($data);
 
-        if (!empty($categorias)) {
-            $product->categorias()->sync($categorias);
+        if (!empty($categories)) {
+            $product->categories()->sync($categories);
         }
 
         $this->syncImages($product, $data['images'] ?? []);
@@ -74,16 +74,16 @@ class ProductService
 
     public function update(Product $product, array $data): Product
     {
-        $categorias = $data['categorias'] ?? null;
-        unset($data['categorias']);
+        $categories = $data['categories'] ?? null;
+        unset($data['categories']);
 
         // Auto-generate SEO fields based on name, description and categories
         $data = $this->autoGenerateSeoFields($data, $product);
 
         $product->update($data);
 
-        if ($categorias !== null) {
-            $product->categorias()->sync($categorias);
+        if ($categories !== null) {
+            $product->categories()->sync($categories);
         }
 
         if (isset($data['images'])) {
@@ -119,7 +119,7 @@ class ProductService
         // Cache apenas quando NÃO há filtro de categoria, preço ou sort customizado
         $useCache = !empty($searchTerm) && strlen($searchTerm) >= 3
                     && empty($minPrice) && empty($maxPrice)
-                    && empty($filters['categoria'])
+                    && empty($filters['category'])
                     && $sortField === 'name' && $sortDir === 'asc';
 
         if ($useCache) {
@@ -141,7 +141,7 @@ class ProductService
                     });
                 });
             })
-            ->with(['images', 'tenant.user', 'categorias']);
+            ->with(['images', 'tenant.user', 'categories']);
 
         // Filtro de conteúdo adulto
         if (! $canViewAdult) {
@@ -164,9 +164,9 @@ class ProductService
         }
 
         // Filtro por categoria
-        if (!empty($filters['categoria'])) {
-            $query->whereHas('categorias', function ($q) use ($filters) {
-                $q->where('slug', $filters['categoria']);
+        if (!empty($filters['category'])) {
+            $query->whereHas('categories', function ($q) use ($filters) {
+                $q->where('slug', $filters['category']);
             });
         }
 
@@ -175,7 +175,7 @@ class ProductService
             $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
         }
 
-        $results = $query->get();
+        $results = $query->take(8)->get();
 
         // --- Store in cache for future searches ---
         if ($useCache && isset($cacheKey)) {
@@ -183,6 +183,79 @@ class ProductService
         }
 
         return $results;
+    }
+
+    /**
+     * Build the base query for active store products (shared by listActiveForStore and paginateActiveForStore).
+     */
+    private function buildActiveStoreQuery(array $filters = [], bool $canViewAdult = false)
+    {
+        $query = Product::withoutGlobalScopes()
+            ->where('is_active', true)
+            ->whereHas('tenant', function ($q) {
+                $q->whereHas('user', function ($sq) {
+                    $sq->whereHas('vendorCarriers', function ($vc) {
+                        $vc->where('status', 'approved');
+                    });
+                });
+            })
+            ->with(['images', 'tenant.user', 'categories']);
+
+        if (! $canViewAdult) {
+            $query->withoutAdultCategories();
+        }
+
+        $searchTerm = $filters['search'] ?? '';
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', "%{$searchTerm}%")
+                  ->orWhere('description', 'ilike', "%{$searchTerm}%");
+            });
+        }
+
+        if (!empty($filters['min_price'])) {
+            $query->where('sale_price', '>=', (float) $filters['min_price']);
+        }
+
+        if (!empty($filters['max_price'])) {
+            $query->where('sale_price', '<=', (float) $filters['max_price']);
+        }
+
+        if (!empty($filters['category'])) {
+            $query->whereHas('categories', function ($q) use ($filters) {
+                $q->where('slug', $filters['category']);
+            });
+        }
+
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
+        }
+
+        return $query;
+    }
+
+    /**
+     * Paginate active products for the store API (lazy loading / "mostrar mais").
+     *
+     * @return array{data: \Illuminate\Database\Eloquent\Collection, has_more: bool, total: int}
+     */
+    public function paginateActiveForStore(array $filters = [], bool $canViewAdult = false, int $page = 1, int $perPage = 10): array
+    {
+        $query = $this->buildActiveStoreQuery($filters, $canViewAdult);
+
+        $total = (clone $query)->count();
+        $offset = ($page - 1) * $perPage;
+
+        $results = $query->skip($offset)->take($perPage)->get();
+
+        return [
+            'data' => $results,
+            'has_more' => ($offset + $perPage) < $total,
+            'total' => $total,
+        ];
     }
 
     /**
@@ -196,11 +269,11 @@ class ProductService
         $maxPrice = $filters['max_price'] ?? null;
         $sortField = $filters['sort'] ?? 'name';
         $sortDir = $filters['sort_dir'] ?? 'asc';
-        $categoriaSlug = $filters['categoria'] ?? null;
+        $categorySlug = $filters['category'] ?? null;
 
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
-            ->with(['images', 'categorias']);
+            ->with(['images', 'categories']);
 
         // Filtro de conteúdo adulto
         if (!$canViewAdult) {
@@ -222,9 +295,9 @@ class ProductService
             $query->where('sale_price', '<=', (float) $maxPrice);
         }
 
-        if (!empty($categoriaSlug)) {
-            $query->whereHas('categorias', function ($q) use ($categoriaSlug) {
-                $q->where('slug', $categoriaSlug);
+        if (!empty($categorySlug)) {
+            $query->whereHas('categories', function ($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug);
             });
         }
 
@@ -244,7 +317,7 @@ class ProductService
      */
     public function shouldSkipImageModeration(Product $product): bool
     {
-        return $product->categorias()->where('slug', 'adulto')->exists();
+        return $product->categories()->where('slug', 'adulto')->exists();
     }
 
     /**
@@ -264,16 +337,16 @@ class ProductService
         $description = $data['description'] ?? ($existing?->description ?? '');
 
         // Resolve categorias: prioriza as enviadas no form, depois as existentes no model
-        $categoriaIds = $data['categorias'] ?? null;
-        $categoriaNames = [];
+        $categoryIds = $data['categories'] ?? null;
+        $categoryNames = [];
 
-        if ($categoriaIds !== null && is_array($categoriaIds)) {
-            $categoriaNames = \App\Models\Categoria::whereIn('id', $categoriaIds)->pluck('name')->toArray();
+        if ($categoryIds !== null && is_array($categoryIds)) {
+            $categoryNames = \App\Models\Category::whereIn('id', $categoryIds)->pluck('name')->toArray();
         } elseif ($existing) {
-            $categoriaNames = $existing->categorias()->pluck('name')->toArray();
+            $categoryNames = $existing->categories()->pluck('name')->toArray();
         }
 
-        $categoriaString = implode(', ', $categoriaNames);
+        $categoryString = implode(', ', $categoryNames);
 
         // Helper: determina se o campo deve ser auto-gerado
         $shouldGenerate = function (string $field) use ($data, $existing): bool {
@@ -303,7 +376,7 @@ class ProductService
 
         // meta_keywords: gera a partir do nome + categorias
         if ($shouldGenerate('meta_keywords')) {
-            $keywords = $this->generateKeywords($name, $categoriaString, $data);
+            $keywords = $this->generateKeywords($name, $categoryString, $data);
             $data['meta_keywords'] = mb_substr($keywords, 0, 255);
         }
 
@@ -316,7 +389,7 @@ class ProductService
 
         // schema_markup: gera JSON-LD Product estruturado
         if ($shouldGenerate('schema_markup')) {
-            $data['schema_markup'] = $this->generateSchemaMarkup($data, $existing, $categoriaString);
+            $data['schema_markup'] = $this->generateSchemaMarkup($data, $existing, $categoryString);
         }
 
         // google_tag_manager: gera script GTM com dataLayer para o produto
@@ -332,7 +405,7 @@ class ProductService
      * Extrai palavras significativas, combina com a categoria e adiciona
      * termos de cauda longa relevantes para impressão 3D.
      */
-    private function generateKeywords(string $name, string $categoriaString, array $data = []): string
+    private function generateKeywords(string $name, string $categoryString, array $data = []): string
     {
         $keywords = [];
 
@@ -349,8 +422,8 @@ class ProductService
         $keywords[] = strtolower(trim($name));
 
         // Adiciona categorias
-        if (!empty($categoriaString)) {
-            foreach (explode(', ', strtolower($categoriaString)) as $cat) {
+        if (!empty($categoryString)) {
+            foreach (explode(', ', strtolower($categoryString)) as $cat) {
                 $keywords[] = trim($cat);
                 $keywords[] = trim($cat) . ' impressão 3d';
             }
@@ -386,7 +459,7 @@ class ProductService
      * Inclui: nome, descrição, imagem, preço, disponibilidade, categorias,
      * marca (tenant), SKU e dimensões quando disponíveis.
      */
-    private function generateSchemaMarkup(array $data, ?Product $existing, string $categoriaString): string
+    private function generateSchemaMarkup(array $data, ?Product $existing, string $categoryString): string
     {
         $name = $data['name'] ?? ($existing?->name ?? 'Produto');
         $description = trim(strip_tags($data['description'] ?? ($existing?->description ?? '')));
@@ -429,8 +502,8 @@ class ProductService
             ];
         }
 
-        if (!empty($categoriaString)) {
-            $schema['category'] = $categoriaString;
+        if (!empty($categoryString)) {
+            $schema['category'] = $categoryString;
         }
 
         // Adiciona dimensões se disponíveis
@@ -537,10 +610,10 @@ HTML;
 
                     // Se conteúdo adulto detectado, vincula à categoria 'adulto'
                     if ($moderationResult['adult_category_id']) {
-                        $currentCategorias = $product->categorias()->pluck('categoria_id')->toArray();
-                        if (!in_array($moderationResult['adult_category_id'], $currentCategorias, true)) {
-                            $currentCategorias[] = $moderationResult['adult_category_id'];
-                            $product->categorias()->sync($currentCategorias);
+                        $currentCategories = $product->categories()->pluck('id')->toArray();
+                        if (!in_array($moderationResult['adult_category_id'], $currentCategories, true)) {
+                            $currentCategories[] = $moderationResult['adult_category_id'];
+                            $product->categories()->sync($currentCategories);
                             Log::info('Categoria adulto vinculada automaticamente via moderação.', [
                                 'product_id' => $product->id,
                             ]);

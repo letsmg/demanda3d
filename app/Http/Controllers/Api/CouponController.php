@@ -54,7 +54,7 @@ class CouponController extends Controller
             }
             // Cupom de categoria específica: só aplica se o produto pertence à categoria
             if ($coupon->category_id !== null) {
-                $productCategories = $item->product->categories()->pluck('categoria_id')->toArray();
+                $productCategories = $item->product->categories()->pluck('id')->toArray();
                 if (! in_array($coupon->category_id, $productCategories)) {
                     return false;
                 }
