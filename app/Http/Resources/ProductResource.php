@@ -61,8 +61,8 @@ class ProductResource extends JsonResource
                     'order' => $img->order,
                 ]);
             }),
-            'categorias' => $this->whenLoaded('categorias', function () {
-                return $this->categorias->map(fn ($cat) => [
+            'categories' => $this->whenLoaded('categories', function () {
+                return $this->categories->map(fn ($cat) => [
                     'id' => $cat->id,
                     'name' => $cat->name,
                     'slug' => $cat->slug,

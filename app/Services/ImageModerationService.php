@@ -4,7 +4,7 @@
 namespace App\Services;
 
 use App\Enums\ModerationRiskCategory;
-use App\Models\Categoria;
+use App\Models\Category;
 use App\Models\Product;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Google\Cloud\Vision\V1\Image as VisionImage;
@@ -33,7 +33,7 @@ class ImageModerationService
     public function analyze(UploadedFile $image, ?Product $product = null): array
     {
         // Se o produto já está na categoria 'adulto', ignora moderação SafeSearch
-        if ($product && $product->categorias()->where('slug', 'adulto')->exists()) {
+        if ($product && $product->categories()->where('slug', 'adulto')->exists()) {
             Log::info('Moderação ignorada: produto já está na categoria adulto.', [
                 'product_id' => $product->id,
             ]);
@@ -99,12 +99,12 @@ class ImageModerationService
         // Se conteúdo adulto detectado, obtém o ID da categoria 'adulto'
         $adultCategoryId = null;
         if ($result['category'] === ModerationRiskCategory::ADULT) {
-            $adultCategory = Categoria::where('slug', 'adulto')->first();
+            $adultCategory = Category::where('slug', 'adulto')->first();
             $adultCategoryId = $adultCategory?->id;
 
             Log::info('Conteúdo adulto detectado — vinculando à categoria adulto.', [
                 'product_id' => $product?->id,
-                'categoria_id' => $adultCategoryId,
+                'category_id' => $adultCategoryId,
             ]);
         }
 

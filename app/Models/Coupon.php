@@ -34,7 +34,7 @@ class Coupon extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Category::class);
     }
 
     /**

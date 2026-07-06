@@ -87,9 +87,9 @@ class Product extends Model
         return $this->images()->first();
     }
 
-    public function categorias(): BelongsToMany
+    public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Categoria::class, 'category_product', 'product_id', 'category_id')
+        return $this->belongsToMany(Category::class, 'category_product', 'product_id', 'category_id')
             ->withTimestamps();
     }
 
@@ -98,7 +98,7 @@ class Product extends Model
      */
     public function hasAdultContent(): bool
     {
-        return $this->categorias()->whereAdultContent()->exists();
+        return $this->categories()->whereAdultContent()->exists();
     }
 
     /**
@@ -106,7 +106,7 @@ class Product extends Model
      */
     public function scopeWhereHasAdultCategories($query)
     {
-        return $query->whereHas('categorias', function ($q) {
+        return $query->whereHas('categories', function ($q) {
             $q->whereAdultContent();
         });
     }
@@ -116,7 +116,7 @@ class Product extends Model
      */
     public function scopeWithoutAdultCategories($query)
     {
-        return $query->whereDoesntHave('categorias', function ($q) {
+        return $query->whereDoesntHave('categories', function ($q) {
             $q->whereAdultContent();
         });
     }

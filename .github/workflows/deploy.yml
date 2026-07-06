@@ -188,7 +188,9 @@ jobs:
 
             echo "📂 Criando estrutura base..."
             sudo mkdir -p "$RELEASES" "$SHARED" "$BACKUPS" "$NEW_RELEASE"
-            
+                        
+            sudo chown -R ubuntu:ubuntu "$SHARED"            
+
             echo "🔧 Aplicando permissões iniciais..."
             sudo chown ubuntu:www-data "$RELEASES" "$SHARED"
             sudo chown ubuntu:ubuntu "$BACKUPS"

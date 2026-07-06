@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Categoria;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Tenant;
@@ -29,7 +29,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Suporte para smartphone ABS',
                 'description' => 'Suporte universal para smartphone, compatível com modelos de 4 a 7 polegadas. Fabricado em ABS de alta resistência.',
-                'categorias' => ['escritorio', 'utilitarios'],
+                'categories' => ['escritorio', 'utilitarios'],
                 'height' => 80, 'width' => 60, 'approximate_weight' => 45, 'waste_weight' => 8,
                 'material_type' => 'filament', 'print_time' => 120, 'pieces_produced' => 4,
                 'maintenance_fee' => 3.50, 'painting_time' => null, 'painting_material' => null,
@@ -41,7 +41,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Porta-chaves personalizado PLA',
                 'description' => 'Porta-chaves impresso em PLA com design personalizável.',
-                'categorias' => ['decorativo', 'utilitarios', 'personagens'],
+                'categories' => ['decorativo', 'utilitarios', 'personagens'],
                 'height' => 50, 'width' => 30, 'approximate_weight' => 15, 'waste_weight' => 5,
                 'material_type' => 'filament', 'print_time' => 45, 'pieces_produced' => 10,
                 'maintenance_fee' => 1.20, 'painting_time' => 20, 'painting_material' => 'Tinta acrílica',
@@ -53,7 +53,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Organizador de mesa PETG',
                 'description' => 'Organizador modular para mesa de escritório.',
-                'categorias' => ['escritorio', 'utilitarios'],
+                'categories' => ['escritorio', 'utilitarios'],
                 'height' => 120, 'width' => 180, 'approximate_weight' => 200, 'waste_weight' => 25,
                 'material_type' => 'filament', 'print_time' => 480, 'pieces_produced' => 1,
                 'maintenance_fee' => 12.00, 'painting_time' => null, 'painting_material' => null,
@@ -65,7 +65,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Vaso decorativo geométrico PLA',
                 'description' => 'Vaso com design geométrico moderno para decoração.',
-                'categorias' => ['decorativo', 'cozinha'],
+                'categories' => ['decorativo', 'cozinha'],
                 'height' => 150, 'width' => 100, 'approximate_weight' => 120, 'waste_weight' => 15,
                 'material_type' => 'filament', 'print_time' => 360, 'pieces_produced' => 1,
                 'maintenance_fee' => 8.00, 'painting_time' => 30, 'painting_material' => 'Spray primer',
@@ -77,7 +77,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Engrenagem para protótipo funcional',
                 'description' => 'Engrenagem industrial em Nylon reforçado para prototipagem rápida.',
-                'categorias' => ['automotivo', 'utilitarios'],
+                'categories' => ['automotivo', 'utilitarios'],
                 'height' => 40, 'width' => 40, 'approximate_weight' => 25, 'waste_weight' => 10,
                 'material_type' => 'filament', 'print_time' => 90, 'pieces_produced' => 6,
                 'maintenance_fee' => 5.50, 'painting_time' => null, 'painting_material' => null,
@@ -125,10 +125,10 @@ class ProductSeeder extends Seeder
                         'google_tag_manager' => $this->generateGtmScript($pd),
                     ]);
 
-                    $slugs = $pd['categorias'] ?? [];
+                    $slugs = $pd['categories'] ?? [];
                     if ($slugs) {
-                        $ids = Categoria::whereIn('slug', $slugs)->pluck('id')->toArray();
-                        if ($ids) { $product->categorias()->sync($ids); }
+                        $ids = Category::whereIn('slug', $slugs)->pluck('id')->toArray();
+                        if ($ids) { $product->categories()->sync($ids); }
                     }
 
                     $this->command?->line("    ✓ Produto criado: {$product->name}");
@@ -177,8 +177,8 @@ class ProductSeeder extends Seeder
             if ($pd['approximate_weight']) { $schema['additionalProperty'][] = ['@type' => 'PropertyValue', 'name' => 'Peso', 'value' => $pd['approximate_weight'] . ' g']; }
         }
 
-        if (! empty($pd['categorias'])) {
-            $names = Categoria::whereIn('slug', $pd['categorias'])->pluck('name')->toArray();
+        if (! empty($pd['categories'])) {
+            $names = Category::whereIn('slug', $pd['categories'])->pluck('name')->toArray();
             if ($names) { $schema['category'] = implode(', ', $names); }
         }
 

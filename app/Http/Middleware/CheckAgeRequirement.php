@@ -31,7 +31,7 @@ class CheckAgeRequirement
             if ($slug) {
                 $product = Product::withoutGlobalScopes()
                     ->where('slug', $slug)
-                    ->with('categorias')
+                    ->with('categories')
                     ->first();
             }
         }

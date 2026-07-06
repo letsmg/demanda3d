@@ -45,18 +45,18 @@ defineOptions({
 
 const props = defineProps<{
     products: any[];
-    categorias: Array<{ slug: string; name: string }>;
+    categories: Array<{ slug: string; name: string }>;
     filters: {
         search?: string;
         min_price?: number;
         max_price?: number;
         sort?: string;
         sort_dir?: string;
-        categoria?: string;
+        category?: string;
     };
 }>();
 
-const activeCategoria = ref(props.filters.categoria || '');
+const activeCategory = ref(props.filters.category || '');
 
 const page = usePage();
 const authClient = computed(() => (page.props as any).auth_client?.user);
@@ -258,8 +258,8 @@ function applyFilters(): void {
     if (maxPrice.value) {
         params.max_price = maxPrice.value;
     }
-    if (activeCategoria.value) {
-        params.categoria = activeCategoria.value;
+    if (activeCategory.value) {
+        params.category = activeCategory.value;
     }
     params.sort = sort.value;
     params.sort_dir = sortDir.value;
@@ -440,17 +440,17 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                     <label class="text-sm font-medium text-amber-700">Categorias:</label>
                     <button
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="!activeCategoria ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
-                        @click="activeCategoria = ''; applyFilters()"
+                        :class="!activeCategory ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        @click="activeCategory = ''; applyFilters()"
                     >
                         Todas
                     </button>
                     <button
-                        v-for="cat in props.categorias"
+                        v-for="cat in props.categories"
                         :key="cat.slug"
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="activeCategoria === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
-                        @click="activeCategoria = cat.slug; applyFilters()"
+                        :class="activeCategory === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        @click="activeCategory = cat.slug; applyFilters()"
                     >
                         {{ cat.name }}
                     </button>

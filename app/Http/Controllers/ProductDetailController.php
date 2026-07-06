@@ -26,7 +26,7 @@ class ProductDetailController extends Controller
     {
         $product = Product::withoutGlobalScopes()
             ->where('slug', $slug)
-            ->with(['images', 'categorias', 'tenant.user'])
+            ->with(['images', 'categories', 'tenant.user'])
             ->firstOrFail();
 
         // Defesa em profundidade: validação explícita para produto adulto

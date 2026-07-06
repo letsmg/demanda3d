@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Ordem: Users → LegalDocuments → Categorias → SeoSettings → Suppliers → Clients → Products → Inputs → Orders → Threads → Messages → Disputes
+     * Ordem: Users → LegalDocuments → Categories → SeoSettings → Suppliers → Clients → Products → Inputs → Orders → Threads → Messages → Disputes
      */
     public function run(): void
     {
@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             LegalDocumentSeeder::class,
             StateSeeder::class,
-            CategoriaSeeder::class,
+            CategorySeeder::class,
             SeoSettingSeeder::class,
             SupplierSeeder::class,
             ClientSeeder::class,

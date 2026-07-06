@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Models\Category;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,7 +24,7 @@ class StoreController extends Controller
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'categoria'   => 'nullable|string|exists:categories,slug',
+            'category'   => 'nullable|string|exists:categories,slug',
         ]);
 
         // Verifica se o usuário pode ver conteúdo adulto (18+)
@@ -37,15 +37,15 @@ class StoreController extends Controller
         $products = $this->productService->listActiveForStore($filters, $canViewAdult);
 
         // Filtra categorias visíveis: sem "adulto" para menores
-        $categoriasQuery = Categoria::orderBy('name');
+        $categoriesQuery = Category::orderBy('name');
         if (! $canViewAdult) {
-            $categoriasQuery->where('is_adult', false);
+            $categoriesQuery->where('is_adult', false);
         }
-        $categorias = $categoriasQuery->get(['slug', 'name']);
+        $categories = $categoriesQuery->get(['slug', 'name']);
 
         return Inertia::render('Store/Index', [
             'products'   => $products,
-            'categorias' => $categorias,
+            'categories' => $categories,
             'filters'    => $filters,
         ]);
     }

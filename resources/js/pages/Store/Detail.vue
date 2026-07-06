@@ -359,16 +359,16 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     <!-- Categorias -->
                     <div
                         v-if="
-                            product.categorias && product.categorias.length > 0
+                            product.categories && product.categories.length > 0
                         "
                         class="flex flex-wrap gap-2"
                     >
                         <span
-                            v-for="cat in product.categorias"
+                            v-for="cat in product.categories"
                             :key="cat.id"
                             class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
                         >
-                            {{ cat.nome }}
+                            {{ cat.name }}
                         </span>
                     </div>
 
