@@ -10,6 +10,7 @@ on:
   push:
     # Monitora as duas branches para isolar os ambientes automaticamente
     branches: [main, hom]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
