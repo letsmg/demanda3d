@@ -1,7 +1,17 @@
 # ==============================================================================
 # ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
-# Eles servem como documentação viva para o portfólio e explicam decisões técnicas
-# complexas de infraestrutura que evitam a quebra do pipeline em atualizações futuras.
+#
+# HISTÓRICO DE INFRAESTRUTURA:
+# - O pipeline utiliza 'set -Eeuo pipefail'. Qualquer comando que retorne falha (exit 1) 
+#   interrompe o deploy imediatamente.
+# - Problema Crítico Corrigido: O comando 'docker compose ps -q app' em ambientes em 
+#   início de execução retornava vazio/erro, disparando o 'pipefail' e encerrando 
+#   o script prematuramente.
+# - Solução Aplicada: Adicionado fallback seguro com '|| echo ""' e travas de 
+#   segurança que validam a existência do contêiner antes de prosseguir.
+#
+# Estes comentários servem como documentação viva para evitar que futuras 
+# otimizações quebrem a resiliência do deploy atômico.
 # ==============================================================================
 
 name: 🚀 Deploy Demanda3D
@@ -250,10 +260,10 @@ jobs:
                 DB_PASS=$(grep -oP '^POSTGRES_PASSWORD=\K.*' "$SHARED/.env.docker" | head -1)
                 
                 echo "⏳ Validando conexões no contêiner $CONTAINER_NAME..."
-                # Executado em subshell isolada para evitar fechamento precoce do terminal
-                (sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+                # Execução direta sem subshell para manter o fluxo do pipe
+                sudo docker exec -i -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
                   psql -U "$DB_USER" -d postgres -tAc \
-                  "SELECT usename FROM pg_user WHERE usename = '$DB_USER';" || echo "db_ok") || true
+                  "SELECT 1;" > /dev/null 2>&1 && echo "✅ Banco conectado com sucesso." || echo "⚠️ Aviso: não foi possível validar conexão, seguindo..."
             else
                 echo "ℹ️ Pulando checagem direta do psql"
             fi
