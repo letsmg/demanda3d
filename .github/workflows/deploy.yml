@@ -76,8 +76,12 @@ jobs:
             BACKUPS="$ROOT/backups"
             NEW_RELEASE="$RELEASES/$(date +%Y%m%d%H%M%S)"
 
-            sudo mkdir -p "$NEW_RELEASE" "$SHARED" "$BACKUPS"
-            sudo unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
+            sudo mkdir -p "$RELEASES" "$SHARED" "$BACKUPS"
+            sudo mkdir -p "$NEW_RELEASE"
+            
+            # Ajuste de permissão pré-unzip para garantir que os arquivos novos de migrations físicos substituam os antigos sem negação de escrita
+            sudo chown -R ubuntu:ubuntu "$NEW_RELEASE"
+            unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
             # 1. Sincronizar configs Docker versionadas (compose e scripts init)
             echo "📦 Sincronizando configs do Docker..."
@@ -161,7 +165,12 @@ jobs:
             # Identifica dinamicamente o nome do contêiner da aplicação que está rodando
             APP_CONTAINER=$(sudo docker ps --filter "name=${PROJECT_NAME}-app" --format "{{.Names}}" | head -1)
             
-            # Se não achar pelo filtro específico, busca pelo padrão do compose no diretório shared
+            # Se for produção (main) e usar nomenclatura alternativa sem o sufixo '3d', busca defensiva:
+            if [ -z "$APP_CONTAINER" ] && [ "$PROJECT_NAME" = "demanda3d" ]; then
+                APP_CONTAINER=$(sudo docker ps --filter "name=demanda-app-prod" --format "{{.Names}}" | head -1)
+            fi
+
+            # Se não achar pelos filtros específicos, busca pelo padrão do compose mapeado no diretório shared
             if [ -z "$APP_CONTAINER" ]; then
                 APP_CONTAINER=$(sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" ps -q app 2>/dev/null)
             fi
@@ -175,7 +184,10 @@ jobs:
             # 6. Ativar nova release
             sudo rm -f "$CURRENT"
             sudo ln -nfs "$NEW_RELEASE" "$CURRENT"
-            sudo systemctl reload php8.5-fpm
+            
+            # Recarrega o PHP-FPM isolado internamente dentro do container da aplicação ativa para propagar os links atômicos
+            echo "🔄 Recarregando cache do container de aplicação..."
+            sudo docker restart "$APP_CONTAINER"
 
             # 7. Limpeza: mantém últimas 5 releases
             cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' sudo rm -rf -- || true
