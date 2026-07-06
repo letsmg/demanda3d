@@ -186,6 +186,79 @@ class ProductService
     }
 
     /**
+     * Build the base query for active store products (shared by listActiveForStore and paginateActiveForStore).
+     */
+    private function buildActiveStoreQuery(array $filters = [], bool $canViewAdult = false)
+    {
+        $query = Product::withoutGlobalScopes()
+            ->where('is_active', true)
+            ->whereHas('tenant', function ($q) {
+                $q->whereHas('user', function ($sq) {
+                    $sq->whereHas('vendorCarriers', function ($vc) {
+                        $vc->where('status', 'approved');
+                    });
+                });
+            })
+            ->with(['images', 'tenant.user', 'categories']);
+
+        if (! $canViewAdult) {
+            $query->withoutAdultCategories();
+        }
+
+        $searchTerm = $filters['search'] ?? '';
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', "%{$searchTerm}%")
+                  ->orWhere('description', 'ilike', "%{$searchTerm}%");
+            });
+        }
+
+        if (!empty($filters['min_price'])) {
+            $query->where('sale_price', '>=', (float) $filters['min_price']);
+        }
+
+        if (!empty($filters['max_price'])) {
+            $query->where('sale_price', '<=', (float) $filters['max_price']);
+        }
+
+        if (!empty($filters['category'])) {
+            $query->whereHas('categories', function ($q) use ($filters) {
+                $q->where('slug', $filters['category']);
+            });
+        }
+
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+        $allowedSorts = ['name', 'sale_price', 'created_at'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
+        }
+
+        return $query;
+    }
+
+    /**
+     * Paginate active products for the store API (lazy loading / "mostrar mais").
+     *
+     * @return array{data: \Illuminate\Database\Eloquent\Collection, has_more: bool, total: int}
+     */
+    public function paginateActiveForStore(array $filters = [], bool $canViewAdult = false, int $page = 1, int $perPage = 10): array
+    {
+        $query = $this->buildActiveStoreQuery($filters, $canViewAdult);
+
+        $total = (clone $query)->count();
+        $offset = ($page - 1) * $perPage;
+
+        $results = $query->skip($offset)->take($perPage)->get();
+
+        return [
+            'data' => $results,
+            'has_more' => ($offset + $perPage) < $total,
+            'total' => $total,
+        ];
+    }
+
+    /**
      * Lista produtos ativos para a API pública.
      * Aplica filtro de conteúdo adulto baseado na permissão do usuário.
      */

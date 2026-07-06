@@ -61,6 +61,51 @@ const activeCategory = ref(props.filters.category || '');
 const page = usePage();
 const authClient = computed(() => (page.props as any).auth_client?.user);
 
+// ============================================================
+// Lazy loading state ("Mostrar mais")
+// ============================================================
+const products = ref<any[]>([...props.products]);
+const hasMoreProducts = ref(props.products.length >= 10);
+const currentPage = ref(1);
+const loadingMore = ref(false);
+
+function resetProducts(): void {
+    products.value = [...props.products];
+    hasMoreProducts.value = props.products.length >= 10;
+    currentPage.value = 1;
+}
+
+async function loadMore(): Promise<void> {
+    if (loadingMore.value || !hasMoreProducts.value) return;
+
+    loadingMore.value = true;
+    const nextPage = currentPage.value + 1;
+
+    try {
+        const params = new URLSearchParams();
+        params.set('page', String(nextPage));
+        if (search.value) params.set('search', search.value);
+        if (minPrice.value) params.set('min_price', minPrice.value);
+        if (maxPrice.value) params.set('max_price', maxPrice.value);
+        if (activeCategory.value) params.set('category', activeCategory.value);
+        params.set('sort', sort.value);
+        params.set('sort_dir', sortDir.value);
+
+        const res = await fetch(`/store/products?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+
+        if (res.ok) {
+            const json = await res.json();
+            products.value.push(...json.data);
+            hasMoreProducts.value = json.has_more;
+            currentPage.value = nextPage;
+        }
+    } finally {
+        loadingMore.value = false;
+    }
+}
+
 // Search & filter state
 const search = ref(props.filters.search || '');
 const minPrice = ref(props.filters.min_price?.toString() || '');
@@ -69,6 +114,16 @@ const sort = ref(props.filters.sort || 'name');
 const sortDir = ref(props.filters.sort_dir || 'asc');
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Watch for prop changes (Inertia re-navigation on filter change)
+watch(
+    () => props.products,
+    (newProducts) => {
+        products.value = [...newProducts];
+        hasMoreProducts.value = newProducts.length >= 10;
+        currentPage.value = 1;
+    }
+);
 
 watch(search, (newVal) => {
     if (searchTimeout) {
@@ -630,6 +685,29 @@ const getImageUrl = (product: any, index: number = 0): string | undefined => {
                         </Button>
                     </CardFooter>
                 </Card>
+            </div>
+
+            <!-- "Mostrar mais" button -->
+            <div
+                v-if="hasMoreProducts"
+                class="mt-8 flex justify-center pb-8"
+            >
+                <Button
+                    variant="outline"
+                    size="lg"
+                    class="border-amber-300 text-amber-700 hover:bg-amber-50"
+                    :disabled="loadingMore"
+                    @click="loadMore"
+                >
+                    <span v-if="loadingMore" class="flex items-center gap-2">
+                        <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Carregando...
+                    </span>
+                    <span v-else>Mostrar mais</span>
+                </Button>
             </div>
         </main>
 
