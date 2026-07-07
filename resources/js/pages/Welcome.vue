@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { ShoppingBag } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +10,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { ShoppingBag } from '@lucide/vue';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
 import { dashboard, login, register } from '@/routes';
 
@@ -30,15 +30,20 @@ const stats = computed(
 );
 
 // Background images from storage/imgs/home (served via public/storage symlink)
+// Atualizado automaticamente pelo pipeline de otimização
 const heroImages = [
-    '/storage/imgs/home/1.webp',
-    '/storage/imgs/home/2.webp',
     '/storage/imgs/home/3.webp',
     '/storage/imgs/home/4.webp',
     '/storage/imgs/home/5.webp',
     '/storage/imgs/home/6.webp',
     '/storage/imgs/home/7.webp',
     '/storage/imgs/home/8.webp',
+    '/storage/imgs/home/felicia.webp',
+    '/storage/imgs/home/felicia2.webp',
+    '/storage/imgs/home/jax-f5.webp',
+    '/storage/imgs/home/impressao-3d-2.webp',
+    '/storage/imgs/home/jhonn-kelly-ryu-wip-5.webp',
+    '/storage/imgs/home/G_001-10.webp',
 ];
 
 const currentImageIndex = ref(0);
@@ -52,7 +57,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    if (imageInterval) clearInterval(imageInterval);
+    if (imageInterval) {
+        clearInterval(imageInterval);
+    }
 });
 
 const features = [
