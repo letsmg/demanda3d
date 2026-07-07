@@ -63,3 +63,11 @@ storage/debugbar/
 /resources/js/routes/
 gcloud-api-7bbd403db8e7*
 public/fonts*
+
+# Pipeline de otimização de imagens
+# Originais não versionados (apenas .gitkeep para manter a estrutura)
+/storage/app/public/imgs/originais/*
+!/storage/app/public/imgs/originais/.gitkeep
+# Home também é derivada de originais e não deve ser versionada
+/storage/app/public/imgs/home/*
+!/storage/app/public/imgs/home/.gitkeep

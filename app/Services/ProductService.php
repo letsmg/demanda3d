@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductImage;
-use App\Services\ImageModerationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -13,11 +12,14 @@ use Illuminate\Support\Facades\Storage;
 class ProductService
 {
     private readonly ImageModerationService $imageModerationService;
+    private readonly ImageOptimizationService $imageOptimizationService;
 
     public function __construct(
         ?ImageModerationService $imageModerationService = null,
+        ?ImageOptimizationService $imageOptimizationService = null,
     ) {
         $this->imageModerationService = $imageModerationService ?? app(ImageModerationService::class);
+        $this->imageOptimizationService = $imageOptimizationService ?? app(ImageOptimizationService::class);
     }
 
     public function list(int $perPage = 15, array $filters = [])
@@ -95,9 +97,12 @@ class ProductService
 
     public function delete(Product $product): bool
     {
-        // Delete all images
+        // Delete all images (both optimized and original)
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->path);
+            if ($image->original_path) {
+                Storage::disk('public')->delete($image->original_path);
+            }
             $image->delete();
         }
 
@@ -579,8 +584,13 @@ HTML;
     }
 
     /**
-     * Sync product images: delete removed ones, upload new ones.
-     * Integra moderação inteligente de imagem via ImageModerationService.
+     * Sincroniza imagens do produto: remove excluídas, faz upload das novas com
+     * pipeline de otimização (original + versão otimizada).
+     *
+     * Fluxo completo por imagem:
+     * 1. Moderação inteligente (ImageModerationService)
+     * 2. Pipeline de otimização (ImageOptimizationService): salva original + otimizado
+     * 3. Persiste no banco apenas o path relativo do otimizado + referência ao original
      *
      * @throws \RuntimeException Se conteúdo ilegal for detectado (422).
      */
@@ -597,10 +607,17 @@ HTML;
             return;
         }
 
+        // Garante que os diretórios do pipeline existem
+        $this->imageOptimizationService->ensureDirectories();
+
         foreach ($images as $image) {
             if ($image instanceof UploadedFile && $order < $remainingSlots) {
-                // Validate max size (4MB)
-                if ($image->getSize() > 4 * 1024 * 1024) {
+                // Validate max size (2MB para ficar consistente com a Form Request)
+                if ($image->getSize() > 2 * 1024 * 1024) {
+                    Log::warning('Imagem excede 2MB, ignorada no syncImages.', [
+                        'product_id' => $product->id,
+                        'size' => $image->getSize(),
+                    ]);
                     continue;
                 }
 
@@ -622,7 +639,6 @@ HTML;
 
                     // Se classificação incerta, marca produto como pendente de revisão
                     if ($moderationResult['status'] === 'approved' && str_contains($moderationResult['category']->value, 'safe')) {
-                        // Verifica se houve incerteza na classificação
                         if (str_contains($product->moderation_status ?? '', 'pending')) {
                             $product->update(['moderation_status' => 'pending_review']);
                         }
@@ -632,14 +648,23 @@ HTML;
                     throw $e;
                 }
 
-                $path = $image->store("imgs/products/{$product->tenant_id}", 'public');
+                // Pipeline de otimização: salva original + versão otimizada
+                $result = $this->imageOptimizationService->processUpload($image);
 
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'path' => $path,
+                    'path' => $result['optimized_path'],
+                    'original_path' => $result['original_path'],
                     'order' => $currentCount + $order++,
+                ]);
+
+                Log::info('Imagem de produto processada com pipeline de otimização.', [
+                    'product_id' => $product->id,
+                    'optimized_path' => $result['optimized_path'],
+                    'original_path' => $result['original_path'],
                 ]);
             }
         }
     }
 }
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

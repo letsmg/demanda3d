@@ -18,10 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTestData } from '@/composables/useTestData';
 import { index as productsIndex } from '@/routes/products';
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB em bytes
+
 const { randomProductName, randomProductDescription, randomPrice } =
     useTestData();
 
 const seoOpen = ref(false);
+const imageError = ref<string | null>(null);
 
 const form = useForm({
     name: '',
@@ -132,16 +135,45 @@ function handleFill() {
 
 function handleClear() {
     form.reset();
+    imageError.value = null;
 }
 
 const submit = () => {
+    // Validação de tamanho antes de enviar (barreira adicional no frontend)
+    if (form.image && form.image.size > MAX_IMAGE_SIZE) {
+        imageError.value = 'A imagem excede o limite de 2MB. Por favor, escolha um arquivo menor.';
+        return;
+    }
+
+    imageError.value = null;
     form.post('/products', { preserveScroll: true });
 };
 
 const onFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files && target.files[0]) {
-        form.image = target.files[0];
+        const file = target.files[0];
+
+        // Validação de formato
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            imageError.value = 'Formato não aceito. Use JPG, PNG ou WEBP.';
+            form.image = null;
+            target.value = ''; // limpa o input
+            return;
+        }
+
+        // Validação de tamanho (2MB)
+        if (file.size > MAX_IMAGE_SIZE) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            imageError.value = `O arquivo selecionado tem ${sizeMB}MB. O tamanho máximo permitido é 2MB.`;
+            form.image = null;
+            target.value = ''; // limpa o input
+            return;
+        }
+
+        imageError.value = null;
+        form.image = file;
     }
 };
 </script>
@@ -233,18 +265,34 @@ const onFileChange = (e: Event) => {
                             id="description"
                             v-model="form.description"
                             placeholder="Descrição do produto"
-                            rows="{4}"
+                            rows="4"
                         />
                     </div>
 
                     <div class="space-y-2">
                         <Label for="image">Imagem do Produto</Label>
+                        <p class="text-sm text-muted-foreground">
+                            Tamanho máximo por imagem: 2MB. Formatos aceitos: JPG, PNG, WEBP.
+                        </p>
                         <Input
                             id="image"
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp"
+                            :class="{
+                                'border-destructive': form.errors.image || imageError,
+                            }"
                             @input="onFileChange"
                         />
+                        <span
+                            v-if="imageError"
+                            class="text-sm text-destructive"
+                            >{{ imageError }}</span
+                        >
+                        <span
+                            v-if="form.errors.image"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.image }}</span
+                        >
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -324,7 +372,7 @@ const onFileChange = (e: Event) => {
                             id="meta_description"
                             v-model="form.meta_description"
                             placeholder="Descrição para mecanismos de busca"
-                            rows="{3}"
+                            rows="3"
                             maxlength="320"
                             :class="{
                                 'border-destructive':
@@ -377,7 +425,7 @@ const onFileChange = (e: Event) => {
                             id="schema_markup"
                             v-model="form.schema_markup"
                             placeholder='{"@context": "https://schema.org", ...}'
-                            rows="{6}"
+                            rows="6"
                             class="font-mono text-sm"
                         />
                         <p class="text-xs text-muted-foreground">
@@ -394,7 +442,7 @@ const onFileChange = (e: Event) => {
                             id="google_tag_manager"
                             v-model="form.google_tag_manager"
                             placeholder="<!-- Google Tag Manager --> ..."
-                            rows="{6}"
+                            rows="6"
                             class="font-mono text-sm"
                         />
                         <p class="text-xs text-muted-foreground">

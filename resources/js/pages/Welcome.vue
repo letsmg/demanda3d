@@ -29,7 +29,7 @@ const stats = computed(
         } | null,
 );
 
-// Background images from public/storage/imgs/home
+// Background images from storage/imgs/home (served via public/storage symlink)
 const heroImages = [
     '/storage/imgs/home/1.webp',
     '/storage/imgs/home/2.webp',

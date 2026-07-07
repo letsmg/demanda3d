@@ -35,6 +35,49 @@ O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta 
 O projeto conta com um guia detalhado de infraestrutura.
 > 📖 **[Clique aqui para acessar o Guia de Setup Detalhado (docs/SETUP.md)](docs/SETUP.md)**
 
+### 📦 Dependências do Sistema (apt)
+
+Os seguintes binários são necessários para o pipeline de otimização de imagens:
+
+```bash
+sudo apt-get update && sudo apt-get install -y \
+    jpegoptim \
+    optipng \
+    pngquant \
+    webp \
+    gifsicle
+```
+
+O pacote `spatie/image-optimizer` detecta automaticamente esses binários quando instalados.
+
+### 🖼️ Pipeline de Otimização de Imagens
+
+O projeto inclui um pipeline automático de otimização de imagens com `intervention/image` (redimensionamento/conversão) e `spatie/image-optimizer` (compressão sem perda).
+
+**Estrutura de diretórios:**
+- `storage/app/public/imgs/originais/` — Imagens brutas (originais), **não versionadas no Git**.
+- `storage/app/public/imgs/home/` — Imagens otimizadas (geradas), **não versionadas no Git**.
+
+**Comando de processamento em lote:**
+```bash
+# Processa todas as imagens de originais/ → home/
+php artisan images:optimize-batch
+
+# Força reprocessamento de todos os arquivos
+php artisan images:optimize-batch --force
+```
+
+> ⚠️ **Importante:** Execute `php artisan images:optimize-batch` como passo de setup inicial e após restaurar backups. As pastas `originais/` e `home/` são ignoradas pelo Git — apenas os `.gitkeep` são versionados para manter a estrutura.
+
+**Fluxo de upload de produtos:**
+Toda imagem enviada via formulário de produto é automaticamente:
+1. Validada (máx. 2MB, formatos JPG/PNG/WEBP — backend + frontend)
+2. Salva como original em `imgs/originais/`
+3. Redimensionada (máx. 1600px largura, sem upscale) e convertida para WebP
+4. Comprimida sem perda visual via `spatie/image-optimizer`
+5. Salva como otimizada em `imgs/home/`
+6. Persistida no banco com path relativo da versão otimizada + referência ao original
+
 ---
 
 <a id="english"></a>
@@ -62,6 +105,40 @@ Demanda3D is a robust SaaS platform built for end-to-end management of 3D printi
 ## 🚀 Setup and Installation
 The project includes a detailed infrastructure guide.
 > 📖 **[Click here to access the Detailed Setup Guide (docs/SETUP.md)](docs/SETUP.md)**
+
+### 📦 System Dependencies (apt)
+
+The following binaries are required for the image optimization pipeline:
+
+```bash
+sudo apt-get update && sudo apt-get install -y \
+    jpegoptim \
+    optipng \
+    pngquant \
+    webp \
+    gifsicle
+```
+
+The `spatie/image-optimizer` package auto-detects these binaries when installed.
+
+### 🖼️ Image Optimization Pipeline
+
+The project includes an automatic image optimization pipeline using `intervention/image` (resize/conversion) and `spatie/image-optimizer` (lossless compression).
+
+**Directory structure:**
+- `storage/app/public/imgs/originais/` — Raw (original) images, **not versioned in Git**.
+- `storage/app/public/imgs/home/` — Optimized images (generated), **not versioned in Git**.
+
+**Batch processing command:**
+```bash
+# Process all images from originais/ → home/
+php artisan images:optimize-batch
+
+# Force reprocess all files
+php artisan images:optimize-batch --force
+```
+
+> ⚠️ **Important:** Run `php artisan images:optimize-batch` as an initial setup step and after restoring backups. The `originais/` and `home/` folders are Git-ignored — only `.gitkeep` files are versioned to preserve the directory structure.
 
 ---
 
