@@ -1,20 +1,39 @@
 # ==============================================================================
 # ⚠️ AVISO CRÍTICO DE MANUTENÇÃO: NUNCA REMOVA OU ALTERE OS COMENTÁRIOS DESTE ARQUIVO!
 #
-# ARQUITETURA DE INFRAESTRUTURA:
-# - Banco de Dados e Redis rodam em containers (Docker).
-# - PHP/Laravel roda NATIVAMENTE no sistema operacional (Host Ubuntu), fora de
-#   containers. NÃO ALTERE para 'docker exec' nos passos de artisan/migrations.
-# - O pipeline usa 'set -Eeuo pipefail' em todo bloco de shell. Qualquer falha
-#   interrompe o deploy (fail-fast).
+# ARQUITETURA (fixa, não muda sem decisão consciente):
+# - Banco de Dados e Redis rodam em containers Docker.
+# - PHP/Laravel roda NATIVAMENTE no host (Ubuntu), fora de containers.
 #
-# HISTÓRICO DE CORREÇÕES RELEVANTES:
-# - Adicionado wait-loop para o Postgres antes de rodar migrations (evitava
-#   falha intermitente logo após 'docker compose up -d').
-# - chown -R agora roda DEPOIS do unzip (antes só o diretório topo recebia
-#   o dono correto, os arquivos extraídos ficavam com grupo errado).
-# - Detecção de container do banco tem fallback explícito com erro claro
-#   caso o nome não seja encontrado, em vez de pular a checagem em silêncio.
+# ✅ SEMPRE:
+# - Rodar 'php artisan' (migrate, optimize, etc.) diretamente no host, nunca
+#   via 'docker exec'. A aplicação não está conteinerizada.
+# - Esperar o Postgres responder (pg_isready) antes de rodar migrations.
+# - Rodar 'chown -R' no release DEPOIS de extrair o zip (nunca antes — o
+#   unzip cria arquivos com grupo do processo, não www-data).
+# - Sincronizar storage/ do release para $SHARED/storage (rsync) ANTES de
+#   apagar e recriar o symlink. Qualquer pasta/arquivo novo versionado
+#   dentro de storage/ (ex.: storage/app/public/home) só chega ao servidor
+#   por causa dessa sincronização.
+# - Rodar 'optimize:clear' ANTES de 'config:cache' / 'route:cache' /
+#   'view:cache' — nunca só 'optimize' sozinho, ou cache antigo (HTML/assets
+#   com hashes do Vite desatualizados) pode continuar sendo servido.
+# - Recarregar o php-fpm (reload, não restart) depois de trocar o cache,
+#   para descartar opcache do release anterior.
+# - Fazer backup do banco (pg_dump) antes de qualquer migration em produção
+#   (main). Não é necessário em hom, que usa migrate:fresh.
+#
+# ❌ NUNCA:
+# - Sobrescrever ou apagar storage/app/public/imgs/products no deploy — é
+#   conteúdo de upload de usuário em produção, não versionado no Git.
+#   Precisa continuar excluído tanto do zip quanto do rsync.
+# - Usar 'migrate:fresh' na branch main. Só 'migrate --force' (destrutivo
+#   demais para dados reais).
+# - Assumir que $SHARED/.env já existe em servidor novo — o script falha
+#   cedo e com mensagem clara se não existir; não tente contornar isso
+#   criando um .env vazio automaticamente.
+# - Remover o '(...)  || { exit 1; }' do bloco crítico (migrations/link) —
+#   é o que garante que uma falha ali não deixa o deploy "meio aplicado".
 #
 # Estes comentários servem como documentação viva para evitar que futuras
 # otimizações quebrem a resiliência do deploy atômico.
@@ -111,7 +130,8 @@ jobs:
             "tests/*" \
             ".env*" \
             "storage/framework/*" \
-            "storage/logs/*"
+            "storage/logs/*" \
+            "storage/app/public/imgs/products/*"
 
           echo "Arquivo criado:"
           ls -lh deploy.zip
@@ -256,6 +276,19 @@ jobs:
             sudo mkdir -p "$SHARED/storage/framework/sessions"
             sudo mkdir -p "$SHARED/bootstrap/cache"
 
+            # Sincroniza TODO o conteúdo de storage/ do release para o storage
+            # compartilhado, sobrescrevendo o que já existir (arquivos/pastas
+            # versionadas no Git são atualizadas normalmente a cada deploy) —
+            # EXCETO storage/app/public/imgs/products, que contém uploads reais
+            # de produtos feitos em produção e NUNCA pode ser sobrescrita/apagada
+            # por um deploy.
+            if [ -d "$NEW_RELEASE/storage" ]; then
+                echo "🔄 Sincronizando storage/ para o shared (preservando imgs/products)..."
+                rsync -a \
+                    --exclude 'app/public/imgs/products/' \
+                    "$NEW_RELEASE/storage/" "$SHARED/storage/"
+            fi
+
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/storage" "$NEW_RELEASE/bootstrap/cache"
 
             ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
@@ -311,17 +344,36 @@ jobs:
 
               echo "✅ Banco de dados pronto."
 
+              # 4c. Backup do banco ANTES de rodar migrations — só em produção (main).
+              # Em 'hom' o backup não faz sentido, pois migrate:fresh já apaga tudo.
+              if [[ "${{ github.ref_name }}" == "main" ]]; then
+                  echo "💾 Gerando backup do banco antes da migration..."
+                  BACKUP_FILE="$BACKUPS/${PROJECT_NAME}-pre-migrate-$(date +%Y%m%d%H%M%S).dump"
+                  sudo docker exec -e PGPASSWORD="$DB_PASS" "$CONTAINER_NAME" \
+                      pg_dump -U "$DB_USER" -Fc postgres > "$BACKUP_FILE"
+                  echo "✅ Backup salvo em $BACKUP_FILE"
+
+                  # Mantém só os 10 backups mais recentes
+                  cd "$BACKUPS" && ls -1tr ${PROJECT_NAME}-pre-migrate-*.dump 2>/dev/null | head -n -10 | xargs -r rm -f --
+              else
+                  echo "⏭️  Backup pulado (ambiente hom usa migrate:fresh, backup não é útil aqui)."
+              fi
+              
               # 5. Migrations
               echo "🚀 Rodando Migrations nativamente no servidor..."
               cd "$NEW_RELEASE"
               php artisan $MIGRATION_STRATEGY --force
+
+              # Limpa caches antigos ANTES de recriar, evitando servir HTML/assets
+              # com hashes de um build anterior (bug de view cache preso).
               php artisan optimize:clear
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
 
+              # Recicla os workers do PHP-FPM para descartar opcache de arquivos
+              # compilados do release anterior.
               sudo systemctl reload php8.5-fpm
-
 
               # 6. Ativação Atômica
               echo "🔄 Atualizando link atual..."
