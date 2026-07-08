@@ -207,7 +207,7 @@ class ToolsController extends Controller
      */
     private function getCurrentHeroImages(): array
     {
-        $files = Storage::disk('public')->files('imgs/originais');
+        $files = Storage::disk('public')->files('imgs/home');
         $images = [];
 
         foreach ($files as $file) {
