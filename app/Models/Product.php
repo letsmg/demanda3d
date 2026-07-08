@@ -28,13 +28,6 @@ use Illuminate\Support\Str;
     'painting_material',
     'painting_cost',
     'extras_cost',
-    'meta_title',
-    'meta_description',
-    'meta_keywords',
-    'canonical_url',
-    'og_image',
-    'schema_markup',
-    'google_tag_manager',
     'approximate_cost',
     'sale_price',
     'is_active',
@@ -44,18 +37,124 @@ class Product extends Model
 {
     use HasFactory;
 
+    /**
+     * Accessors SEO — 100% derivados dos campos nativos do produto.
+     *
+     * meta_title        → name (máx. 120 chars)
+     * meta_description  → description (strip_tags, máx. 320 chars)
+     * meta_keywords     → name + categorias + termos de nicho
+     * canonical_url     → route('store.detail', slug)
+     * og_image          → primeira imagem do produto ou fallback default
+     * schema_markup     → JSON-LD Product (via ProductService)
+     * google_tag_manager → script GTM + dataLayer (via ProductService)
+     */
+    protected $appends = [
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'canonical_url',
+        'og_image',
+        'schema_markup',
+        'google_tag_manager',
+    ];
+
+    // ─── Accessors SEO ───────────────────────────────────────────────
+
+    public function getMetaTitleAttribute(): string
+    {
+        return mb_substr(trim($this->attributes['name'] ?? ''), 0, 120);
+    }
+
+    public function getMetaDescriptionAttribute(): string
+    {
+        $clean = trim(strip_tags($this->attributes['description'] ?? ''));
+
+        return mb_substr($clean ?: ($this->attributes['name'] ?? ''), 0, 320);
+    }
+
+    public function getMetaKeywordsAttribute(): string
+    {
+        $keywords = [];
+        $nameWords = explode(' ', strtolower(trim($this->attributes['name'] ?? '')));
+
+        foreach ($nameWords as $word) {
+            $clean = preg_replace('/[^a-zà-ú0-9]/', '', $word);
+            if (mb_strlen($clean) >= 3 && ! in_array($clean, ['com', 'para', 'que', 'dos', 'das', 'uma', 'são'])) {
+                $keywords[] = $clean;
+            }
+        }
+
+        $keywords[] = strtolower(trim($this->attributes['name'] ?? ''));
+
+        // Categorias
+        if ($this->relationLoaded('categories')) {
+            foreach ($this->categories as $cat) {
+                $name = strtolower($cat->name);
+                $keywords[] = $name;
+                $keywords[] = $name . ' impressão 3d';
+            }
+        }
+
+        // Termos nicho
+        $keywords[] = 'impressão 3d';
+        $keywords[] = 'produto 3d';
+        $keywords[] = 'marketplace 3d';
+        $keywords[] = 'impressão sob demanda';
+
+        if (! empty($this->attributes['material_type'])) {
+            $keywords[] = 'filamento ' . strtolower($this->attributes['material_type']);
+        }
+
+        $keywords = array_unique(array_filter($keywords));
+
+        return mb_substr(implode(', ', $keywords), 0, 255);
+    }
+
+    public function getCanonicalUrlAttribute(): string
+    {
+        $slug = $this->attributes['slug'] ?? '';
+
+        if (empty($slug)) {
+            return '';
+        }
+
+        return route('store.detail', ['slug' => $slug]);
+    }
+
+    public function getOgImageAttribute(): string
+    {
+        if ($this->relationLoaded('images') && $first = $this->images->first()) {
+            return url('storage/' . $first->path);
+        }
+
+        // Fallback: busca do SeoSetting ou asset default
+        return \App\Models\SeoSetting::getValue('og_image_default', asset('images/og-default.jpg'));
+    }
+
+    public function getSchemaMarkupAttribute(): string
+    {
+        return app(\App\Services\ProductService::class)->renderSchemaMarkup($this);
+    }
+
+    public function getGoogleTagManagerAttribute(): string
+    {
+        return app(\App\Services\ProductService::class)->renderGtmScript($this);
+    }
+
+    // ─── Boot, Casts, Relations, Scopes ──────────────────────────────
+
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
 
         static::creating(function (Product $product) {
-            if (empty($product->slug) && !empty($product->name)) {
+            if (empty($product->slug) && ! empty($product->name)) {
                 $product->slug = static::generateUniqueSlug($product->name, $product->tenant_id);
             }
         });
 
         static::updating(function (Product $product) {
-            if ($product->isDirty('name') && !$product->isDirty('slug')) {
+            if ($product->isDirty('name') && ! $product->isDirty('slug')) {
                 $product->slug = static::generateUniqueSlug($product->name, $product->tenant_id, $product->id);
             }
         });
@@ -93,17 +192,11 @@ class Product extends Model
             ->withTimestamps();
     }
 
-    /**
-     * Verifica se o produto pertence a pelo menos uma categoria de conteúdo adulto.
-     */
     public function hasAdultContent(): bool
     {
         return $this->categories()->whereAdultContent()->exists();
     }
 
-    /**
-     * Scope para filtrar produtos que contenham categorias adultas.
-     */
     public function scopeWhereHasAdultCategories($query)
     {
         return $query->whereHas('categories', function ($q) {
@@ -111,9 +204,6 @@ class Product extends Model
         });
     }
 
-    /**
-     * Scope para excluir produtos de categorias adultas da listagem.
-     */
     public function scopeWithoutAdultCategories($query)
     {
         return $query->whereDoesntHave('categories', function ($q) {
@@ -121,9 +211,6 @@ class Product extends Model
         });
     }
 
-    /**
-     * Gera um slug único para o produto dentro do tenant.
-     */
     public static function generateUniqueSlug(string $name, ?int $tenantId = null, ?int $excludeId = null): string
     {
         $baseSlug = Str::slug($name);
@@ -138,7 +225,7 @@ class Product extends Model
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
             $slug = $baseSlug . '-' . $counter;

@@ -19,19 +19,6 @@ class ProductResource extends JsonResource
         /** @var \App\Models\User|null $user */
         $user = $request->user();
 
-        // SEO fallback: busca na tabela seo_settings, depois config/app.php, depois fallback estático
-        $metaTitle = $this->meta_title
-            ?: SeoSetting::getValue('meta_title_default', config('app.name'));
-        $metaDescription = $this->meta_description
-            ?: SeoSetting::getValue('meta_description_default', config('app.seo.default_description', 'Marketplace de impressão 3D sob demanda.'));
-        $metaKeywords = $this->meta_keywords
-            ?: SeoSetting::getValue('meta_keywords_default', 'impressão 3D, marketplace, demanda 3D');
-        $canonicalUrl = route('store.detail', ['slug' => $this->slug]);
-        $ogImage = SeoSetting::getValue('og_image_default', asset('images/og-default.jpg'));
-        // schema_markup and google_tag_manager are raw code - no fallback needed
-        $schemaMarkup = $this->schema_markup;
-        $googleTagManager = $this->google_tag_manager;
-
         return [
             'id' => $this->id,
             'tenant_id' => $this->when($user && $user->isStaff(), $this->tenant_id),
@@ -70,16 +57,16 @@ class ProductResource extends JsonResource
                 ]);
             }),
 
-            // SEO
+            // SEO — 100% dinâmico via accessors no Model Product
             'seo' => [
-                'meta_title' => $metaTitle,
-                'meta_description' => $metaDescription,
-                'meta_keywords' => $metaKeywords,
-                'canonical_url' => $canonicalUrl,
-                'og_image' => $ogImage,
+                'meta_title' => $this->meta_title,
+                'meta_description' => $this->meta_description,
+                'meta_keywords' => $this->meta_keywords,
+                'canonical_url' => $this->canonical_url,
+                'og_image' => $this->og_image,
                 'h1_text' => $this->name,
-                'schema_markup' => $schemaMarkup,
-                'google_tag_manager' => $googleTagManager,
+                'schema_markup' => $this->schema_markup,
+                'google_tag_manager' => $this->google_tag_manager,
             ],
 
             'created_at' => $this->created_at,

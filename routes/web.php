@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LegalConsentController;
+use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\Inertia\CarrierController as InertiaCarrierController;
 use App\Http\Controllers\Inertia\ClientController as InertiaClientController;
 use App\Http\Controllers\Inertia\FreightContractController as InertiaFreightContractController;
@@ -23,12 +24,12 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\StoreDetailController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('welcome');
+// Welcome page — carrossel de imagens dinâmico da pasta imgs/home/
+Route::get('/', WelcomeController::class)->name('welcome');
 Route::inertia('/home', 'Dashboard')->name('home');
 
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
-
 
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
@@ -189,10 +190,13 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
             ->name('orders.label');
     });
 
-    // Tools
+    // Tools (staff dashboard)
     Route::prefix('tools')->name('tools.')->group(function () {
         Route::get('/', [InertiaToolsController::class, 'index'])->name('index');
         Route::post('/sitemap', [InertiaToolsController::class, 'generateSitemap'])->name('sitemap.generate');
+        // Hero images (carrossel da home) — admin only
+        Route::post('/hero-images', [InertiaToolsController::class, 'uploadHeroImages'])->name('hero-images.upload');
+        Route::delete('/hero-images', [InertiaToolsController::class, 'deleteHeroImage'])->name('hero-images.delete');
     });
 
     // Reports (management + admin com canAccessFinancials)
@@ -205,3 +209,4 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
 });
 
 require __DIR__.'/settings.php';
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

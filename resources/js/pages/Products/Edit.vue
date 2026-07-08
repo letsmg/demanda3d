@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, AlertCircle, ChevronDown, Save } from '@lucide/vue';
+import Sortable from 'sortablejs';
+import { ArrowLeft, AlertCircle, Save, X, GripVertical, Plus, Trash2 } from '@lucide/vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,110 +14,97 @@ import { useTestData } from '@/composables/useTestData';
 import { index as productsIndex } from '@/routes/products';
 import type { Product } from '@/types';
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB em bytes
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGES = 5;
+const SLOTS = Array.from({ length: MAX_IMAGES }, (_, i) => i);
 
-const { randomProductName, randomProductDescription, randomPrice } =
-    useTestData();
-
-function generateGtm(name: string, price: string): string {
-    const dataLayer = {
-        event: 'product_detail_view',
-        ecommerce: {
-            detail: {
-                products: [
-                    {
-                        name: name,
-                        price: price,
-                    },
-                ],
-            },
-        },
-    };
-    const jsonStr = JSON.stringify(dataLayer, null, 2);
-    const endTag = '</' + 'script>';
-    return (
-        '<!-- Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  dataLayer.push(' +
-        jsonStr +
-        ');\n' +
-        endTag
-    );
+interface ExistingImage {
+    id: number;
+    url: string;
+    order: number;
 }
 
-function generateSeoFromData(
-    name: string,
-    description: string,
-): Record<string, string> {
-    const cleanDesc = description.replace(/<[^>]+>/g, '').trim();
-    const words = name
-        .toLowerCase()
-        .split(/\s+/)
-        .filter((w) => w.length >= 3);
-
-    return {
-        meta_title: name.substring(0, 120),
-        meta_description: (cleanDesc || name).substring(0, 320),
-        meta_keywords: [
-            name.toLowerCase(),
-            ...words,
-            'impressão 3d',
-            'produto 3d',
-            'marketplace 3d',
-        ]
-            .join(', ')
-            .substring(0, 255),
-        canonical_url: '',
-        og_image: '',
-        schema_markup: JSON.stringify(
-            {
-                '@context': 'https://schema.org',
-                '@type': 'Product',
-                name: name,
-                description: cleanDesc || name,
-                offers: {
-                    '@type': 'Offer',
-                    price: form.sale_price || '0',
-                    priceCurrency: 'BRL',
-                    availability: 'https://schema.org/InStock',
-                },
-            },
-            null,
-            2,
-        ),
-        google_tag_manager: generateGtm(name, form.sale_price || '0'),
-    };
+interface NewPreview {
+    file: File;
+    url: string;
 }
+
+const { randomProductName, randomProductDescription, randomPrice } = useTestData();
 
 const props = defineProps<{
     product: Product & {
-        meta_title?: string;
-        meta_description?: string;
-        meta_keywords?: string;
-        canonical_url?: string;
-        og_image?: string;
-        schema_markup?: string;
-        google_tag_manager?: string;
+        images?: { id: number; url: string; order: number }[];
     };
 }>();
 
-const seoOpen = ref(false);
 const imageError = ref<string | null>(null);
+const existingImages = ref<ExistingImage[]>(
+    (props.product.images || []).sort((a, b) => a.order - b.order),
+);
+const newPreviews = ref<NewPreview[]>([]);
+const imagesToDelete = ref<number[]>([]);
+const thumbnailContainer = ref<HTMLElement | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
+let sortableInstance: Sortable | null = null;
 
 const form = useForm({
     name: props.product.name,
     description: props.product.description || '',
     sale_price: props.product.sale_price,
     is_active: props.product.is_active,
-    image: null as File | null,
-    // SEO fields
-    meta_title: (props.product as any).meta_title || '',
-    meta_description: (props.product as any).meta_description || '',
-    meta_keywords: (props.product as any).meta_keywords || '',
-    canonical_url: (props.product as any).canonical_url || '',
-    og_image: (props.product as any).og_image || '',
-    schema_markup: (props.product as any).schema_markup || '',
-    google_tag_manager: (props.product as any).google_tag_manager || '',
+    images: [] as File[],
+    images_order: existingImages.value.map((img) => img.id),
+    images_delete: [] as number[],
 });
 
+// =========================================================================
+// SortableJS — corrigido: destroy antes de init, acionado em cada mudança
+// =========================================================================
+function initSortable() {
+    destroySortable();
+    const total = existingImages.value.length + newPreviews.value.length;
+    if (!thumbnailContainer.value || total < 2) return;
+
+    sortableInstance = Sortable.create(thumbnailContainer.value, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'opacity-50',
+        onEnd() {
+            const newOrder = sortableInstance!.toArray();
+
+            const reorderedExisting = newOrder
+                .map((id) => existingImages.value.find((img) => `existing-${img.id}` === id))
+                .filter(Boolean) as ExistingImage[];
+
+            const reorderedNew = newOrder
+                .map((id) => {
+                    const match = id.match(/^new-(\d+)$/);
+                    return match ? newPreviews.value[parseInt(match[1], 10)] : null;
+                })
+                .filter(Boolean) as NewPreview[];
+
+            existingImages.value = reorderedExisting;
+            newPreviews.value = reorderedNew;
+
+            form.images_order = existingImages.value.map((img) => img.id);
+            form.images = reorderedNew.map((p) => p.file);
+        },
+    });
+}
+
+function destroySortable() {
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
+}
+
+const totalThumbnails = () => existingImages.value.length + newPreviews.value.length;
+
+// =========================================================================
+// Test data
+// =========================================================================
 function buildTestFields() {
     return [
         { key: 'name', value: randomProductName() },
@@ -134,61 +116,94 @@ function buildTestFields() {
 function handleFill() {
     const fresh = buildTestFields();
     for (const f of fresh) {
-        if (f.key in form) {
-            (form as any)[f.key] = f.value;
-        }
-    }
-
-    const seoFields = generateSeoFromData(form.name, form.description);
-    for (const [key, value] of Object.entries(seoFields)) {
-        if (key in form) {
-            (form as any)[key] = value;
-        }
+        if (f.key in form) (form as any)[f.key] = f.value;
     }
 }
 
 function handleClear() {
     form.reset();
     imageError.value = null;
+    newPreviews.value = [];
+    destroySortable();
 }
 
-const submit = () => {
-    // Validação de tamanho antes de enviar (barreira adicional no frontend)
-    if (form.image && form.image.size > MAX_IMAGE_SIZE) {
-        imageError.value = 'A imagem excede o limite de 2MB. Por favor, escolha um arquivo menor.';
+// =========================================================================
+// Image handling
+// =========================================================================
+function addImages(files: FileList) {
+    if (totalThumbnails() + files.length > MAX_IMAGES) {
+        imageError.value = `Máximo de ${MAX_IMAGES} imagens. Você já tem ${totalThumbnails()}.`;
         return;
     }
 
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            imageError.value = 'Formato não aceito. Use JPG, PNG ou WEBP.';
+            continue;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            imageError.value = `"${file.name}" excede 2MB.`;
+            continue;
+        }
+
+        newPreviews.value.push({ file, url: URL.createObjectURL(file) });
+    }
+
+    imageError.value = null;
+    form.images = newPreviews.value.map((p) => p.file);
+    nextTick(() => initSortable());
+}
+
+function removeExistingImage(imageId: number) {
+    existingImages.value = existingImages.value.filter((img) => img.id !== imageId);
+    imagesToDelete.value.push(imageId);
+    form.images_delete = [...imagesToDelete.value];
+    form.images_order = existingImages.value.map((img) => img.id);
+    nextTick(() => initSortable());
+}
+
+function removeNewImage(index: number) {
+    URL.revokeObjectURL(newPreviews.value[index].url);
+    newPreviews.value.splice(index, 1);
+    form.images = newPreviews.value.map((p) => p.file);
+    nextTick(() => initSortable());
+}
+
+function onFileChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    if (target.files && target.files.length > 0) {
+        addImages(target.files);
+        target.value = '';
+    }
+}
+
+function triggerFileInput() {
+    fileInput.value?.click();
+}
+
+function onContainerDrop(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        addImages(e.dataTransfer.files);
+    }
+}
+
+function onDragOver(e: DragEvent) {
+    e.preventDefault();
+}
+
+onMounted(() => {
+    if (totalThumbnails() > 1) {
+        initSortable();
+    }
+});
+
+const submit = () => {
     imageError.value = null;
     form.put(`/products/${props.product.id}`, { preserveScroll: true });
-};
-
-const onFileChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    if (target.files && target.files[0]) {
-        const file = target.files[0];
-
-        // Validação de formato
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            imageError.value = 'Formato não aceito. Use JPG, PNG ou WEBP.';
-            form.image = null;
-            target.value = ''; // limpa o input
-            return;
-        }
-
-        // Validação de tamanho (2MB)
-        if (file.size > MAX_IMAGE_SIZE) {
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            imageError.value = `O arquivo selecionado tem ${sizeMB}MB. O tamanho máximo permitido é 2MB.`;
-            form.image = null;
-            target.value = ''; // limpa o input
-            return;
-        }
-
-        imageError.value = null;
-        form.image = file;
-    }
 };
 </script>
 
@@ -197,17 +212,11 @@ const onFileChange = (e: Event) => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="productsIndex()"
-                    ><ArrowLeft class="h-4 w-4"
-                /></Link>
+                <Link :href="productsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
-                    Editar Produto
-                </h1>
-                <p class="text-sm text-muted-foreground">
-                    Editando: {{ product.name }}
-                </p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Editar Produto</h1>
+                <p class="text-sm text-muted-foreground">Editando: {{ product.name }}</p>
             </div>
         </div>
 
@@ -217,261 +226,131 @@ const onFileChange = (e: Event) => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper
-            :form="form"
-            :fields="buildTestFields()"
-            label="Editar Produto"
-            @fill="handleFill"
-            @clear="handleClear"
-        />
+        <FormTestHelper :form="form" :fields="buildTestFields()" label="Editar Produto" @fill="handleFill" @clear="handleClear" />
 
         <form @submit.prevent="submit">
             <Card>
-                <CardHeader
-                    ><CardTitle>Informações do Produto</CardTitle
-                    ><CardDescription
-                        >Edite os dados do produto</CardDescription
-                    ></CardHeader
-                >
+                <CardHeader>
+                    <CardTitle>Informações do Produto</CardTitle>
+                    <CardDescription>Edite os dados do produto. Os campos SEO são gerados automaticamente.</CardDescription>
+                </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="name">Nome *</Label>
-                            <Input
-                                id="name"
-                                v-model="form.name"
-                                placeholder="Nome"
-                                :class="{
-                                    'border-destructive': form.errors.name,
-                                }"
-                            />
-                            <span
-                                v-if="form.errors.name"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.name }}</span
-                            >
+                            <Input id="name" v-model="form.name" placeholder="Nome" :class="{ 'border-destructive': form.errors.name }" />
+                            <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
                         </div>
                         <div class="space-y-2">
                             <Label for="sale_price">Preço de Venda *</Label>
-                            <Input
-                                id="sale_price"
-                                v-model="form.sale_price"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                :class="{
-                                    'border-destructive':
-                                        form.errors.sale_price,
-                                }"
-                            />
-                            <span
-                                v-if="form.errors.sale_price"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.sale_price }}</span
-                            >
+                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00" :class="{ 'border-destructive': form.errors.sale_price }" />
+                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
                         </div>
                     </div>
+
                     <div class="space-y-2">
                         <Label for="description">Descrição</Label>
-                        <Textarea
-                            id="description"
-                            v-model="form.description"
-                            placeholder="Descrição"
-                            rows="4"
-                        />
+                        <Textarea id="description" v-model="form.description" placeholder="Descrição" rows="4" />
                     </div>
+
+                    <!-- Imagens do Produto -->
                     <div class="space-y-2">
-                        <Label for="image">Imagem do Produto</Label>
+                        <Label>Imagens do Produto (máx. {{ MAX_IMAGES }})</Label>
                         <p class="text-sm text-muted-foreground">
-                            Tamanho máximo por imagem: 2MB. Formatos aceitos: JPG, PNG, WEBP.
+                            Arraste as miniaturas para reordenar. Arraste novas imagens do seu computador para cá ou clique para selecionar.
+                            Tamanho máximo: 2MB. Formatos: JPG, PNG, WEBP.
                         </p>
+
+                        <!-- Área de drop + miniaturas existentes + novas + slots vazios -->
+                        <div
+                            v-if="totalThumbnails() < MAX_IMAGES"
+                            ref="thumbnailContainer"
+                            class="flex flex-wrap gap-3 rounded-lg border-2 border-dashed border-muted-foreground/30 p-4 transition-colors hover:border-primary/50"
+                            @dragover="onDragOver"
+                            @drop="onContainerDrop"
+                            @click="triggerFileInput"
+                        >
+                            <!-- Existing images -->
+                            <div
+                                v-for="img in existingImages"
+                                :key="'existing-' + img.id"
+                                :data-id="'existing-' + img.id"
+                                class="group relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
+                            >
+                                <img :src="img.url" :alt="'Imagem ' + img.order" class="h-full w-full object-cover" />
+                                <button
+                                    type="button"
+                                    @click.stop="removeExistingImage(img.id)"
+                                    class="absolute right-0.5 top-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <Trash2 class="h-3 w-3" />
+                                </button>
+                                <div
+                                    v-if="totalThumbnails() > 1"
+                                    class="drag-handle absolute bottom-0.5 left-0.5 cursor-grab rounded bg-black/50 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <GripVertical class="h-3 w-3" />
+                                </div>
+                            </div>
+
+                            <!-- New previews -->
+                            <div
+                                v-for="(preview, index) in newPreviews"
+                                :key="'new-' + index"
+                                :data-id="'new-' + index"
+                                class="group relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-dashed border-primary/50 bg-muted"
+                            >
+                                <img :src="preview.url" alt="Nova imagem" class="h-full w-full object-cover" />
+                                <button
+                                    type="button"
+                                    @click.stop="removeNewImage(index)"
+                                    class="absolute right-0.5 top-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <X class="h-3 w-3" />
+                                </button>
+                                <div
+                                    v-if="totalThumbnails() > 1"
+                                    class="drag-handle absolute bottom-0.5 left-0.5 cursor-grab rounded bg-black/50 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <GripVertical class="h-3 w-3" />
+                                </div>
+                            </div>
+
+                            <!-- Slots vazios com "+" -->
+                            <div
+                                v-for="slot in SLOTS.filter((_, i) => i >= totalThumbnails())"
+                                :key="'slot-' + slot"
+                                class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/50 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                            >
+                                <Plus class="h-6 w-6 text-muted-foreground/50" />
+                            </div>
+                        </div>
+
                         <Input
-                            id="image"
+                            ref="fileInput"
+                            id="images"
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
-                            :class="{
-                                'border-destructive': form.errors.image || imageError,
-                            }"
+                            multiple
+                            class="hidden"
                             @input="onFileChange"
                         />
-                        <span
-                            v-if="imageError"
-                            class="text-sm text-destructive"
-                            >{{ imageError }}</span
-                        >
-                        <span
-                            v-if="form.errors.image"
-                            class="text-sm text-destructive"
-                            >{{ form.errors.image }}</span
-                        >
+                        <span v-if="imageError" class="text-sm text-destructive">{{ imageError }}</span>
+                        <span v-if="form.errors.images" class="text-sm text-destructive">{{ form.errors.images }}</span>
                     </div>
+
                     <div class="flex items-center gap-2">
                         <Label for="is_active">Produto ativo?</Label>
-                        <input
-                            id="is_active"
-                            type="checkbox"
-                            v-model="form.is_active"
-                            class="h-4 w-4"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <!-- SEO Section -->
-            <Card class="mt-6">
-                <CardHeader class="cursor-pointer" @click="seoOpen = !seoOpen">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <CardTitle class="text-lg"
-                                >SEO — Otimização para Buscadores</CardTitle
-                            >
-                            <CardDescription
-                                >Configure meta tags, schema markup e Google Tag
-                                Manager</CardDescription
-                            >
-                        </div>
-                        <ChevronDown
-                            class="h-5 w-5 transition-transform"
-                            :class="{ 'rotate-180': seoOpen }"
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent v-show="seoOpen" class="space-y-6">
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="meta_title"
-                                >Meta Title (máx. 120 caracteres)</Label
-                            >
-                            <Input
-                                id="meta_title"
-                                v-model="form.meta_title"
-                                placeholder="Título para SEO"
-                                maxlength="120"
-                                :class="{
-                                    'border-destructive':
-                                        form.errors.meta_title,
-                                }"
-                            />
-                            <span
-                                v-if="form.errors.meta_title"
-                                class="text-sm text-destructive"
-                                >{{ form.errors.meta_title }}</span
-                            >
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="meta_keywords"
-                                >Meta Keywords (máx. 255 caracteres)</Label
-                            >
-                            <Input
-                                id="meta_keywords"
-                                v-model="form.meta_keywords"
-                                placeholder="palavra-chave1, palavra-chave2"
-                                :class="{
-                                    'border-destructive':
-                                        form.errors.meta_keywords,
-                                }"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="meta_description"
-                            >Meta Description (máx. 320 caracteres)</Label
-                        >
-                        <Textarea
-                            id="meta_description"
-                            v-model="form.meta_description"
-                            placeholder="Descrição para mecanismos de busca"
-                            rows="3"
-                            maxlength="320"
-                            :class="{
-                                'border-destructive':
-                                    form.errors.meta_description,
-                            }"
-                        />
-                        <span
-                            v-if="form.errors.meta_description"
-                            class="text-sm text-destructive"
-                            >{{ form.errors.meta_description }}</span
-                        >
-                    </div>
-
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="canonical_url">URL Canônica</Label>
-                            <Input
-                                id="canonical_url"
-                                v-model="form.canonical_url"
-                                type="url"
-                                placeholder="https://seu-dominio.com/produto"
-                                :class="{
-                                    'border-destructive':
-                                        form.errors.canonical_url,
-                                }"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="og_image"
-                                >URL da Imagem Open Graph</Label
-                            >
-                            <Input
-                                id="og_image"
-                                v-model="form.og_image"
-                                type="url"
-                                placeholder="https://seu-dominio.com/imagem.jpg"
-                                :class="{
-                                    'border-destructive': form.errors.og_image,
-                                }"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="schema_markup"
-                            >Schema Markup (JSON-LD) — Aceita código JSON
-                            estruturado</Label
-                        >
-                        <Textarea
-                            id="schema_markup"
-                            v-model="form.schema_markup"
-                            placeholder='{"@context": "https://schema.org", ...}'
-                            rows="6"
-                            class="font-mono text-sm"
-                        />
-                        <p class="text-xs text-muted-foreground">
-                            Este campo aceita JSON/HTML para dados estruturados.
-                            Não será sanitizado.
-                        </p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="google_tag_manager"
-                            >Google Tag Manager — Aceita código JS/HTML</Label
-                        >
-                        <Textarea
-                            id="google_tag_manager"
-                            v-model="form.google_tag_manager"
-                            placeholder="<!-- Google Tag Manager --> ..."
-                            rows="6"
-                            class="font-mono text-sm"
-                        />
-                        <p class="text-xs text-muted-foreground">
-                            Este campo aceita scripts de tracking. Não será
-                            sanitizado.
-                        </p>
+                        <input id="is_active" type="checkbox" v-model="form.is_active" class="h-4 w-4" />
                     </div>
                 </CardContent>
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child
-                    ><Link :href="productsIndex()">Cancelar</Link></Button
-                >
-                <Button type="submit" :disabled="form.processing"
-                    ><Save class="mr-2 h-4 w-4" />{{
-                        form.processing ? 'Salvando...' : 'Salvar Alterações'
-                    }}</Button
-                >
+                <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
+                <Button type="submit" :disabled="form.processing">
+                    <Save class="mr-2 h-4 w-4" />{{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
+                </Button>
             </div>
         </form>
     </div>

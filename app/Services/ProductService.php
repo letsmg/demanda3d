@@ -60,9 +60,6 @@ class ProductService
         $categories = $data['categories'] ?? [];
         unset($data['categories']);
 
-        // Auto-generate SEO fields based on name, description and categories
-        $data = $this->autoGenerateSeoFields($data, null);
-
         $product = Product::create($data);
 
         if (!empty($categories)) {
@@ -77,10 +74,9 @@ class ProductService
     public function update(Product $product, array $data): Product
     {
         $categories = $data['categories'] ?? null;
-        unset($data['categories']);
-
-        // Auto-generate SEO fields based on name, description and categories
-        $data = $this->autoGenerateSeoFields($data, $product);
+        $imagesDelete = $data['images_delete'] ?? [];
+        $imagesOrder = $data['images_order'] ?? null;
+        unset($data['categories'], $data['images_delete'], $data['images_order']);
 
         $product->update($data);
 
@@ -88,11 +84,48 @@ class ProductService
             $product->categories()->sync($categories);
         }
 
-        if (isset($data['images'])) {
+        // Processa exclusão de imagens
+        if (!empty($imagesDelete)) {
+            $this->deleteImages($product, $imagesDelete);
+        }
+
+        // Processa reordenação de imagens
+        if ($imagesOrder !== null) {
+            $this->reorderImages($product, $imagesOrder);
+        }
+
+        // Upload de novas imagens
+        if (isset($data['images']) && !empty($data['images'])) {
             $this->syncImages($product, $data['images']);
         }
 
         return $product;
+    }
+
+    /**
+     * Remove imagens do produto (storage + banco).
+     */
+    private function deleteImages(Product $product, array $imageIds): void
+    {
+        $images = $product->images()->whereIn('id', $imageIds)->get();
+
+        foreach ($images as $image) {
+            Storage::disk('public')->delete($image->path);
+            if ($image->original_path) {
+                Storage::disk('public')->delete($image->original_path);
+            }
+            $image->delete();
+        }
+    }
+
+    /**
+     * Reordena as imagens do produto conforme array de IDs na nova ordem.
+     */
+    private function reorderImages(Product $product, array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $imageId) {
+            $product->images()->where('id', $imageId)->update(['order' => $index]);
+        }
     }
 
     public function delete(Product $product): bool
@@ -336,126 +369,16 @@ class ProductService
      * @param  Product|null  $existing    Produto existente (null para criação)
      * @return array                      Dados com campos SEO auto-gerados
      */
-    private function autoGenerateSeoFields(array $data, ?Product $existing): array
-    {
-        $name = $data['name'] ?? ($existing?->name ?? '');
-        $description = $data['description'] ?? ($existing?->description ?? '');
-
-        // Resolve categorias: prioriza as enviadas no form, depois as existentes no model
-        $categoryIds = $data['categories'] ?? null;
-        $categoryNames = [];
-
-        if ($categoryIds !== null && is_array($categoryIds)) {
-            $categoryNames = \App\Models\Category::whereIn('id', $categoryIds)->pluck('name')->toArray();
-        } elseif ($existing) {
-            $categoryNames = $existing->categories()->pluck('name')->toArray();
-        }
-
-        $categoryString = implode(', ', $categoryNames);
-
-        // Helper: determina se o campo deve ser auto-gerado
-        $shouldGenerate = function (string $field) use ($data, $existing): bool {
-            // Se o usuário enviou o campo explicitamente (não vazio), respeita o valor
-            if (!empty($data[$field])) {
-                return false;
-            }
-            // Se está criando, gera sempre que vazio
-            if (!$existing) {
-                return true;
-            }
-            // Se está atualizando e o campo está vazio no request, gera
-
-            return true;
-        };
-
-        // meta_title: usa o nome do produto (máx. 120 chars)
-        if ($shouldGenerate('meta_title')) {
-            $data['meta_title'] = mb_substr(trim($name), 0, 120);
-        }
-
-        // meta_description: usa a descrição do produto (máx. 320 chars)
-        if ($shouldGenerate('meta_description')) {
-            $cleanDescription = trim(strip_tags($description));
-            $data['meta_description'] = mb_substr($cleanDescription ?: $name, 0, 320);
-        }
-
-        // meta_keywords: gera a partir do nome + categorias
-        if ($shouldGenerate('meta_keywords')) {
-            $keywords = $this->generateKeywords($name, $categoryString, $data);
-            $data['meta_keywords'] = mb_substr($keywords, 0, 255);
-        }
-
-        // og_image: usa a primeira imagem do produto, se existir
-        if ($shouldGenerate('og_image')) {
-            if ($existing && $firstImage = $existing->firstImage()) {
-                $data['og_image'] = url('storage/' . $firstImage->path);
-            }
-        }
-
-        // schema_markup: gera JSON-LD Product estruturado
-        if ($shouldGenerate('schema_markup')) {
-            $data['schema_markup'] = $this->generateSchemaMarkup($data, $existing, $categoryString);
-        }
-
-        // google_tag_manager: gera script GTM com dataLayer para o produto
-        if ($shouldGenerate('google_tag_manager')) {
-            $data['google_tag_manager'] = $this->generateGtmScript($data, $existing);
-        }
-
-        return $data;
-    }
-
     /**
-     * Gera keywords relevantes a partir do nome do produto e categorias.
-     * Extrai palavras significativas, combina com a categoria e adiciona
-     * termos de cauda longa relevantes para impressão 3D.
+     * Sobrecarga pública para o accessor do Model. Aceita apenas o Product
+     * e extrai todos os dados necessários dos atributos e relacionamentos.
      */
-    private function generateKeywords(string $name, string $categoryString, array $data = []): string
+    public function renderSchemaMarkup(Product $product): string
     {
-        $keywords = [];
+        $data = $product->getAttributes();
+        $categoryString = $product->categories()->pluck('name')->implode(', ');
 
-        // Adiciona palavras do nome do produto (remove palavras muito curtas)
-        $nameWords = explode(' ', strtolower(trim($name)));
-        foreach ($nameWords as $word) {
-            $clean = preg_replace('/[^a-zà-ú0-9]/', '', $word);
-            if (mb_strlen($clean) >= 3 && !in_array($clean, ['com', 'para', 'que', 'dos', 'das', 'uma', 'são'])) {
-                $keywords[] = $clean;
-            }
-        }
-
-        // Adiciona o nome completo como keyword
-        $keywords[] = strtolower(trim($name));
-
-        // Adiciona categorias
-        if (!empty($categoryString)) {
-            foreach (explode(', ', strtolower($categoryString)) as $cat) {
-                $keywords[] = trim($cat);
-                $keywords[] = trim($cat) . ' impressão 3d';
-            }
-        }
-
-        // Adiciona termos genéricos relevantes para o nicho
-        $genericTerms = [
-            'impressão 3d',
-            'produto 3d',
-            'marketplace 3d',
-            'impressão sob demanda',
-            'peça 3d personalizada',
-            'filamento ' . strtolower($data['material_type'] ?? ''),
-            'prototipagem 3d',
-        ];
-
-        foreach ($genericTerms as $term) {
-            $term = trim($term);
-            if (!empty($term) && $term !== 'filamento ') {
-                $keywords[] = $term;
-            }
-        }
-
-        // Remove duplicatas, palavras vazias e limita
-        $keywords = array_unique(array_filter($keywords));
-
-        return implode(', ', $keywords);
+        return $this->generateSchemaMarkupInternal($data, $product, $categoryString);
     }
 
     /**
@@ -464,7 +387,7 @@ class ProductService
      * Inclui: nome, descrição, imagem, preço, disponibilidade, categorias,
      * marca (tenant), SKU e dimensões quando disponíveis.
      */
-    private function generateSchemaMarkup(array $data, ?Product $existing, string $categoryString): string
+    private function generateSchemaMarkupInternal(array $data, ?Product $existing, string $categoryString): string
     {
         $name = $data['name'] ?? ($existing?->name ?? 'Produto');
         $description = trim(strip_tags($data['description'] ?? ($existing?->description ?? '')));
@@ -545,12 +468,21 @@ class ProductService
     }
 
     /**
+     * Sobrecarga pública para o accessor do Model. Aceita apenas o Product
+     * e extrai todos os dados necessários dos atributos.
+     */
+    public function renderGtmScript(Product $product): string
+    {
+        return $this->generateGtmScriptInternal($product->getAttributes(), $product);
+    }
+
+    /**
      * Gera script de Google Tag Manager com dataLayer para o produto.
      *
      * Configura evento de page_view com dados do produto para remarketing
      * e trackeamento de e-commerce no Google Analytics 4.
      */
-    private function generateGtmScript(array $data, ?Product $existing): string
+    private function generateGtmScriptInternal(array $data, ?Product $existing): string
     {
         $name = $data['name'] ?? ($existing?->name ?? 'Produto');
         $salePrice = $data['sale_price'] ?? ($existing?->sale_price ?? 0);

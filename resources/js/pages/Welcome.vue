@@ -17,6 +17,10 @@ defineOptions({
     layout: WelcomeLayout,
 });
 
+const props = defineProps<{
+    heroImages?: string[];
+}>();
+
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const stats = computed(
@@ -29,31 +33,33 @@ const stats = computed(
         } | null,
 );
 
-// Background images from storage/imgs/home (served via public/storage symlink)
-// Atualizado automaticamente pelo pipeline de otimização
-const heroImages = [
-    '/storage/imgs/home/3.webp',
-    '/storage/imgs/home/4.webp',
-    '/storage/imgs/home/5.webp',
-    '/storage/imgs/home/6.webp',
-    '/storage/imgs/home/7.webp',
-    '/storage/imgs/home/8.webp',
-    '/storage/imgs/home/felicia.webp',
-    '/storage/imgs/home/felicia2.webp',
-    '/storage/imgs/home/jax-f5.webp',
-    '/storage/imgs/home/impressao-3d-2.webp',
-    '/storage/imgs/home/jhonn-kelly-ryu-wip-5.webp',
-    '/storage/imgs/home/G_001-10.webp',
-];
+// Imagens do carrossel recebidas do WelcomeController
+// Se não houver, usa fallback hardcoded
+const heroImages = computed(() => {
+    if (props.heroImages && props.heroImages.length > 0) {
+        return props.heroImages;
+    }
+    // Fallback para quando acessado sem controller (ex: Route::inertia)
+    return [
+        '/storage/imgs/home/3.webp',
+        '/storage/imgs/home/4.webp',
+        '/storage/imgs/home/5.webp',
+        '/storage/imgs/home/6.webp',
+        '/storage/imgs/home/7.webp',
+        '/storage/imgs/home/8.webp',
+    ];
+});
 
 const currentImageIndex = ref(0);
 let imageInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
-    imageInterval = setInterval(() => {
-        currentImageIndex.value =
-            (currentImageIndex.value + 1) % heroImages.length;
-    }, 4000);
+    if (heroImages.value.length > 0) {
+        imageInterval = setInterval(() => {
+            currentImageIndex.value =
+                (currentImageIndex.value + 1) % heroImages.value.length;
+        }, 4000);
+    }
 });
 
 onUnmounted(() => {
@@ -209,7 +215,7 @@ const features = [
                     </template>
                 </div>
                 <!-- Image dots -->
-                <div class="mt-8 flex justify-center gap-2">
+                <div v-if="heroImages.length > 0" class="mt-8 flex justify-center gap-2">
                     <button
                         v-for="(img, idx) in heroImages"
                         :key="img"
