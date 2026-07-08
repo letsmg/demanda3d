@@ -24,7 +24,7 @@ class WelcomeController extends Controller
             if (in_array($ext, ['webp', 'jpg', 'jpeg', 'png', 'gif'], true)) {
                 $heroImages[] = [
                     'filename' => basename($file),
-                    'url' => Storage::disk('public')->url($file),
+                    'url' => Storage::disk('public')->url($file) . '?v=' . filemtime(Storage::disk('public')->path($file)),
                 ];
             }
         }

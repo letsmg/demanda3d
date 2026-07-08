@@ -215,7 +215,7 @@ class ToolsController extends Controller
             if (in_array($ext, ['webp', 'jpg', 'jpeg', 'png', 'gif'], true)) {
                 $images[] = [
                     'filename' => basename($file),
-                    'url' => Storage::disk('public')->url($file),
+                    'url' => Storage::disk('public')->url($file) . '?v=' . filemtime(Storage::disk('public')->path($file)),
                 ];
             }
         }
