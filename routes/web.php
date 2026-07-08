@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 // Welcome page — carrossel de imagens dinâmico da pasta imgs/home/
 Route::get('/', WelcomeController::class)->name('welcome');
 Route::inertia('/home', 'Dashboard')->name('home');
+Route::inertia('/sobre', 'About')->name('about');
 
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');

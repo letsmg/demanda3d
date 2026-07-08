@@ -181,36 +181,11 @@ const features = [
                     <template v-else>
                         <Button
                             size="lg"
-                            as-child
-                            class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
-                        >
-                            <Link :href="register.url()">Começar Agora</Link>
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            as-child
-                            class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
-                        >
-                            <Link :href="login.url()">Sou Vendedor</Link>
-                        </Button>
-                        <Button
-                            size="lg"
                             variant="secondary"
                             as-child
                             class="bg-amber-700 text-amber-100 hover:bg-amber-600"
                         >
-                            <Link :href="'/login_cli'">Sou Cliente</Link>
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            as-child
-                            class="border-amber-300 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
-                        >
-                            <Link :href="'/login_carrier'"
-                                >Sou Transportadora</Link
-                            >
+                            <Link :href="'/sobre'">Quero saber mais</Link>
                         </Button>
                     </template>
                 </div>
