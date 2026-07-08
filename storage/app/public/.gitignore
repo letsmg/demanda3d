@@ -1,3 +1,7 @@
 *
 !.gitignore
-/originais
+!imgs/
+!imgs/**/
+!imgs/**/*
+imgs/originais/
+imgs/products/
