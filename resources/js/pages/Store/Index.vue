@@ -362,24 +362,24 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 </h1>
                 <p class="mt-1 text-sm text-amber-600">
                     Produtos disponíveis para impressão 3D de todos os nossos
-                    produtores parceiros
+                    vendedores
                 </p>
             </div>
 
             <div class="mb-8 space-y-4">
                 <div class="relative">
                     <Search
-                        class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-400"
+                        class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-910"
                     />
                     <Input
                         v-model="searchTerm"
                         type="text"
                         placeholder="Buscar produtos por nome ou descrição..."
-                        class="w-full border-amber-300 bg-white! pr-10 pl-10 text-amber-900! placeholder:text-amber-800! focus:border-amber-500 focus:ring-amber-500"
+                        class="w-full border-amber-900 bg-white! pr-10 pl-10 text-amber-900! placeholder:text-amber-800! focus:border-amber-500 focus:ring-amber-500"
                     />
                     <button
                         v-if="searchTerm"
-                        class="absolute top-1/2 right-3 -translate-y-1/2 text-amber-400 hover:text-amber-600"
+                        class="absolute top-1/2 right-3 -translate-y-1/2 text-amber-910 hover:text-amber-600"
                         @click="searchTerm = ''; applyStoreFilters()"
                     >
                         <X class="h-4 w-4" />
@@ -401,7 +401,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             min="0"
                             step="0.01"
                             placeholder="Mín"
-                            class="w-24 border-amber-300 bg-white! text-amber-900! placeholder:text-amber-800!"
+                            class="w-24 border-amber-900 bg-white! text-amber-900! placeholder:text-amber-800!"
                             @change="applyStoreFilters"
                         />
                         <span class="text-amber-600">-</span>
@@ -411,7 +411,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             min="0"
                             step="0.01"
                             placeholder="Máx"
-                            class="w-24 border-amber-300 bg-white! text-amber-900! placeholder:text-amber-800!"
+                            class="w-24 border-amber-900 bg-white! text-amber-900! placeholder:text-amber-800!"
                             @change="applyStoreFilters"
                         />
                     </div>
@@ -422,7 +422,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             @update:model-value="onSortOptionChange"
                         >
                             <SelectTrigger
-                                class="w-44 border-amber-300 bg-white! text-amber-800 placeholder:text-amber-800!"
+                                class="w-44 border-amber-900 bg-white! text-amber-800 placeholder:text-amber-800!"
                                 ><SelectValue
                             /></SelectTrigger>
                             <SelectContent>
@@ -452,7 +452,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     <label class="text-sm font-medium text-amber-700">Categorias:</label>
                     <button
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="!activeCategory ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        :class="!activeCategory ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-910'"
                         @click="activeCategory = ''; applyStoreFilters()"
                     >
                         Todas
@@ -461,7 +461,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         v-for="cat in props.categories"
                         :key="cat.slug"
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="activeCategory === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-400'"
+                        :class="activeCategory === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-910'"
                         @click="activeCategory = cat.slug; applyStoreFilters()"
                     >
                         {{ cat.name }}
@@ -470,7 +470,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             </div>
 
             <div v-if="visibleProducts.length === 0" class="py-16 text-center">
-                <ShoppingBag class="mx-auto h-12 w-12 text-amber-300" />
+                <ShoppingBag class="mx-auto h-12 w-12 text-amber-900" />
                 <h3 class="mt-2 text-sm font-semibold text-amber-800">
                     Nenhum produto encontrado
                 </h3>
@@ -532,7 +532,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         <div class="flex items-start justify-between">
                             <div>
                                 <CardTitle class="text-base text-amber-900">{{ product.name }}</CardTitle>
-                                <p v-if="product.tenant?.display_name" class="mt-0.5 text-xs text-amber-400">
+                                <p v-if="product.tenant?.display_name" class="mt-0.5 text-xs text-amber-910">
                                     {{ product.tenant.display_name }}
                                 </p>
                             </div>
@@ -554,7 +554,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 </div>
                                 <button
                                     v-else
-                                    class="flex h-8 w-8 items-center justify-center rounded-full text-amber-400 transition hover:bg-amber-50 hover:text-amber-600"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full text-amber-910 transition hover:bg-amber-50 hover:text-amber-600"
                                     @click="addToCart(product.id)"
                                     :title="authClient ? 'Adicionar ao carrinho' : 'Faça login para comprar'"
                                 >
@@ -576,11 +576,11 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 {{ product.tenant?.user?.display_name || product.tenant?.user?.first_name_encrypted || 'Vendedor' }}
                             </p>
                             <div v-if="product.tenant?.rating_count > 0" class="flex items-center gap-1">
-                                <Star class="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                <Star class="h-3.5 w-3.5 fill-amber-910 text-amber-910" />
                                 <span class="text-xs font-medium text-amber-700">{{ product.tenant.rating_average }}</span>
-                                <span class="text-xs text-amber-400">({{ product.tenant.rating_count }})</span>
+                                <span class="text-xs text-amber-910">({{ product.tenant.rating_count }})</span>
                             </div>
-                            <p v-else class="text-xs text-amber-400">sem histórico de vendas</p>
+                            <p v-else class="text-xs text-amber-910">sem histórico de vendas</p>
                         </div>
                     </CardContent>
 
@@ -602,7 +602,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 <Button
                     variant="outline"
                     size="lg"
-                    class="border-amber-300 text-amber-700 hover:bg-amber-50"
+                    class="border-amber-900 text-amber-700 hover:bg-amber-50"
                     :disabled="loadingMore"
                     @click="loadMoreProducts"
                 >
@@ -634,7 +634,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             class="max-h-[60vh] rounded-lg object-contain"
                         />
                         <div v-else class="flex h-64 w-full items-center justify-center rounded-lg bg-amber-100">
-                            <ImageIcon class="h-16 w-16 text-amber-300" />
+                            <ImageIcon class="h-16 w-16 text-amber-900" />
                         </div>
                     </div>
                     <button
@@ -670,11 +670,11 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                     {{ selectedProduct.tenant?.user?.display_name || selectedProduct.tenant?.user?.first_name_encrypted || 'Vendedor' }}
                                 </p>
                                 <div v-if="selectedProduct.tenant?.rating_count > 0" class="mt-1 flex items-center gap-1">
-                                    <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+                                    <Star class="h-4 w-4 fill-amber-910 text-amber-910" />
                                     <span class="text-sm font-medium text-amber-700">{{ selectedProduct.tenant.rating_average }}</span>
-                                    <span class="text-sm text-amber-400">({{ selectedProduct.tenant.rating_count }} avaliações)</span>
+                                    <span class="text-sm text-amber-910">({{ selectedProduct.tenant.rating_count }} avaliações)</span>
                                 </div>
-                                <p v-else class="mt-1 text-sm text-amber-400">sem histórico de vendas</p>
+                                <p v-else class="mt-1 text-sm text-amber-910">sem histórico de vendas</p>
                             </div>
                             <Button @click="addToCart(selectedProduct.id)">
                                 {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}

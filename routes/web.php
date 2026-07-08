@@ -17,6 +17,7 @@ use App\Http\Controllers\Inertia\InputController as InertiaInputController;
 use App\Http\Controllers\Inertia\OrderController as InertiaOrderController;
 use App\Http\Controllers\Inertia\ProductController as InertiaProductController;
 use App\Http\Controllers\Inertia\ReportController;
+use App\Http\Controllers\Inertia\AdminUserController as InertiaAdminUserController;
 use App\Http\Controllers\Inertia\ToolsController as InertiaToolsController;
 use App\Http\Controllers\Inertia\SupplierController as InertiaSupplierController;
 use App\Http\Controllers\ProductDetailController;
@@ -197,6 +198,14 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         // Hero images (carrossel da home) — admin only
         Route::post('/hero-images', [InertiaToolsController::class, 'uploadHeroImages'])->name('hero-images.upload');
         Route::delete('/hero-images', [InertiaToolsController::class, 'deleteHeroImage'])->name('hero-images.delete');
+    });
+
+    // Admin Users — CRUD visível apenas para Admin (access_level = 10)
+    Route::prefix('admin/users')->name('admin.users.')->group(function () {
+        Route::get('/', [InertiaAdminUserController::class, 'index'])->name('index');
+        Route::put('{user}', [InertiaAdminUserController::class, 'update'])->name('update');
+        Route::patch('{user}/toggle', [InertiaAdminUserController::class, 'toggle'])->name('toggle');
+        Route::post('{user}/reset-password', [InertiaAdminUserController::class, 'resetPassword'])->name('reset-password');
     });
 
     // Reports (management + admin com canAccessFinancials)

@@ -8,6 +8,8 @@ import {
     Calendar,
     Clock,
     DollarSign,
+    Shield,
+    Store,
 } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -47,9 +49,13 @@ type DashboardStats = {
     recent_inputs: Input[];
 };
 
-const { stats } = defineProps<{
+const { stats, user_access_level } = defineProps<{
     stats: DashboardStats;
+    user_access_level: number;
 }>();
+
+const isAdmin = user_access_level >= 10;
+const accessLabel = isAdmin ? 'Administrador' : 'Loja';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -80,6 +86,11 @@ const formatDate = (dateStr: string) => {
                 </p>
             </div>
             <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge :variant="isAdmin ? 'default' : 'secondary'" class="gap-1 px-2 py-0.5 text-xs">
+                    <Shield v-if="isAdmin" class="h-3 w-3" />
+                    <Store v-else class="h-3 w-3" />
+                    {{ accessLabel }}
+                </Badge>
                 <Calendar class="h-4 w-4" />
                 <span>{{
                     new Date().toLocaleDateString('pt-BR', {
@@ -102,7 +113,7 @@ const formatDate = (dateStr: string) => {
                         >Total de Clientes</CardTitle
                     >
                     <div
-                        class="rounded-lg bg-blue-100 p-2 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                        class="rounded-lg bg-blue-100 p-2 text-blue-700 dark:bg-blue-900/30 dark:text-blue-910"
                     >
                         <Users class="h-4 w-4" />
                     </div>
@@ -129,7 +140,7 @@ const formatDate = (dateStr: string) => {
                         >Total de Pedidos</CardTitle
                     >
                     <div
-                        class="rounded-lg bg-green-100 p-2 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        class="rounded-lg bg-green-100 p-2 text-green-700 dark:bg-green-900/30 dark:text-green-910"
                     >
                         <ShoppingCart class="h-4 w-4" />
                     </div>
@@ -156,7 +167,7 @@ const formatDate = (dateStr: string) => {
                         >Receita Mensal</CardTitle
                     >
                     <div
-                        class="rounded-lg bg-purple-100 p-2 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                        class="rounded-lg bg-purple-100 p-2 text-purple-700 dark:bg-purple-900/30 dark:text-purple-910"
                     >
                         <TrendingUp class="h-4 w-4" />
                     </div>
@@ -182,7 +193,7 @@ const formatDate = (dateStr: string) => {
                         >Entregas Pendentes</CardTitle
                     >
                     <div
-                        class="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        class="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/30 dark:text-amber-910"
                     >
                         <Clock class="h-4 w-4" />
                     </div>
@@ -192,7 +203,7 @@ const formatDate = (dateStr: string) => {
                         {{ stats.pending_deliveries }}
                     </div>
                     <p class="text-xs text-muted-foreground">
-                        <span class="text-amber-600 dark:text-amber-400"
+                        <span class="text-amber-600 dark:text-amber-910"
                             >Aguardando entrega</span
                         >
                     </p>

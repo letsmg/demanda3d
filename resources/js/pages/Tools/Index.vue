@@ -125,7 +125,7 @@ const deleteImage = (filename: string) => {
         </div>
 
         <!-- Flash messages -->
-        <Alert v-if="flash?.success" class="border-green-400 bg-green-50 text-green-800">
+        <Alert v-if="flash?.success" class="border-green-910 bg-green-50 text-green-800">
             <CheckCircle class="h-4 w-4" />
             <AlertTitle>Sucesso</AlertTitle>
             <AlertDescription>{{ flash?.success }}</AlertDescription>
