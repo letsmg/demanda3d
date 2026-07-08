@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Observers\ProductObserver;
 use App\Observers\ReviewObserver;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -28,8 +29,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->defineGates();
         Review::observe(ReviewObserver::class);
         Product::observe(ProductObserver::class);
+    }
+
+    /**
+     * Define os gates de autorização do sistema.
+     */
+    protected function defineGates(): void
+    {
+        Gate::define('admin.only', fn ($user) => $user?->isAdmin() ?? false);
     }
 
     /**

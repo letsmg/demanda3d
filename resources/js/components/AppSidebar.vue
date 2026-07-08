@@ -82,11 +82,14 @@ const mainNavItems: NavItem[] = [
         href: productsIndex(),
         icon: ShoppingBag,
     },
-    {
-        title: 'Ferramentas',
-        href: toolsIndex(),
-        icon: Wrench,
-    },
+    // Visível apenas para Admin
+    ...(isAdmin
+        ? [{
+              title: 'Ferramentas',
+              href: toolsIndex(),
+              icon: Wrench,
+          }]
+        : []),
     {
         title: 'Relatórios',
         href: reportsIndex(),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Wrench, RefreshCw, FileText, CheckCircle, Image, Upload, Trash2, AlertCircle } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +10,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -40,7 +39,6 @@ const uploadForm = useForm({
 const deleteForm = useForm({
     filename: '',
 });
-
 const imageError = ref<string | null>(null);
 const uploading = ref(false);
 
@@ -87,6 +85,7 @@ const submitUpload = () => {
 
     uploadForm.post('/tools/hero-images', {
         preserveScroll: true,
+        forceFormData: true,
         onSuccess: () => {
             uploadForm.images = [];
             uploading.value = false;
@@ -103,7 +102,7 @@ const deleteImage = (filename: string) => {
     if (!confirm(`Remover "${filename}" do carrossel?`)) return;
 
     deleteForm.filename = filename;
-    deleteForm.delete('/tools/hero-images', {
+    deleteForm.delete(`/tools/hero-images?filename=${encodeURIComponent(filename)}`, {
         preserveScroll: true,
         onSuccess: () => {
             deleteForm.filename = '';
@@ -135,6 +134,35 @@ const deleteImage = (filename: string) => {
             <AlertTitle>Erro</AlertTitle>
             <AlertDescription>{{ flash?.error }}</AlertDescription>
         </Alert>
+
+        <!-- Lista de ferramentas disponíveis -->
+        <Card>
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <Wrench class="h-5 w-5 text-amber-600" />
+                    Ferramentas disponíveis
+                </CardTitle>
+                <CardDescription>Utilitários para administração do sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="flex items-start gap-3 rounded-lg border p-3">
+                        <FileText class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                        <div>
+                            <p class="text-sm font-medium">Gerar Sitemap</p>
+                            <p class="text-xs text-muted-foreground">Atualiza sitemap.xml com todas as páginas públicas e produtos ativos</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 rounded-lg border p-3">
+                        <Image class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                        <div>
+                            <p class="text-sm font-medium">Carrossel da Home</p>
+                            <p class="text-xs text-muted-foreground">Upload e gerenciamento das imagens de fundo da página inicial</p>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
 
         <div class="grid gap-6 md:grid-cols-2">
             <!-- Sitemap Card -->
@@ -232,13 +260,14 @@ const deleteImage = (filename: string) => {
                             Tamanho máximo: 2MB por imagem. Formatos: JPG, PNG, WEBP.
                             As imagens serão otimizadas automaticamente.
                         </p>
-                        <Input
+                        <input
                             id="hero-image-input"
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
                             multiple
                             :disabled="uploading || uploadForm.processing"
-                            @input="onFilesSelected"
+                            class="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            @change="onFilesSelected"
                         />
                         <span
                             v-if="imageError || uploadForm.errors.images"
