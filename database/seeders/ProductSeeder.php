@@ -6,9 +6,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Tenant;
+use App\Services\ImageOptimizationService;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
@@ -20,10 +21,13 @@ class ProductSeeder extends Seeder
 
         if ($tenants->isEmpty()) {
             $this->command?->warn('⚠ Nenhum tenant encontrado.');
+
             return;
         }
 
         $this->command?->info('=== Criando produtos e baixando imagens ===');
+
+        $imageService = app(ImageOptimizationService::class);
 
         $products = [
             [
@@ -83,26 +87,26 @@ class ProductSeeder extends Seeder
 
                 if (! $product) {
                     $product = Product::withoutGlobalScopes()->create([
-                        'tenant_id'          => $tenantId,
-                        'name'               => $pd['name'],
-                        'slug'               => Product::generateUniqueSlug($pd['name'], $tenantId),
-                        'description'        => $pd['description'],
-                        'height'             => $pd['height'],
-                        'width'              => $pd['width'],
+                        'tenant_id' => $tenantId,
+                        'name' => $pd['name'],
+                        'slug' => Product::generateUniqueSlug($pd['name'], $tenantId),
+                        'description' => $pd['description'],
+                        'height' => $pd['height'],
+                        'width' => $pd['width'],
                         'approximate_weight' => $pd['approximate_weight'],
-                        'waste_weight'       => $pd['waste_weight'],
-                        'material_type'      => $pd['material_type'],
-                        'print_time'         => $pd['print_time'],
-                        'pieces_produced'    => $pd['pieces_produced'],
-                        'maintenance_fee'    => $pd['maintenance_fee'],
-                        'painting_time'      => $pd['painting_time'],
-                        'painting_material'  => $pd['painting_material'],
-                        'painting_cost'      => $pd['painting_cost'],
-                        'extras_cost'        => $pd['extras_cost'],
-                        'approximate_cost'   => $pd['approximate_cost'],
-                        'sale_price'         => $pd['sale_price'],
-                        'is_active'          => true,
-                        'moderation_status'  => 'approved',
+                        'waste_weight' => $pd['waste_weight'],
+                        'material_type' => $pd['material_type'],
+                        'print_time' => $pd['print_time'],
+                        'pieces_produced' => $pd['pieces_produced'],
+                        'maintenance_fee' => $pd['maintenance_fee'],
+                        'painting_time' => $pd['painting_time'],
+                        'painting_material' => $pd['painting_material'],
+                        'painting_cost' => $pd['painting_cost'],
+                        'extras_cost' => $pd['extras_cost'],
+                        'approximate_cost' => $pd['approximate_cost'],
+                        'sale_price' => $pd['sale_price'],
+                        'is_active' => true,
+                        'moderation_status' => 'approved',
                     ]);
 
                     $slugs = $pd['categories'] ?? [];
@@ -119,21 +123,46 @@ class ProductSeeder extends Seeder
 
                 for ($i = $existing; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
                     $url = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
-                    $path = "products/{$tenantId}/{$product->id}-{$i}.jpg";
                     $this->command?->getOutput()->write("    ⏳ Baixando imagem {$i}/2... ");
                     $content = @file_get_contents($url);
 
-                    if ($content !== false) {
-                        Storage::disk('public')->put($path, $content);
-                        ProductImage::create(['product_id' => $product->id, 'path' => $path, 'order' => $i]);
-                        $this->command?->getOutput()->writeln("<fg=green>✓ OK</>");
-                    } else {
-                        $this->command?->getOutput()->writeln("<fg=red>✗ FALHA</>");
+                    if ($content === false) {
+                        $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+
+                        continue;
+                    }
+
+                    // Salva em temp para criar UploadedFile e passar pelo pipeline
+                    $tmpPath = tempnam(sys_get_temp_dir(), 'seed_') . '.jpg';
+                    file_put_contents($tmpPath, $content);
+
+                    $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
+
+                    try {
+                        $result = $imageService->processProductUpload(
+                            $uploadedFile,
+                            $tenantId,
+                            $product->id,
+                            $product->slug,
+                        );
+
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path' => $result['optimized_path'],
+                            'original_path' => $result['original_path'],
+                            'thumbnail_path' => $result['thumbnail_path'],
+                            'order' => $i,
+                        ]);
+
+                        $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+                    } catch (\Exception $e) {
+                        $this->command?->getOutput()->writeln("<fg=red>✗ ERRO: {$e->getMessage()}</>");
+                    } finally {
+                        @unlink($tmpPath);
                     }
                 }
             }
             $this->command?->info('');
         }
     }
-
 }

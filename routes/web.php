@@ -198,6 +198,7 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         // Hero images (carrossel da home) — admin only
         Route::post('/hero-images', [InertiaToolsController::class, 'uploadHeroImages'])->name('hero-images.upload');
         Route::delete('/hero-images', [InertiaToolsController::class, 'deleteHeroImage'])->name('hero-images.delete');
+        Route::post('/hero-images/rebuild', [InertiaToolsController::class, 'rebuildHeroImages'])->name('hero-images.rebuild');
     });
 
     // Admin Users — CRUD visível apenas para Admin (access_level = 10)

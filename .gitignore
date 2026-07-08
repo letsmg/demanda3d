@@ -65,9 +65,6 @@ gcloud-api-7bbd403db8e7*
 public/fonts*
 
 # Pipeline de otimização de imagens
-# Originais não versionados (apenas .gitkeep para manter a estrutura)
-/storage/app/public/imgs/originais/*
-!/storage/app/public/imgs/originais/.gitkeep
-# Home também é derivada de originais e não deve ser versionada
-/storage/app/public/imgs/home/*
-!/storage/app/public/imgs/home/.gitkeep
+# Apenas a pasta products/ é excluída (contém imagens de produtos por tenant, geradas dinamicamente)
+# originais/ e home/ são versionadas para o carrossel da página inicial
+/storage/app/public/imgs/products/

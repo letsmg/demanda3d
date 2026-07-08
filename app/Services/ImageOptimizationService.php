@@ -36,10 +36,11 @@ class ImageOptimizationService
      *
      * @return array{original_path: string, thumbnail_path: string, optimized_path: string}
      */
-    public function processProductUpload(UploadedFile $file, int $tenantId, int $productId): array
+    public function processProductUpload(UploadedFile $file, int $tenantId, int $productId, string $slug = ''): array
     {
         $extension = $this->resolveExtension($file);
-        $baseName = \Illuminate\Support\Str::uuid()->toString() . '.' . $extension;
+        $namePrefix = $slug ?: \Illuminate\Support\Str::uuid()->toString();
+        $baseName = $namePrefix . '.' . $extension;
 
         $basePath = self::PRODUCTS_DIR . "/{$tenantId}/{$productId}";
 

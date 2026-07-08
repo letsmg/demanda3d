@@ -575,6 +575,7 @@ HTML;
                         $image,
                         $product->tenant_id,
                         $product->id,
+                        $product->slug,
                     );
 
                     // 3. Persiste no banco APÓS sucesso do upload
