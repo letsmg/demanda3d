@@ -245,6 +245,9 @@ jobs:
             mkdir -p "$SHARED/docker"
             [ -d "$NEW_RELEASE/docker" ] && cp -r "$NEW_RELEASE/docker/"* "$SHARED/docker/" || true
 
+            # Garante permissão de execução para scripts de entrypoint Docker
+            find "$SHARED/docker" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+
             if [ -f "$NEW_RELEASE/$COMPOSE_FILE" ]; then
                 cp "$NEW_RELEASE/$COMPOSE_FILE" "$SHARED/docker-compose.yml"
             fi
