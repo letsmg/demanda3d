@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Enums\ModerationRiskCategory;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SecurityLog;
 use Google\Cloud\Vision\V1\ImageAnnotatorClient;
 use Google\Cloud\Vision\V1\Image as VisionImage;
 use Illuminate\Http\UploadedFile;
@@ -59,6 +60,14 @@ class ImageModerationService
             ModerationRiskCategory::ILLEGAL => 'rejected',
         };
 
+        // Inclui o raw_response da API para auditoria no SecurityLog
+        $result = [
+            'status' => $status,
+            'category' => $classification['category'],
+            'details' => $classification['details'],
+            'raw_response' => $safeSearchResults,
+        ];
+
         Log::info('Resultado da moderação de imagem.', [
             'category' => $classification['category']->value,
             'details' => $classification['details'],
@@ -66,11 +75,7 @@ class ImageModerationService
             'product_id' => $product?->id,
         ]);
 
-        return [
-            'status' => $status,
-            'category' => $classification['category'],
-            'details' => $classification['details'],
-        ];
+        return $result;
     }
 
     /**
@@ -84,6 +89,15 @@ class ImageModerationService
         $result = $this->analyze($image, $product);
 
         if ($result['status'] === 'rejected') {
+            // Registra a tentativa de violação na tabela security_logs
+            SecurityLog::create([
+                'tenant_id' => auth()->user()?->tenant_id,
+                'user_id' => auth()->id(),
+                'attempted_at' => now(),
+                'violation_type' => $result['details'],
+                'raw_response' => $result['raw_response'] ?? null,
+            ]);
+
             Log::warning('Upload bloqueado: conteúdo ilegal detectado.', [
                 'details' => $result['details'],
                 'product_id' => $product?->id,

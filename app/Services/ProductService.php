@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -114,6 +115,9 @@ class ProductService
             if ($image->original_path) {
                 Storage::disk('public')->delete($image->original_path);
             }
+            if ($image->thumbnail_path) {
+                Storage::disk('public')->delete($image->thumbnail_path);
+            }
             $image->delete();
         }
     }
@@ -130,11 +134,14 @@ class ProductService
 
     public function delete(Product $product): bool
     {
-        // Delete all images (both optimized and original)
+        // Delete all images (optimized, original, thumbnail)
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->path);
             if ($image->original_path) {
                 Storage::disk('public')->delete($image->original_path);
+            }
+            if ($image->thumbnail_path) {
+                Storage::disk('public')->delete($image->thumbnail_path);
             }
             $image->delete();
         }
@@ -516,13 +523,12 @@ HTML;
     }
 
     /**
-     * Sincroniza imagens do produto: remove excluídas, faz upload das novas com
-     * pipeline de otimização (original + versão otimizada).
+     * Sincroniza imagens do produto com pipeline completo:
+     * 1. Moderação via Google Cloud Vision SafeSearch
+     * 2. Upload físico (original + thumbnail + optimized) em paths por tenant
+     * 3. Persistência no banco
      *
-     * Fluxo completo por imagem:
-     * 1. Moderação inteligente (ImageModerationService)
-     * 2. Pipeline de otimização (ImageOptimizationService): salva original + otimizado
-     * 3. Persiste no banco apenas o path relativo do otimizado + referência ao original
+     * Tudo dentro de DB::transaction — se o upload falhar, o banco reverte.
      *
      * @throws \RuntimeException Se conteúdo ilegal for detectado (422).
      */
@@ -531,7 +537,6 @@ HTML;
         $order = 0;
         $maxImages = 5;
 
-        // Remove excess images if more than allowed
         $currentCount = $product->images()->count();
         $remainingSlots = $maxImages - $currentCount;
 
@@ -539,12 +544,8 @@ HTML;
             return;
         }
 
-        // Garante que os diretórios do pipeline existem
-        $this->imageOptimizationService->ensureDirectories();
-
         foreach ($images as $image) {
             if ($image instanceof UploadedFile && $order < $remainingSlots) {
-                // Validate max size (2MB para ficar consistente com a Form Request)
                 if ($image->getSize() > 2 * 1024 * 1024) {
                     Log::warning('Imagem excede 2MB, ignorada no syncImages.', [
                         'product_id' => $product->id,
@@ -553,48 +554,47 @@ HTML;
                     continue;
                 }
 
-                // Moderação inteligente da imagem
+                // 1. Moderação — Google Cloud Vision SafeSearch (block se ilegal)
                 try {
                     $moderationResult = $this->imageModerationService->moderateUpload($image, $product);
 
-                    // Se conteúdo adulto detectado, vincula à categoria 'adulto'
                     if ($moderationResult['adult_category_id']) {
                         $currentCategories = $product->categories()->pluck('id')->toArray();
                         if (!in_array($moderationResult['adult_category_id'], $currentCategories, true)) {
                             $currentCategories[] = $moderationResult['adult_category_id'];
                             $product->categories()->sync($currentCategories);
-                            Log::info('Categoria adulto vinculada automaticamente via moderação.', [
-                                'product_id' => $product->id,
-                            ]);
-                        }
-                    }
-
-                    // Se classificação incerta, marca produto como pendente de revisão
-                    if ($moderationResult['status'] === 'approved' && str_contains($moderationResult['category']->value, 'safe')) {
-                        if (str_contains($product->moderation_status ?? '', 'pending')) {
-                            $product->update(['moderation_status' => 'pending_review']);
                         }
                     }
                 } catch (\RuntimeException $e) {
-                    // Conteúdo ilegal — relança a exceção para o controller tratar
-                    throw $e;
+                    throw $e; // Conteúdo ilegal — 422
                 }
 
-                // Pipeline de otimização: salva original + versão otimizada
-                $result = $this->imageOptimizationService->processUpload($image);
+                // 2. Upload + otimização dentro de transaction
+                DB::transaction(function () use ($product, $image, &$order, $currentCount) {
+                    $result = $this->imageOptimizationService->processProductUpload(
+                        $image,
+                        $product->tenant_id,
+                        $product->id,
+                    );
 
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $result['optimized_path'],
-                    'original_path' => $result['original_path'],
-                    'order' => $currentCount + $order++,
-                ]);
+                    // 3. Persiste no banco APÓS sucesso do upload
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'path' => $result['optimized_path'],
+                        'original_path' => $result['original_path'],
+                        'thumbnail_path' => $result['thumbnail_path'],
+                        'order' => $currentCount + $order,
+                    ]);
 
-                Log::info('Imagem de produto processada com pipeline de otimização.', [
-                    'product_id' => $product->id,
-                    'optimized_path' => $result['optimized_path'],
-                    'original_path' => $result['original_path'],
-                ]);
+                    Log::info('Imagem de produto processada com pipeline completo.', [
+                        'product_id' => $product->id,
+                        'tenant_id' => $product->tenant_id,
+                        'optimized_path' => $result['optimized_path'],
+                        'thumbnail_path' => $result['thumbnail_path'],
+                    ]);
+                });
+
+                $order++;
             }
         }
     }

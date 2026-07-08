@@ -228,7 +228,6 @@ const submit = () => {
                             class="flex flex-wrap gap-3 rounded-lg border-2 border-dashed border-muted-foreground/30 p-4 transition-colors hover:border-primary/50"
                             @dragover="onDragOver"
                             @drop="onContainerDrop"
-                            @click="triggerFileInput"
                         >
                             <!-- Miniaturas das imagens selecionadas -->
                             <div
@@ -253,24 +252,26 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <!-- Slots vazios com "+" -->
-                            <div
+                            <!-- Slots vazios com "+" — clicáveis para abrir o file picker -->
+                            <button
                                 v-for="slot in SLOTS.filter((_, i) => i >= previewImages.length)"
                                 :key="'slot-' + slot"
+                                type="button"
                                 class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/50 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                                @click="triggerFileInput"
                             >
                                 <Plus class="h-6 w-6 text-muted-foreground/50" />
-                            </div>
+                            </button>
                         </div>
 
-                        <Input
+                        <input
                             ref="fileInput"
                             id="images"
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
                             multiple
                             class="hidden"
-                            @input="onFileChange"
+                            @change="onFileChange"
                         />
                         <span v-if="imageError" class="text-sm text-destructive">{{ imageError }}</span>
                         <span v-if="form.errors.images" class="text-sm text-destructive">{{ form.errors.images }}</span>

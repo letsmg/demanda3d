@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
     'product_id',
     'path',
     'original_path',
+    'thumbnail_path',
     'order',
 ])]
 class ProductImage extends Model

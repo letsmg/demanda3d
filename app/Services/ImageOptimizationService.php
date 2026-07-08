@@ -23,6 +23,97 @@ class ImageOptimizationService
     private const OPTIMIZED_DISK = 'public';
     private const ORIGINAL_DIR = 'imgs/originais';
     private const OPTIMIZED_DIR = 'imgs/home';
+    private const PRODUCTS_DIR = 'imgs/products';
+
+
+    /**
+     * Processa upload de imagem de produto com paths por tenant e ID.
+     *
+     * Gera três versões:
+     *   - original  (produtos/{tenant_id}/{product_id}/original/)
+     *   - thumbnail (produtos/{tenant_id}/{product_id}/thumbnail/) 200x200
+     *   - optimized (produtos/{tenant_id}/{product_id}/optimized/) webp 85%
+     *
+     * @return array{original_path: string, thumbnail_path: string, optimized_path: string}
+     */
+    public function processProductUpload(UploadedFile $file, int $tenantId, int $productId): array
+    {
+        $extension = $this->resolveExtension($file);
+        $baseName = \Illuminate\Support\Str::uuid()->toString() . '.' . $extension;
+
+        $basePath = self::PRODUCTS_DIR . "/{$tenantId}/{$productId}";
+
+        // 1. Salva original
+        $originalPath = "{$basePath}/original/{$baseName}";
+        Storage::disk('public')->put($originalPath, file_get_contents($file->getRealPath()));
+
+        // 2. Gera thumbnail (200x200)
+        $thumbnailPath = "{$basePath}/thumbnail/{$baseName}";
+        $this->generateThumbnail($file, $thumbnailPath);
+
+        // 3. Gera versão otimizada
+        $optimizedPath = $this->optimizeAndSaveProduct($file, "{$basePath}/optimized", $baseName);
+
+        return [
+            'original_path' => $originalPath,
+            'thumbnail_path' => $thumbnailPath,
+            'optimized_path' => $optimizedPath,
+        ];
+    }
+
+    /**
+     * Gera uma miniatura 200x200 da imagem.
+     */
+    private function generateThumbnail(UploadedFile $file, string $targetPath): void
+    {
+        $manager = ImageManager::gd();
+        $image = $manager->read($file->getRealPath());
+        $image->cover(200, 200);
+
+        $absoluteTarget = Storage::disk('public')->path($targetPath);
+        $targetDir = dirname($absoluteTarget);
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $tmpThumb = tempnam(sys_get_temp_dir(), 'thumb_') . '.webp';
+        $image->toWebp(quality: 80)->save($tmpThumb);
+
+        rename($tmpThumb, $absoluteTarget);
+    }
+
+    /**
+     * Otimiza e salva a imagem de produto no diretório de destino.
+     */
+    private function optimizeAndSaveProduct(UploadedFile $file, string $basePath, string $filename): string
+    {
+        $manager = ImageManager::gd();
+        $image = $manager->read($file->getRealPath());
+
+        if ($image->width() > self::MAX_WIDTH) {
+            $image->scale(width: self::MAX_WIDTH);
+        }
+
+        $targetFormat = 'webp';
+        $outputFilename = pathinfo($filename, PATHINFO_FILENAME) . '.' . $targetFormat;
+        $targetPath = "{$basePath}/{$outputFilename}";
+        $absoluteTarget = Storage::disk('public')->path($targetPath);
+
+        $targetDir = dirname($absoluteTarget);
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $tmpOptimized = tempnam(sys_get_temp_dir(), 'opt_') . '.' . $targetFormat;
+        $image->toWebp(quality: 85)->save($tmpOptimized);
+
+        $optimizerChain = OptimizerChainFactory::create();
+        $optimizerChain->optimize($tmpOptimized);
+
+        rename($tmpOptimized, $absoluteTarget);
+
+        return $targetPath;
+    }
 
     /**
      * Processa um UploadedFile: salva original e gera versão otimizada.
