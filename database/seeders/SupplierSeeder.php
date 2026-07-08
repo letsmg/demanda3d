@@ -95,7 +95,7 @@ class SupplierSeeder extends Seeder
                 'contact' => 'Vendas - Polymaker',
                 'email' => 'vendas@polymaker.ind.br',
                 'website' => 'https://www.polymaker.ind.br',
-                'phone1' => '(31) 3100-4004',
+                'phone1' => '(31) 3100-9104',
                 'phone2' => null,
                 'contact1' => 'Maria Santos',
                 'contact2' => 'Suporte Técnico',

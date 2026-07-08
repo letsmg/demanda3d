@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
     'last_name_hash',
     'password',
     'access_level',
+    'is_active',
     'data_nascimento',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]

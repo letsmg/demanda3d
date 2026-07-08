@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { ShoppingBag } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,13 +10,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { ShoppingBag } from '@lucide/vue';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
 import { dashboard, login, register } from '@/routes';
 
 defineOptions({
     layout: WelcomeLayout,
 });
+
+const props = defineProps<{
+    heroImages?: string[];
+}>();
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
@@ -29,30 +33,39 @@ const stats = computed(
         } | null,
 );
 
-// Background images from public/storage/imgs/home
-const heroImages = [
-    '/storage/imgs/home/1.webp',
-    '/storage/imgs/home/2.webp',
-    '/storage/imgs/home/3.webp',
-    '/storage/imgs/home/4.webp',
-    '/storage/imgs/home/5.webp',
-    '/storage/imgs/home/6.webp',
-    '/storage/imgs/home/7.webp',
-    '/storage/imgs/home/8.webp',
-];
+// Imagens do carrossel recebidas do WelcomeController
+// Se não houver, usa fallback hardcoded
+const heroImages = computed(() => {
+    if (props.heroImages && props.heroImages.length > 0) {
+        return props.heroImages;
+    }
+    // Fallback para quando acessado sem controller (ex: Route::inertia)
+    return [
+        '/storage/imgs/home/3.webp',
+        '/storage/imgs/home/4.webp',
+        '/storage/imgs/home/5.webp',
+        '/storage/imgs/home/6.webp',
+        '/storage/imgs/home/7.webp',
+        '/storage/imgs/home/8.webp',
+    ];
+});
 
 const currentImageIndex = ref(0);
 let imageInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
-    imageInterval = setInterval(() => {
-        currentImageIndex.value =
-            (currentImageIndex.value + 1) % heroImages.length;
-    }, 4000);
+    if (heroImages.value.length > 0) {
+        imageInterval = setInterval(() => {
+            currentImageIndex.value =
+                (currentImageIndex.value + 1) % heroImages.value.length;
+        }, 4000);
+    }
 });
 
 onUnmounted(() => {
-    if (imageInterval) clearInterval(imageInterval);
+    if (imageInterval) {
+        clearInterval(imageInterval);
+    }
 });
 
 const features = [
@@ -168,41 +181,16 @@ const features = [
                     <template v-else>
                         <Button
                             size="lg"
-                            as-child
-                            class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
-                        >
-                            <Link :href="register.url()">Começar Agora</Link>
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            as-child
-                            class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
-                        >
-                            <Link :href="login.url()">Sou Parceiro</Link>
-                        </Button>
-                        <Button
-                            size="lg"
                             variant="secondary"
                             as-child
                             class="bg-amber-700 text-amber-100 hover:bg-amber-600"
                         >
-                            <Link :href="'/login_cli'">Sou Cliente</Link>
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            as-child
-                            class="border-amber-300 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
-                        >
-                            <Link :href="'/login_carrier'"
-                                >Sou Transportadora</Link
-                            >
+                            <Link :href="'/sobre'">Quero saber mais</Link>
                         </Button>
                     </template>
                 </div>
                 <!-- Image dots -->
-                <div class="mt-8 flex justify-center gap-2">
+                <div v-if="heroImages.length > 0" class="mt-8 flex justify-center gap-2">
                     <button
                         v-for="(img, idx) in heroImages"
                         :key="img"
@@ -321,9 +309,8 @@ const features = [
             >
                 <Button
                     size="lg"
-                    variant="outline"
                     as-child
-                    class="border-amber-400 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
+                    class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
                 >
                     <Link href="/store">
                         <ShoppingBag class="mr-2 h-5 w-5" />
@@ -345,12 +332,12 @@ const features = [
                         as-child
                         class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
                     >
-                        <Link :href="login.url()">Sou Parceiro</Link>
+                        <Link :href="login.url()">Sou Vendedor</Link>
                     </Button>
                     <Button
                         size="lg"
                         as-child
-                        class="bg-amber-600 text-amber-50 hover:bg-amber-500"
+                        class="bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400"
                     >
                         <Link :href="'/login_cli'">Sou Cliente</Link>
                     </Button>

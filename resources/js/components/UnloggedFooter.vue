@@ -8,19 +8,19 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
             <div
                 class="flex flex-col items-center justify-between gap-4 md:flex-row"
             >
-                <div class="flex items-center gap-2 text-sm text-amber-300">
-                    <AppLogoIcon class="size-5 fill-current text-amber-400" />
+                <div class="flex items-center gap-2 text-sm text-amber-50">
+                    <AppLogoIcon class="size-5 fill-current text-amber-300" />
                     <span
                         >&copy; {{ new Date().getFullYear() }} Demanda3D. All
                         rights reserved.</span
                     >
                 </div>
-                <p class="text-xs text-amber-400/70">
+                <p class="text-xs text-amber-200/70">
                     Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos
                     reservados.
                 </p>
 
-                <nav class="flex items-center gap-4 text-sm text-amber-300">
+                <nav class="flex items-center gap-4 text-sm text-amber-50">
                     <a
                         :href="'/legal/terms'"
                         class="transition-colors hover:text-amber-100"
@@ -33,16 +33,12 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
                     >
                         Política de Privacidade
                     </a>
-                    <span class="hidden text-amber-400/70 sm:inline">|</span>
                     <a
                         href="mailto:contato@demanda3d.com.br"
                         class="transition-colors hover:text-amber-100"
                     >
                         contato@demanda3d.com.br
                     </a>
-                    <span class="hidden text-amber-400/70 sm:inline"
-                        >3D Printing Solutions</span
-                    >
                 </nav>
             </div>
         </div>

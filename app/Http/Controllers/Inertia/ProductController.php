@@ -48,7 +48,7 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('Products/Edit', [
-            'product' => $product,
+            'product' => $product->load('images'),
         ]);
     }
 

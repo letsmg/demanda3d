@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import {
     BarChart3,
     BookOpen,
     FolderGit2,
     LayoutGrid,
+    ShieldCheck,
     Truck,
     Users,
     Package,
@@ -36,6 +37,9 @@ import { index as carriersIndex } from '@/routes/carriers';
 import { index as freightContractsIndex } from '@/routes/freight-contracts';
 import { index as toolsIndex } from '@/routes/tools';
 import type { NavItem } from '@/types';
+
+const page = usePage<{ auth: { user?: { access_level?: number } } }>();
+const isAdmin = (page.props.auth?.user?.access_level ?? 0) >= 10;
 
 const mainNavItems: NavItem[] = [
     {
@@ -78,16 +82,27 @@ const mainNavItems: NavItem[] = [
         href: productsIndex(),
         icon: ShoppingBag,
     },
-    {
-        title: 'Ferramentas',
-        href: toolsIndex(),
-        icon: Wrench,
-    },
+    // Visível apenas para Admin
+    ...(isAdmin
+        ? [{
+              title: 'Ferramentas',
+              href: toolsIndex(),
+              icon: Wrench,
+          }]
+        : []),
     {
         title: 'Relatórios',
         href: reportsIndex(),
         icon: BarChart3,
     },
+    // Visível apenas para Admin
+    ...(isAdmin
+        ? [{
+              title: 'Vendedores',
+              href: '/admin/users',
+              icon: ShieldCheck,
+          }]
+        : []),
 ];
 
 const footerNavItems: NavItem[] = [

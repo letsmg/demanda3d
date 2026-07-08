@@ -1,204 +1,100 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
-import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
 
-defineOptions({
-    layout: {
-        title: 'Cadastro de Transportadora',
-        description: 'Cadastre sua transportadora na plataforma',
-    },
-});
+defineOptions({ layout: WelcomeLayout });
 
 const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-    doc_type: 'CNPJ',
-    document: '',
-    data_nascimento: '',
-    accept_terms: false,
+    name: '', email: '', password: '', password_confirmation: '',
+    doc_type: 'CNPJ', document: '', data_nascimento: '', accept_terms: false,
 });
 
-function submit() {
-    form.post('/register_carrier', {
-        preserveState: true,
-    });
-}
+function submit() { form.post('/register_carrier', { preserveState: true }); }
 </script>
 
 <template>
     <Head title="Cadastro de Transportadora" />
-
-    <div class="mb-4 text-center">
-        <p class="text-sm text-muted-foreground">
-            Cadastre sua transportadora para começar a operar na plataforma
-        </p>
+    <div class="mx-auto flex w-full flex-col justify-center py-12 sm:w-[460px]">
+        <Card class="border-amber-500 bg-amber-50/80 shadow-sm">
+            <CardHeader class="text-center pb-2">
+                <CardTitle class="text-xl text-amber-900">Cadastro de Transportadora</CardTitle>
+                <CardDescription class="text-amber-600">Cadastre sua transportadora para começar a operar na plataforma</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form @submit.prevent="submit" class="flex flex-col gap-6">
+                    <div class="grid gap-4">
+                        <div class="grid gap-2">
+                            <Label for="name" class="text-amber-800">Nome da Transportadora</Label>
+                            <Input id="name" type="text" v-model="form.name" required autofocus :tabindex="1"
+                                class="border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                placeholder="Transportadora Exemplo Ltda" />
+                            <InputError :message="form.errors.name" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="email" class="text-amber-800">E-mail</Label>
+                            <Input id="email" type="email" v-model="form.email" required :tabindex="2"
+                                class="border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                placeholder="email@exemplo.com" />
+                            <InputError :message="form.errors.email" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="password" class="text-amber-800">Senha</Label>
+                            <PasswordInput id="password" v-model="form.password" required :tabindex="3" placeholder="Mínimo 8 caracteres" />
+                            <InputError :message="form.errors.password" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="password_confirmation" class="text-amber-800">Confirmar Senha</Label>
+                            <PasswordInput id="password_confirmation" v-model="form.password_confirmation" required :tabindex="4" placeholder="Repita a senha" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="doc_type" class="text-amber-800">Tipo de Documento</Label>
+                            <Select v-model="form.doc_type">
+                                <SelectTrigger :tabindex="5" class="border-amber-900 bg-white text-amber-800"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                <SelectContent><SelectItem value="CNPJ">CNPJ</SelectItem><SelectItem value="CPF">CPF</SelectItem></SelectContent>
+                            </Select>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="document" class="text-amber-800">{{ form.doc_type === 'CNPJ' ? 'CNPJ' : 'CPF' }}</Label>
+                            <Input id="document" type="text" v-model="form.document" required :tabindex="6"
+                                class="border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                :placeholder="form.doc_type === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'" />
+                            <InputError :message="form.errors.document" />
+                        </div>
+                        <div v-if="form.doc_type === 'CPF'" class="grid gap-2">
+                            <Label for="data_nascimento" class="text-amber-800">Data de Nascimento</Label>
+                            <Input id="data_nascimento" type="date" v-model="form.data_nascimento" :tabindex="7"
+                                class="border-amber-900 bg-white text-amber-900" />
+                        </div>
+                        <div class="rounded-md bg-amber-100 p-3 flex items-start gap-2">
+                            <Checkbox id="accept_terms" v-model:checked="form.accept_terms" :tabindex="8" class="border-amber-900" />
+                            <Label for="accept_terms" class="text-sm leading-relaxed text-amber-800">
+                                Li e aceito os <a href="/legal/terms" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Termos de Uso</a>
+                                e a <a href="/legal/privacy" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Política de Privacidade</a>
+                            </Label>
+                        </div>
+                        <InputError :message="form.errors.accept_terms" />
+                        <Button type="submit" class="mt-2 w-full bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="9" :disabled="form.processing">
+                            <Spinner v-if="form.processing" /> Criar Conta de Transportadora
+                        </Button>
+                    </div>
+                    <div class="text-center text-sm text-amber-600">
+                        Já tem uma conta? <a href="/login_carrier" class="font-medium text-amber-700 hover:text-amber-900">Faça login</a>
+                    </div>
+                    <div class="space-y-1 text-center text-xs text-amber-600">
+                        <div><Link :href="'/register'" class="font-medium text-amber-700 hover:text-amber-900">Cadastre-se como Vendedor</Link></div>
+                        <div><Link :href="'/register_cli'" class="font-medium text-amber-700 hover:text-amber-900">Cadastre-se como Cliente</Link></div>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
     </div>
-
-    <form @submit.prevent="submit" class="flex flex-col gap-6">
-        <div class="grid gap-6">
-            <!-- Nome da Empresa -->
-            <div class="grid gap-2">
-                <Label for="name">Nome da Transportadora</Label>
-                <Input
-                    id="name"
-                    type="text"
-                    name="name"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    :tabindex="1"
-                    placeholder="Transportadora Exemplo Ltda"
-                />
-                <InputError :message="form.errors.name" />
-            </div>
-
-            <!-- E-mail -->
-            <div class="grid gap-2">
-                <Label for="email">E-mail</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    v-model="form.email"
-                    required
-                    :tabindex="2"
-                    autocomplete="email"
-                    placeholder="email@exemplo.com"
-                />
-                <InputError :message="form.errors.email" />
-            </div>
-
-            <!-- Senha -->
-            <div class="grid gap-2">
-                <Label for="password">Senha</Label>
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    v-model="form.password"
-                    required
-                    :tabindex="3"
-                    autocomplete="new-password"
-                    placeholder="Mínimo 8 caracteres"
-                />
-                <InputError :message="form.errors.password" />
-            </div>
-
-            <!-- Confirmar Senha -->
-            <div class="grid gap-2">
-                <Label for="password_confirmation">Confirmar Senha</Label>
-                <PasswordInput
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    v-model="form.password_confirmation"
-                    required
-                    :tabindex="4"
-                    autocomplete="new-password"
-                    placeholder="Repita a senha"
-                />
-            </div>
-
-            <!-- Tipo de Documento -->
-            <div class="grid gap-2">
-                <Label for="doc_type">Tipo de Documento</Label>
-                <Select v-model="form.doc_type">
-                    <SelectTrigger :tabindex="5">
-                        <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="CNPJ">CNPJ</SelectItem>
-                        <SelectItem value="CPF">CPF</SelectItem>
-                    </SelectContent>
-                </Select>
-                <InputError :message="form.errors.doc_type" />
-            </div>
-
-            <!-- Documento -->
-            <div class="grid gap-2">
-                <Label for="document">
-                    {{ form.doc_type === 'CNPJ' ? 'CNPJ' : 'CPF' }}
-                </Label>
-                <Input
-                    id="document"
-                    type="text"
-                    name="document"
-                    v-model="form.document"
-                    required
-                    :tabindex="6"
-                    :placeholder="
-                        form.doc_type === 'CNPJ'
-                            ? '00.000.000/0000-00'
-                            : '000.000.000-00'
-                    "
-                />
-                <InputError :message="form.errors.document" />
-            </div>
-
-            <!-- Data de Nascimento (apenas para CPF) -->
-            <div v-if="form.doc_type === 'CPF'" class="grid gap-2">
-                <Label for="data_nascimento">Data de Nascimento</Label>
-                <Input
-                    id="data_nascimento"
-                    type="date"
-                    name="data_nascimento"
-                    v-model="form.data_nascimento"
-                    :tabindex="7"
-                />
-                <InputError :message="form.errors.data_nascimento" />
-            </div>
-
-            <!-- Aceite dos Termos -->
-            <div class="flex items-start gap-2">
-                <Checkbox
-                    id="accept_terms"
-                    name="accept_terms"
-                    v-model:checked="form.accept_terms"
-                    :tabindex="8"
-                />
-                <Label for="accept_terms" class="text-sm leading-relaxed">
-                    Li e aceito os
-                    <TextLink :href="'/legal/terms'" target="_blank">
-                        Termos de Uso
-                    </TextLink>
-                    e a
-                    <TextLink :href="'/legal/privacy'" target="_blank">
-                        Política de Privacidade
-                    </TextLink>
-                </Label>
-            </div>
-            <InputError :message="form.errors.accept_terms" />
-
-            <Button
-                type="submit"
-                class="mt-4 w-full"
-                :tabindex="9"
-                :disabled="form.processing"
-            >
-                <Spinner v-if="form.processing" />
-                Criar Conta de Transportadora
-            </Button>
-        </div>
-
-        <div class="text-center text-sm text-muted-foreground">
-            Já tem uma conta?
-            <TextLink :href="'/login_carrier'" :tabindex="10"
-                >Faça login</TextLink
-            >
-        </div>
-    </form>
 </template>

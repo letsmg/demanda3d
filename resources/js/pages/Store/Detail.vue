@@ -250,7 +250,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             v-else
                             class="flex h-full w-full items-center justify-center"
                         >
-                            <ImageIcon class="h-24 w-24 text-amber-300" />
+                            <ImageIcon class="h-24 w-24 text-amber-900" />
                         </div>
 
                         <button
@@ -274,7 +274,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             <button
                                 v-for="(img, idx) in productImages"
                                 :key="idx"
-                                class="h-2 w-2 rounded-full border border-amber-400 transition"
+                                class="h-2 w-2 rounded-full border border-amber-910 transition"
                                 :class="
                                     idx === currentImageIndex
                                         ? 'bg-amber-500'
@@ -343,7 +343,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 :class="
                                     i <=
                                     Math.round(product.tenant.rating_average)
-                                        ? 'fill-amber-400 text-amber-400'
+                                        ? 'fill-amber-910 text-amber-910'
                                         : 'text-amber-200'
                                 "
                             />
@@ -499,7 +499,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                     v-else
                                     class="flex h-full w-full items-center justify-center"
                                 >
-                                    <Package class="h-10 w-10 text-amber-300" />
+                                    <Package class="h-10 w-10 text-amber-900" />
                                 </div>
                             </div>
                         </Link>

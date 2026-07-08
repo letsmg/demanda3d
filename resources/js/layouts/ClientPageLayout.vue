@@ -16,7 +16,7 @@ const clientUser = computed(() => (page.props as any).auth_client?.user);
                 <div class="flex h-16 items-center justify-between">
                     <a href="/store" class="flex items-center gap-2">
                         <svg
-                            class="h-8 w-8 text-amber-400"
+                            class="h-8 w-8 text-amber-910"
                             viewBox="0 0 32 32"
                             fill="currentColor"
                         >
@@ -81,25 +81,25 @@ const clientUser = computed(() => (page.props as any).auth_client?.user);
                 <div class="flex gap-6 overflow-x-auto">
                     <a
                         href="/perfil"
-                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-300 hover:text-amber-700"
+                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-900 hover:text-amber-700"
                     >
                         Meu Perfil
                     </a>
                     <a
                         href="/perfil/enderecos"
-                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-300 hover:text-amber-700"
+                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-900 hover:text-amber-700"
                     >
                         Meus Endereços
                     </a>
                     <a
                         href="/perfil/pedidos"
-                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-300 hover:text-amber-700"
+                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-900 hover:text-amber-700"
                     >
                         Meus Pedidos
                     </a>
                     <a
                         href="/store"
-                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-300 hover:text-amber-700"
+                        class="border-b-2 border-transparent px-1 py-3 text-sm font-medium text-amber-600 hover:border-amber-900 hover:text-amber-700"
                     >
                         Store
                     </a>

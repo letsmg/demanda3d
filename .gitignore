@@ -63,3 +63,8 @@ storage/debugbar/
 /resources/js/routes/
 gcloud-api-7bbd403db8e7*
 public/fonts*
+
+# Pipeline de otimização de imagens
+# Apenas a pasta products/ é excluída (contém imagens de produtos por tenant, geradas dinamicamente)
+# originais/ e home/ são versionadas para o carrossel da página inicial
+/storage/app/public/imgs/products/

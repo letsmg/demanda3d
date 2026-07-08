@@ -48,6 +48,7 @@ class DashboardController extends Controller
             ->count();
 
         return Inertia::render('Dashboard', [
+            'user_access_level' => auth()->user()->access_level,
             'stats' => [
                 'clients_count' => $clientsCount,
                 'orders_count' => $ordersCount,

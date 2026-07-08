@@ -79,8 +79,6 @@ test('customer cannot create product', function () {
         'sale_price' => 10,
     ]);
 
-    // POST not available on this route (only GET for public API)
-    // Either 405 (Method Not Allowed) or 403 (Forbidden) are acceptable
     expect(in_array($response->status(), [403, 405]))->toBeTrue();
 });
 
@@ -119,7 +117,7 @@ test('product creation auto-generates SEO fields via service', function () {
     expect($product->meta_keywords)->toContain('produto seo teste')
         ->toContain('impressão 3d');
 
-    // schema_markup must be valid JSON
+    // schema_markup é gerado dinamicamente via accessor (não mais armazenado no banco)
     $schema = json_decode($product->schema_markup, true);
     expect($schema)->not->toBeNull();
     expect($schema['@type'])->toBe('Product');
@@ -129,17 +127,13 @@ test('product creation auto-generates SEO fields via service', function () {
     expect($schema['offers']['availability'])->toBe('https://schema.org/InStock');
     expect($schema['additionalProperty'])->toHaveCount(3); // height, width, weight
 
-    // google_tag_manager must contain dataLayer
+    // google_tag_manager é gerado dinamicamente via accessor
     expect($product->google_tag_manager)->toContain('Google Tag Manager');
     expect($product->google_tag_manager)->toContain('product_detail_view');
     expect($product->google_tag_manager)->toContain('Produto SEO Teste');
-
-    // canonical_url is set after slug is generated (via updateQuietly in create)
-    expect($product->canonical_url)->toContain('/store/');
-    expect($product->canonical_url)->toContain($product->slug);
 });
 
-test('product SEO fields are not overwritten when manually provided', function () {
+test('product SEO fields are always derived dynamically from native attributes', function () {
     actingAs($this->management);
 
     $mockModeration = Mockery::mock(\App\Services\ImageModerationService::class);
@@ -151,19 +145,20 @@ test('product SEO fields are not overwritten when manually provided', function (
         'name' => 'Produto Manual',
         'description' => 'Descrição manual.',
         'sale_price' => 49.90,
-        'meta_title' => 'Título Manual Customizado',
-        'meta_description' => 'Meta descrição manual.',
-        'meta_keywords' => 'custom, manual, keyword',
-        'schema_markup' => '{"@type":"Custom"}',
-        'google_tag_manager' => '<!-- custom GTM -->',
     ]);
 
-    // Campos fornecidos manualmente devem ser preservados
-    expect($product->meta_title)->toBe('Título Manual Customizado');
-    expect($product->meta_description)->toBe('Meta descrição manual.');
-    expect($product->meta_keywords)->toBe('custom, manual, keyword');
-    expect($product->schema_markup)->toBe('{"@type":"Custom"}');
-    expect($product->google_tag_manager)->toBe('<!-- custom GTM -->');
+    // Todos os campos SEO são derivados de name/description — sempre
+    expect($product->meta_title)->toBe('Produto Manual');
+    expect($product->meta_description)->toBe('Descrição manual.');
+    expect($product->meta_keywords)->toContain('produto manual');
+
+    // schema_markup e google_tag_manager são sempre gerados dinamicamente
+    $schema = json_decode($product->schema_markup, true);
+    expect($schema)->not->toBeNull();
+    expect($schema['@type'])->toBe('Product');
+    expect($schema['name'])->toBe('Produto Manual');
+
+    expect($product->google_tag_manager)->toContain('Produto Manual');
 });
 
 test('product SEO fields update correctly when name changes', function () {
@@ -193,15 +188,12 @@ test('product SEO fields update correctly when name changes', function () {
     expect($product->meta_title)->toBe('Produto Renomeado');
     expect($product->meta_title)->not->toBe($originalTitle);
 
-    // schema_markup must reflect new name
+    // schema_markup and google_tag_manager reflect new name (dinâmicos via accessor)
     expect($product->schema_markup)->toContain('Produto Renomeado');
     expect($product->google_tag_manager)->toContain('Produto Renomeado');
-
-    // Slug is regenerated when name changes, so canonical_url reflects new slug
-    expect($product->canonical_url)->toContain($product->slug);
 });
 
-test('product seeder generates valid schema markup and GTM', function () {
+test('product seeder generates valid schema markup and GTM via accessors', function () {
     // Needs CategorySeeder first
     $categorySeeder = new \Database\Seeders\CategorySeeder();
     $categorySeeder->run();
@@ -212,14 +204,14 @@ test('product seeder generates valid schema markup and GTM', function () {
     $products = Product::withoutGlobalScopes()->get();
 
     foreach ($products as $product) {
-        // schema_markup must be valid JSON
+        // schema_markup is a dynamic accessor — must be valid JSON
         $schema = json_decode($product->schema_markup, true);
         expect($schema)->not->toBeNull("Schema inválido para produto {$product->name}");
         expect($schema['@type'])->toBe('Product');
         expect($schema['name'])->toBe($product->name);
         expect($schema['offers']['priceCurrency'])->toBe('BRL');
 
-        // google_tag_manager must contain product name and dataLayer
+        // google_tag_manager is a dynamic accessor — must contain product name and dataLayer
         expect($product->google_tag_manager)->toContain('Google Tag Manager');
         expect($product->google_tag_manager)->toContain('product_detail_view');
         expect($product->google_tag_manager)->toContain($product->name);

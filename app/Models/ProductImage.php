@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'product_id',
     'path',
+    'original_path',
+    'thumbnail_path',
     'order',
 ])]
 class ProductImage extends Model

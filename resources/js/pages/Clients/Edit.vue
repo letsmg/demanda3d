@@ -433,7 +433,7 @@ const submit = () => {
                     <Alert
                         v-if="typeMismatchWarning"
                         variant="default"
-                        class="border-amber-300 bg-amber-50 text-amber-900"
+                        class="border-amber-900 bg-amber-50 text-amber-900"
                     >
                         <AlertCircle class="h-4 w-4" />
                         <AlertTitle>Atenção</AlertTitle>

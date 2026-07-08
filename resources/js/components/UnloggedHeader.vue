@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppLogo from '@/components/AppLogo.vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import { welcome, login } from '@/routes';
 import storeRoutes from '@/routes/store';
@@ -11,7 +11,7 @@ const navigation = [
 ];
 
 const partnerLinks = [
-    { name: 'Sou Parceiro', href: login.url(), highlight: true },
+    { name: 'Sou Vendedor', href: login.url(), highlight: true },
 ];
 
 const clientLinks = [
@@ -29,7 +29,8 @@ const carrierLinks = [
     >
         <div class="container mx-auto flex h-16 items-center px-4 md:px-8">
             <Link :href="welcome.url()" class="flex items-center gap-2">
-                <AppLogo class="brightness-0 invert" />
+                <AppLogoIcon class="size-8 fill-current text-white" />
+                <span class="text-lg font-semibold text-white">Demanda 3D</span>
             </Link>
 
             <nav class="ml-auto flex items-center gap-2">
@@ -48,10 +49,9 @@ const carrierLinks = [
                 <template v-for="item in clientLinks" :key="item.name">
                     <Button
                         v-if="item.highlight"
-                        variant="outline"
                         size="sm"
                         as-child
-                        class="hidden border-amber-500 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
+                        class="hidden bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400 sm:flex"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
@@ -61,16 +61,15 @@ const carrierLinks = [
                 <template v-for="item in carrierLinks" :key="item.name">
                     <Button
                         v-if="item.highlight"
-                        variant="outline"
                         size="sm"
                         as-child
-                        class="hidden border-amber-400/50 text-amber-200 hover:bg-amber-800 hover:text-amber-50 sm:flex"
+                        class="hidden bg-amber-500 font-semibold text-amber-950 hover:bg-amber-400 sm:flex"
                     >
                         <Link :href="item.href">{{ item.name }}</Link>
                     </Button>
                 </template>
 
-                <!-- Partner links (Sou Parceiro) -->
+                <!-- Partner links (Sou Vendedor) -->
                 <template v-for="item in partnerLinks" :key="item.name">
                     <Button
                         v-if="item.highlight"

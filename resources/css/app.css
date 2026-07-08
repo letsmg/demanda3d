@@ -107,7 +107,7 @@
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(0 0% 98%);
     --border: hsl(0 0% 92.8%);
-    --input: hsl(0 0% 89.8%);
+    --input: hsl(0 0% 100%);
     --ring: hsl(0 0% 3.9%);
     --chart-1: hsl(12 76% 61%);
     --chart-2: hsl(173 58% 39%);
@@ -179,5 +179,25 @@
     a,
     button {
         transition: all 0.15s ease-in-out;
+    }
+
+    /* Placeholders visíveis — cor amber-700 */
+    ::placeholder,
+    input::placeholder,
+    textarea::placeholder {
+        color: hsl(35 92% 35%);
+        opacity: 1;
+    }
+
+    /* Fundo dos inputs sempre branco (sobrescreve qualquer bg-muted herdado) */
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='number'],
+    input[type='date'],
+    input[type='file'],
+    textarea,
+    select {
+        background-color: #ffffff;
     }
 }

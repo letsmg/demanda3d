@@ -149,7 +149,7 @@ function submitCheckout() {
                             'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
                             step >= s
                                 ? 'border-amber-600 bg-amber-600 text-white hover:bg-amber-700'
-                                : 'border-amber-300 text-amber-400',
+                                : 'border-amber-900 text-amber-910',
                         ]"
                     >
                         <Check v-if="step > s" class="h-4 w-4" />
@@ -182,7 +182,7 @@ function submitCheckout() {
                     <div
                         v-for="addr in addresses"
                         :key="addr.id"
-                        class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:border-amber-400"
+                        class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:border-amber-910"
                         :class="{
                             'border-amber-500 bg-amber-50':
                                 selectedAddressId === addr.id,
@@ -221,7 +221,7 @@ function submitCheckout() {
                         <input
                             type="checkbox"
                             v-model="newAddress"
-                            class="h-4 w-4 rounded border-amber-300"
+                            class="h-4 w-4 rounded border-amber-900"
                         />
                         <span class="text-sm text-amber-700"
                             >Cadastrar novo endereço</span
@@ -344,7 +344,7 @@ function submitCheckout() {
                     </p>
                     <div
                         v-if="carriers.length === 0"
-                        class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-center text-sm text-amber-700"
+                        class="rounded-lg border border-amber-900 bg-amber-50 p-4 text-center text-sm text-amber-700"
                     >
                         ⚠️ Nenhuma transportadora disponível. O vendedor ainda
                         não vinculou transportadoras aos produtos.
@@ -353,7 +353,7 @@ function submitCheckout() {
                         <div
                             v-for="carrier in carriers"
                             :key="carrier.id"
-                            class="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:border-amber-400"
+                            class="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:border-amber-910"
                             :class="{
                                 'border-amber-500 bg-amber-50':
                                     selectedCarrierId === carrier.id,
@@ -482,7 +482,7 @@ function submitCheckout() {
                             { id: 'pix', label: 'Pix', icon: '⚡' },
                         ]"
                         :key="method.id"
-                        class="cursor-pointer rounded-lg border p-4 hover:border-amber-400"
+                        class="cursor-pointer rounded-lg border p-4 hover:border-amber-910"
                         :class="{
                             'border-amber-500 bg-amber-50':
                                 selectedPaymentMethod === method.id,

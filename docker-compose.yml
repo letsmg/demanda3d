@@ -13,7 +13,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - demanda-psql-dev:/var/lib/postgresql
+      - demanda-psql-dev:/var/lib/postgresql/data
       - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
@@ -25,7 +25,12 @@ services:
       - demanda-net-dev
 
   # =============================================
-  # PostgreSQL Slave (Replica) - DEV
+  # PostgreSQL Replica (Hot Standby) - DEV
+  #
+  # NÃO usa docker-entrypoint-initdb.d — usa entrypoint customizado.
+  # Motivo: scripts de initdb.d rodam enquanto um Postgres temporário
+  # já está ativo em $PGDATA, causando corrupção ao tentar fazer
+  # pg_basebackup no mesmo diretório. Ver entrypoint-replica.sh.
   # =============================================
   demanda-psql-rep-dev:
     image: postgres:18.4-alpine
@@ -35,11 +40,12 @@ services:
       - .env.docker
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
+    entrypoint: ["/entrypoint-replica.sh"]
     ports:
       - "5435:5432"
     volumes:
-      - demanda-psql-rep-dev:/var/lib/postgresql
-      - ./docker/psql-rep/init-replica.sh:/docker-entrypoint-initdb.d/00-init-replica.sh:ro
+      - demanda-psql-rep-dev:/var/lib/postgresql/data
+      - ./docker/psql-rep/entrypoint-replica.sh:/entrypoint-replica.sh:ro
     depends_on:
       demanda-psql-dev:
         condition: service_healthy
@@ -47,8 +53,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - demanda-net-dev
 
