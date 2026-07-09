@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Review;
-use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,22 +16,15 @@ class Tenant extends Model
         'user_id',
         'company_name_encrypted',
         'company_name_hash',
-        'fantasy_name_encrypted',
-        'fantasy_name_hash',
-        'document_encrypted',
-        'document_hash',
-        'phone_encrypted',
-        'phone_hash',
-        'address_encrypted',
-        'address_hash',
-        'number_encrypted',
-        'number_hash',
-        'district_encrypted',
-        'district_hash',
-        'city_encrypted',
-        'city_hash',
-        'state',
+        'fantasy_name',
         'fantasy_slug',
+        'document',
+        'phone',
+        'address',
+        'number',
+        'district',
+        'city',
+        'state',
         'zipcode',
         'logo_path',
         'banner_path',
@@ -42,17 +34,14 @@ class Tenant extends Model
     ];
 
     /**
-     * Atributos virtuais descriptografados para serialização JSON/Inertia.
+     * Apenas company_name (razão social) permanece criptografado por LGPD.
+     * Todos os outros campos são públicos — dados da empresa visíveis na loja.
+     *
+     * ATENÇÃO: Não informe dados pessoais nos campos da empresa.
+     * Nome fantasia, CNPJ e endereço comercial são públicos por lei.
      */
     protected $appends = [
         'company_name',
-        'fantasy_name',
-        'document',
-        'phone',
-        'address',
-        'number',
-        'district',
-        'city',
         'logo_url',
         'banner_url',
     ];
@@ -63,26 +52,20 @@ class Tenant extends Model
             'active' => 'boolean',
             'rating_average' => 'decimal:2',
             'rating_count' => 'integer',
-            // IMPORTANTE: NÃO usar cast 'encrypted' — isso causaria dupla descriptografia
-            // com os accessors manuais que usam EncryptionService::decrypt().
         ];
     }
 
     protected static function booted(): void
     {
         static::creating(function (Tenant $tenant) {
-            if (empty($tenant->fantasy_slug) && !empty($tenant->getFantasyNameAttribute())) {
-                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->getFantasyNameAttribute());
+            if (empty($tenant->fantasy_slug) && !empty($tenant->fantasy_name)) {
+                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name);
             }
         });
 
         static::updating(function (Tenant $tenant) {
-            if ($tenant->isDirty('fantasy_name_encrypted') && !$tenant->isDirty('fantasy_slug')) {
-                // Regenera o slug se o nome fantasia mudou (criptografado, mas o accessor resolve)
-                $cleartext = EncryptionService::decrypt($tenant->fantasy_name_encrypted);
-                if ($cleartext) {
-                    $tenant->fantasy_slug = static::generateUniqueFantasySlug($cleartext, $tenant->id);
-                }
+            if ($tenant->isDirty('fantasy_name') && !$tenant->isDirty('fantasy_slug')) {
+                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name, $tenant->id);
             }
         });
     }
@@ -108,14 +91,16 @@ class Tenant extends Model
         return $slug;
     }
 
-    // ── Accessors de imagem ──────────────────────────────
+    public function getCompanyNameAttribute(): ?string
+    {
+        return \App\Services\EncryptionService::decrypt($this->company_name_encrypted);
+    }
 
     public function getLogoUrlAttribute(): ?string
     {
         if (empty($this->logo_path)) {
             return null;
         }
-
         return url('storage/' . $this->logo_path);
     }
 
@@ -124,7 +109,6 @@ class Tenant extends Model
         if (empty($this->banner_path)) {
             return null;
         }
-
         return url('storage/' . $this->banner_path);
     }
 
@@ -152,48 +136,5 @@ class Tenant extends Model
     {
         return $this->hasMany(Input::class);
     }
-
-    // ── Accessors de descriptografia ────────────────────────────
-
-    public function getCompanyNameAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->company_name_encrypted);
-    }
-
-    public function getFantasyNameAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->fantasy_name_encrypted);
-    }
-
-    public function getDocumentAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->document_encrypted);
-    }
-
-    public function getPhoneAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->phone_encrypted);
-    }
-
-    public function getAddressAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->address_encrypted);
-    }
-
-    public function getNumberAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->number_encrypted);
-    }
-
-    public function getDistrictAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->district_encrypted);
-    }
-
-    public function getCityAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->city_encrypted);
-    }
 }
-
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

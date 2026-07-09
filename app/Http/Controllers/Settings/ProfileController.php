@@ -106,19 +106,16 @@ class ProfileController extends Controller
 
         $tenantData = [];
 
-        // Campos de texto (aplicar paridade LGPD)
-        $lgpdFields = ['company_name', 'fantasy_name', 'document', 'phone', 'address', 'number', 'district', 'city'];
-        foreach ($lgpdFields as $field) {
-            if (array_key_exists($field, $data) && $data[$field] !== null) {
-                $tenantData = array_merge(
-                    $tenantData,
-                    \App\Services\EncryptionService::buildEncryptedFields([$field => $data[$field]], $field)
-                );
-            }
+        // Apenas company_name permanece criptografado (LGPD)
+        if (array_key_exists('company_name', $data) && $data['company_name'] !== null) {
+            $tenantData = array_merge(
+                $tenantData,
+                \App\Services\EncryptionService::buildEncryptedFields(['company_name' => $data['company_name']], 'company_name')
+            );
         }
 
-        // Campos sem criptografia
-        foreach (['state', 'zipcode'] as $field) {
+        // Campos públicos (texto puro)
+        foreach (['fantasy_name', 'document', 'phone', 'address', 'number', 'district', 'city', 'state', 'zipcode'] as $field) {
             if (array_key_exists($field, $data) && $data[$field] !== null) {
                 $tenantData[$field] = $data[$field];
             }

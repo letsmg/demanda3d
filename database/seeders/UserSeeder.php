@@ -80,31 +80,28 @@ class UserSeeder extends Seeder
 
             if ($userData['create_tenant']) {
                 $companyName = $userData['tenant_company'];
+
+                // Apenas company_name permanece criptografado (LGPD)
                 $tenant = Tenant::create([
                     'user_id' => $user->id,
                     'company_name_encrypted' => EncryptionService::encryptWithHash($companyName)['encrypted'],
                     'company_name_hash' => EncryptionService::encryptWithHash($companyName)['hash'],
-                    'fantasy_name_encrypted' => EncryptionService::encryptWithHash($companyName)['encrypted'],
-                    'fantasy_name_hash' => EncryptionService::encryptWithHash($companyName)['hash'],
-                    'document_encrypted' => EncryptionService::encryptWithHash('00.000.000/0001-00')['encrypted'],
-                    'document_hash' => EncryptionService::encryptWithHash('00.000.000/0001-00')['hash'],
-                    'phone_encrypted' => EncryptionService::encryptWithHash('(11) 99999-0000')['encrypted'],
-                    'phone_hash' => EncryptionService::encryptWithHash('(11) 99999-0000')['hash'],
-                    'address_encrypted' => EncryptionService::encryptWithHash('Av. Principal')['encrypted'],
-                    'address_hash' => EncryptionService::encryptWithHash('Av. Principal')['hash'],
-                    'number_encrypted' => EncryptionService::encryptWithHash('100')['encrypted'],
-                    'number_hash' => EncryptionService::encryptWithHash('100')['hash'],
-                    'district_encrypted' => EncryptionService::encryptWithHash('Centro')['encrypted'],
-                    'district_hash' => EncryptionService::encryptWithHash('Centro')['hash'],
-                    'city_encrypted' => EncryptionService::encryptWithHash('São Paulo')['encrypted'],
-                    'city_hash' => EncryptionService::encryptWithHash('São Paulo')['hash'],
+                    // Campos públicos (texto puro)
+                    'fantasy_name' => $companyName,
+                    'fantasy_slug' => \App\Models\Tenant::generateUniqueFantasySlug($companyName),
+                    'document' => '00.000.000/0001-00',
+                    'phone' => '(11) 99999-0000',
+                    'address' => 'Av. Principal',
+                    'number' => '100',
+                    'district' => 'Centro',
+                    'city' => 'São Paulo',
                     'state' => 'SP',
                     'zipcode' => '01000-000',
                     'active' => true,
                 ]);
-                $this->command->info("✓ Tenant criado para: {$userData['display_name']}");
 
-                // Baixa e processa imagens de logo e banner para o tenant
+                $this->command->info("✓ Tenant criado para: {$userData['display_name']} (slug: {$tenant->fantasy_slug})");
+
                 $this->downloadTenantImages($tenant, $userData['display_name']);
             }
         }
@@ -112,15 +109,10 @@ class UserSeeder extends Seeder
         $this->command->info('');
     }
 
-    /**
-     * Baixa imagens de logo e banner via picsum.photos e as aplica ao tenant
-     * usando o pipeline de otimização (mesmo padrão do ProductSeeder).
-     */
     private function downloadTenantImages(Tenant $tenant, string $displayName): void
     {
         $imageService = app(ImageOptimizationService::class);
 
-        // Logo
         try {
             $logoUrl = "https://picsum.photos/seed/{$tenant->id}-logo/400/400";
             $this->command?->getOutput()->write("    ⏳ Baixando logo... ");
@@ -131,7 +123,6 @@ class UserSeeder extends Seeder
                 file_put_contents($tmpPath, $content);
 
                 $uploadedFile = new UploadedFile($tmpPath, 'logo.jpg', 'image/jpeg', null, true);
-
                 $logoPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'logo');
                 $tenant->update(['logo_path' => $logoPath]);
 
@@ -144,7 +135,6 @@ class UserSeeder extends Seeder
             $this->command?->getOutput()->writeln("<fg=red>✗ ERRO logo: {$e->getMessage()}</>");
         }
 
-        // Banner
         try {
             $bannerUrl = "https://picsum.photos/seed/{$tenant->id}-banner/1200/400";
             $this->command?->getOutput()->write("    ⏳ Baixando banner... ");
@@ -155,7 +145,6 @@ class UserSeeder extends Seeder
                 file_put_contents($tmpPath, $content);
 
                 $uploadedFile = new UploadedFile($tmpPath, 'banner.jpg', 'image/jpeg', null, true);
-
                 $bannerPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'banner');
                 $tenant->update(['banner_path' => $bannerPath]);
 
