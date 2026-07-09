@@ -64,8 +64,8 @@ const authClient = computed(() => (page.props as any).auth_client?.user);
 // ============================================================
 // Lazy loading state ("Mostrar mais")
 // ============================================================
-const visibleProducts = ref<any[]>([...props.products]);
-const hasMore = ref(props.products.length >= 8);
+const visibleProducts = ref<any[]>(Array.isArray(props.products) ? [...props.products] : []);
+const hasMore = ref(Array.isArray(props.products) ? props.products.length >= 8 : false);
 const currentPage = ref(1);
 const loadingMore = ref(false);
 
@@ -112,6 +112,9 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
     () => props.products,
     (newList) => {
+        if (!newList || !Array.isArray(newList)) {
+            return;
+        }
         visibleProducts.value = [...newList];
         hasMore.value = newList.length >= 8;
         currentPage.value = 1;
@@ -119,9 +122,13 @@ watch(
 );
 
 watch(searchTerm, (newVal) => {
-    if (searchTimer) clearTimeout(searchTimer);
-    if (newVal.length >= 3 || newVal.length === 0) {
-        searchTimer = setTimeout(() => applyStoreFilters(), 400);
+    if (searchTimer) {
+      clearTimeout(searchTimer);
+    }
+    if (newVal.length >= 3) {
+        searchTimer = setTimeout(() => applyStoreFilters(), 500);
+    } else if (newVal.length === 0) {
+      applyStoreFilters();
     }
 });
 
@@ -292,6 +299,7 @@ function applyStoreFilters(): void {
         preserveState: true,
         preserveScroll: true,
         replace: true,
+        only: ['products', 'categories', 'filters'],
     });
 }
 

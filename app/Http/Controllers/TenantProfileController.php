@@ -22,6 +22,45 @@ use Inertia\Response;
 class TenantProfileController extends Controller
 {
     /**
+     * GET /tenants — Lista pública de todos os tenants verificados.
+     */
+    public function index(Request $request): Response
+    {
+        $filters = $request->validate([
+            'search'   => 'nullable|string|min:3|max:255',
+            'sort'     => 'nullable|in:fantasy_name,rating_average,created_at',
+            'sort_dir' => 'nullable|in:asc,desc',
+        ]);
+
+        $query = Tenant::with(['user:id,display_name,first_name_encrypted,last_name_encrypted', 'address'])
+            ->whereNotNull('verified_at');
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('fantasy_name', 'ilike', "%{$search}%")
+                  ->orWhere('company_name', 'ilike', "%{$search}%");
+            });
+        }
+
+        $sortField = $filters['sort'] ?? 'fantasy_name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+        $allowedSortFields = ['fantasy_name', 'rating_average', 'created_at'];
+        if (in_array($sortField, $allowedSortFields)) {
+            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
+        } else {
+            $query->orderBy('fantasy_name', 'asc');
+        }
+
+        $tenants = $query->paginate(12);
+
+        return Inertia::render('Tenant/Index', [
+            'tenants' => $tenants->items(),
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
      * Exibe o perfil público da loja com seus produtos.
      */
     public function show(string $fantasySlug, Request $request): Response
