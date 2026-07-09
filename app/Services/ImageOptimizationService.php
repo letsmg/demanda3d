@@ -21,18 +21,19 @@ class ImageOptimizationService
     private const MAX_WIDTH = 1600;
     private const ORIGINAL_DISK = 'public';
     private const OPTIMIZED_DISK = 'public';
-    private const ORIGINAL_DIR = 'imgs/originais';
+    private const ORIGINAL_DIR = 'imgs/originals';
     private const OPTIMIZED_DIR = 'imgs/home';
-    private const PRODUCTS_DIR = 'imgs/products';
+    private const PRODUCTS_DIR = 'imgs/{tenant_id}/products/{product_id}';
+    private const PROFILE_DIR = 'imgs/{tenant_id}/profile';
 
 
     /**
      * Processa upload de imagem de produto com paths por tenant e ID.
      *
      * Gera três versões:
-     *   - original  (produtos/{tenant_id}/{product_id}/original/)
-     *   - thumbnail (produtos/{tenant_id}/{product_id}/thumbnail/) 200x200
-     *   - optimized (produtos/{tenant_id}/{product_id}/optimized/) webp 85%
+     *   - original  ({tenant_id}/products/{product_id}/original/)
+     *   - thumbnail ({tenant_id}/products/{product_id}/thumbnail/) 200x200
+     *   - optimized ({tenant_id}/products/{product_id}/optimized/) webp 85%
      *
      * @return array{original_path: string, thumbnail_path: string, optimized_path: string}
      */
@@ -42,7 +43,7 @@ class ImageOptimizationService
         $namePrefix = $slug ?: \Illuminate\Support\Str::uuid()->toString();
         $baseName = $namePrefix . '.' . $extension;
 
-        $basePath = self::PRODUCTS_DIR . "/{$tenantId}/{$productId}";
+        $basePath = str_replace(['{tenant_id}', '{product_id}'], [$tenantId, $productId], self::PRODUCTS_DIR);
 
         // 1. Salva original
         $originalPath = "{$basePath}/original/{$baseName}";
@@ -60,6 +61,24 @@ class ImageOptimizationService
             'thumbnail_path' => $thumbnailPath,
             'optimized_path' => $optimizedPath,
         ];
+    }
+
+    /**
+     * Processa upload de logo ou banner para perfil do tenant.
+     *
+     * @param UploadedFile $file   Arquivo de imagem
+     * @param int          $tenantId
+     * @param string       $type   'logo' ou 'banner'
+     *
+     * @return string Caminho relativo do arquivo otimizado
+     */
+    public function processTenantProfileUpload(UploadedFile $file, int $tenantId, string $type): string
+    {
+        $basePath = str_replace('{tenant_id}', $tenantId, self::PROFILE_DIR);
+        $extension = $this->resolveExtension($file);
+        $baseName = $type . '.' . $extension;
+
+        return $this->optimizeAndSaveProduct($file, $basePath, $baseName);
     }
 
     /**
@@ -146,7 +165,7 @@ class ImageOptimizationService
     /**
      * Otimiza um arquivo já existente em disco (usado pelo batch command).
      *
-     * @param string $relativePath Caminho relativo dentro do disco "public" (ex: imgs/originais/foto.jpg).
+     * @param string $relativePath Caminho relativo dentro do disco "public" (ex: imgs/originals/foto.jpg).
      * @return string Caminho relativo do arquivo otimizado salvo.
      */
     public function optimizeExisting(string $relativePath): string

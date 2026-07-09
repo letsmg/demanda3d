@@ -34,6 +34,10 @@ Route::inertia('/sobre', 'About')->name('about');
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
 
+// Public tenant profile page (loja específica) — produtos de um vendedor apenas
+Route::get('/tenant/{fantasy_slug}', [App\Http\Controllers\TenantProfileController::class, 'show'])
+    ->name('tenant.profile');
+
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
     ->middleware(['check.age'])

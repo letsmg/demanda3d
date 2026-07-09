@@ -33,6 +33,8 @@ class Tenant extends Model
         'city_hash',
         'state',
         'zipcode',
+        'logo_path',
+        'banner_path',
         'active',
         'rating_average',
         'rating_count',
@@ -50,6 +52,8 @@ class Tenant extends Model
         'number',
         'district',
         'city',
+        'logo_url',
+        'banner_url',
     ];
 
     protected function casts(): array
@@ -61,6 +65,66 @@ class Tenant extends Model
             // IMPORTANTE: NÃO usar cast 'encrypted' — isso causaria dupla descriptografia
             // com os accessors manuais que usam EncryptionService::decrypt().
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant) {
+            if (empty($tenant->fantasy_slug) && !empty($tenant->getFantasyNameAttribute())) {
+                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->getFantasyNameAttribute());
+            }
+        });
+
+        static::updating(function (Tenant $tenant) {
+            if ($tenant->isDirty('fantasy_name_encrypted') && !$tenant->isDirty('fantasy_slug')) {
+                // Regenera o slug se o nome fantasia mudou (criptografado, mas o accessor resolve)
+                $cleartext = EncryptionService::decrypt($tenant->fantasy_name_encrypted);
+                if ($cleartext) {
+                    $tenant->fantasy_slug = static::generateUniqueFantasySlug($cleartext, $tenant->id);
+                }
+            }
+        });
+    }
+
+    public static function generateUniqueFantasySlug(string $fantasyName, ?int $excludeId = null): string
+    {
+        $baseSlug = \Illuminate\Support\Str::slug($fantasyName);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (true) {
+            $query = static::where('fantasy_slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+            if (!$query->exists()) {
+                break;
+            }
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
+    // ── Accessors de imagem ──────────────────────────────
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (empty($this->logo_path)) {
+            return null;
+        }
+
+        return url('storage/' . $this->logo_path);
+    }
+
+    public function getBannerUrlAttribute(): ?string
+    {
+        if (empty($this->banner_path)) {
+            return null;
+        }
+
+        return url('storage/' . $this->banner_path);
     }
 
     public function user(): BelongsTo
