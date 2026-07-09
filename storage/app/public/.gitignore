@@ -4,3 +4,4 @@
 !imgs/**/
 !imgs/**/*
 imgs/products/
+imgs/[0-9]*/

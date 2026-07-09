@@ -5,8 +5,10 @@ namespace Database\Seeders;
 use App\Enums\UserAccessLevel;
 use App\Models\Tenant;
 use App\Services\EncryptionService;
+use App\Services\ImageOptimizationService;
 use App\Services\UserService;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -78,7 +80,7 @@ class UserSeeder extends Seeder
 
             if ($userData['create_tenant']) {
                 $companyName = $userData['tenant_company'];
-                Tenant::create([
+                $tenant = Tenant::create([
                     'user_id' => $user->id,
                     'company_name_encrypted' => EncryptionService::encryptWithHash($companyName)['encrypted'],
                     'company_name_hash' => EncryptionService::encryptWithHash($companyName)['hash'],
@@ -101,9 +103,69 @@ class UserSeeder extends Seeder
                     'active' => true,
                 ]);
                 $this->command->info("✓ Tenant criado para: {$userData['display_name']}");
+
+                // Baixa e processa imagens de logo e banner para o tenant
+                $this->downloadTenantImages($tenant, $userData['display_name']);
             }
         }
 
         $this->command->info('');
+    }
+
+    /**
+     * Baixa imagens de logo e banner via picsum.photos e as aplica ao tenant
+     * usando o pipeline de otimização (mesmo padrão do ProductSeeder).
+     */
+    private function downloadTenantImages(Tenant $tenant, string $displayName): void
+    {
+        $imageService = app(ImageOptimizationService::class);
+
+        // Logo
+        try {
+            $logoUrl = "https://picsum.photos/seed/{$tenant->id}-logo/400/400";
+            $this->command?->getOutput()->write("    ⏳ Baixando logo... ");
+            $content = @file_get_contents($logoUrl);
+
+            if ($content !== false) {
+                $tmpPath = tempnam(sys_get_temp_dir(), 'seed_logo_') . '.jpg';
+                file_put_contents($tmpPath, $content);
+
+                $uploadedFile = new UploadedFile($tmpPath, 'logo.jpg', 'image/jpeg', null, true);
+
+                $logoPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'logo');
+                $tenant->update(['logo_path' => $logoPath]);
+
+                $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+                @unlink($tmpPath);
+            } else {
+                $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+            }
+        } catch (\Exception $e) {
+            $this->command?->getOutput()->writeln("<fg=red>✗ ERRO logo: {$e->getMessage()}</>");
+        }
+
+        // Banner
+        try {
+            $bannerUrl = "https://picsum.photos/seed/{$tenant->id}-banner/1200/400";
+            $this->command?->getOutput()->write("    ⏳ Baixando banner... ");
+            $content = @file_get_contents($bannerUrl);
+
+            if ($content !== false) {
+                $tmpPath = tempnam(sys_get_temp_dir(), 'seed_banner_') . '.jpg';
+                file_put_contents($tmpPath, $content);
+
+                $uploadedFile = new UploadedFile($tmpPath, 'banner.jpg', 'image/jpeg', null, true);
+
+                $bannerPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'banner');
+                $tenant->update(['banner_path' => $bannerPath]);
+
+                $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+                @unlink($tmpPath);
+            } else {
+                $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+            }
+        } catch (\Exception $e) {
+            $this->command?->getOutput()->writeln("<fg=red>✗ ERRO banner: {$e->getMessage()}</>");
+        }
     }
 }
