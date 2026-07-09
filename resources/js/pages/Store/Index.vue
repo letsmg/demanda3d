@@ -532,9 +532,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         <div class="flex items-start justify-between">
                             <div>
                                 <CardTitle class="text-base text-amber-900">{{ product.name }}</CardTitle>
-                                <p v-if="product.tenant?.display_name" class="mt-0.5 text-xs text-amber-910">
-                                    {{ product.tenant.display_name }}
-                                </p>
                             </div>
                             <div class="flex items-center gap-1">
                                 <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-1">
@@ -573,7 +570,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 {{ formatPrice(product.sale_price) }}
                             </p>
                             <p class="text-xs text-amber-600">
-                                {{ product.tenant?.user?.display_name || product.tenant?.user?.first_name_encrypted || 'Vendedor' }}
+                                <a v-if="product.tenant?.fantasy_slug" :href="`/tenant/${product.tenant.fantasy_slug}`" class="hover:text-amber-600 hover:underline">
+                                    {{ product.tenant.fantasy_name || product.tenant.company_name || 'Vendedor' }}
+                                </a>
+                                <span v-else>{{ product.tenant?.fantasy_name || product.tenant?.company_name || 'Vendedor' }}</span>
                             </p>
                             <div v-if="product.tenant?.rating_count > 0" class="flex items-center gap-1">
                                 <Star class="h-3.5 w-3.5 fill-amber-910 text-amber-910" />

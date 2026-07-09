@@ -32,6 +32,7 @@ class Tenant extends Model
         'city_encrypted',
         'city_hash',
         'state',
+        'fantasy_slug',
         'zipcode',
         'logo_path',
         'banner_path',

@@ -71,6 +71,16 @@ class ProductResource extends JsonResource
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'tenant' => $this->whenLoaded('tenant', function () {
+                return [
+                    'id' => $this->tenant->id,
+                    'display_name' => $this->tenant->fantasy_name ?? $this->tenant->company_name ?? 'Vendedor',
+                    'fantasy_slug' => $this->tenant->fantasy_slug,
+                    'rating_average' => $this->tenant->rating_average,
+                    'rating_count' => $this->tenant->rating_count,
+                ];
+            }),
         ];
     }
 }

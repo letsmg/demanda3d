@@ -41,10 +41,15 @@ const form = useForm({
 
 function submitFilters() {
   const query = new URLSearchParams();
-  if (form.search) query.set('search', form.search);
-  if (form.category) query.set('category', form.category);
-  if (form.sort) query.set('sort', form.sort);
-
+  if (form.search) {
+    query.set('search', form.search);
+  }
+  if (form.category) {
+    query.set('category', form.category);
+  }
+  if (form.sort) {
+    query.set('sort', form.sort);
+  }
   window.location.search = query.toString();
 }
 </script>
@@ -78,7 +83,7 @@ function submitFilters() {
     <div class="bg-amber-100 border border-amber-300 rounded-lg p-4 mb-8">
       <p class="text-amber-800 text-sm">
         Você está visualizando apenas produtos de <strong>{{ tenant.fantasy_name }}</strong>.
-        <a :href="`/store?` + new URLSearchParams({ search: form.search, category: form.category, sort: form.sort }).toString()" class="font-semibold text-amber-900 hover:underline">
+        <a :href="`/store?search=${encodeURIComponent(form.search)}&category=${encodeURIComponent(form.category)}&sort=${encodeURIComponent(form.sort)}`" class="font-semibold text-amber-900 hover:underline">
           Clique aqui para ver todos os produtos disponíveis
         </a>
       </p>
@@ -114,32 +119,54 @@ function submitFilters() {
       </select>
     </form>
 
-    <!-- Grid de produtos -->
+    <!-- Grid de produtos com miniaturas -->
     <div v-if="products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <a
+      <div
         v-for="product in products"
         :key="product.id"
-        :href="`/store/${product.slug}`"
         class="bg-white rounded-lg shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition-shadow"
       >
-        <div class="aspect-square bg-amber-50 overflow-hidden">
-          <img
-            v-if="product.images && product.images.length > 0"
-            :src="product.images[0].url"
-            :alt="product.name"
-            class="w-full h-full object-cover"
-          />
-          <div v-else class="w-full h-full flex items-center justify-center text-amber-300">
-            Sem imagem
+        <!-- Imagem principal + miniaturas -->
+        <div class="relative">
+          <a :href="`/store/${product.slug}`" class="block aspect-square bg-amber-50 overflow-hidden">
+            <img
+              v-if="product.images && product.images.length > 0"
+              :src="product.images[0].url"
+              :alt="product.name"
+              class="w-full h-full object-cover"
+            />
+            <div v-else class="w-full h-full flex items-center justify-center text-amber-300">
+              Sem imagem
+            </div>
+          </a>
+          <!-- Miniaturas (igual à Store) -->
+          <div
+            v-if="product.images && product.images.length > 1"
+            class="p-2 flex gap-1"
+          >
+            <a
+              v-for="(img, idx) in product.images.slice(0, 5)"
+              :key="idx"
+              :href="`/store/${product.slug}`"
+              class="h-10 w-10 flex-shrink-0 overflow-hidden rounded border-2 border-white/80 shadow-sm transition hover:border-blue-500"
+            >
+              <img
+                :src="img.url"
+                :alt="`${product.name} ${idx + 1}`"
+                class="h-full w-full object-cover"
+              />
+            </a>
           </div>
         </div>
         <div class="p-4">
-          <h3 class="font-semibold text-amber-900 truncate">{{ product.name }}</h3>
+          <a :href="`/store/${product.slug}`" class="block">
+            <h3 class="font-semibold text-amber-900 truncate hover:text-amber-600">{{ product.name }}</h3>
+          </a>
           <p class="text-amber-700 font-bold mt-1">
             R$ {{ Number(product.sale_price).toFixed(2) }}
           </p>
         </div>
-      </a>
+      </div>
     </div>
     <div v-else class="text-center py-16 text-amber-600">
       Nenhum produto encontrado nesta loja.
