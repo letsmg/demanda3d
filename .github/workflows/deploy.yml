@@ -179,8 +179,8 @@ jobs:
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
-            #MIGRATION_STRATEGY="migrate:fresh --seed"
-            MIGRATION_STRATEGY="migrate:fresh"
+            MIGRATION_STRATEGY="migrate:fresh --seed"
+            #MIGRATION_STRATEGY="migrate:fresh"
             DB_CONTAINER_TARGET="demanda-psql-hom"
 
           fi
@@ -373,7 +373,8 @@ jobs:
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
-
+              php artisan storage:link --force
+              
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
               sudo systemctl reload php8.5-fpm

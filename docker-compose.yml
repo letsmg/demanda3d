@@ -44,7 +44,7 @@ services:
     ports:
       - "5435:5432"
     volumes:
-      - demanda-psql-rep-dev:/var/lib/postgresql/data
+      - demanda-psql-rep-dev:/var/lib/postgresql
       - ./docker/psql-rep/entrypoint-replica.sh:/entrypoint-replica.sh:ro
     depends_on:
       demanda-psql-dev:

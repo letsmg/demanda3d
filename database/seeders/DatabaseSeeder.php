@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
             DisputeSeeder::class,
             CouponSeeder::class,
         ]);
+        
 
         $this->command->info('');
         $this->command->info('╔══════════════════════════════════════════╗');

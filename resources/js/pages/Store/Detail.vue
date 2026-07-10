@@ -319,7 +319,15 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             v-if="product.tenant?.display_name"
                             class="mt-1 text-sm text-amber-500"
                         >
-                            por {{ product.tenant.display_name }}
+                            por
+                            <Link
+                                v-if="product.tenant.fantasy_slug"
+                                :href="`/tenant/${product.tenant.fantasy_slug}`"
+                                class="hover:text-amber-700 hover:underline"
+                            >
+                                {{ product.tenant.display_name }}
+                            </Link>
+                            <span v-else>{{ product.tenant.display_name }}</span>
                         </p>
                     </div>
 

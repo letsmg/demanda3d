@@ -22,7 +22,7 @@ class OptimizeImagesBatch extends Command
      *
      * @var string
      */
-    protected $description = 'Processa todas as imagens de storage/app/public/imgs/originais, gerando versões otimizadas em storage/app/public/imgs/home';
+    protected $description = 'Processa todas as imagens de storage/app/public/imgs/originals, gerando versões otimizadas em storage/app/public/imgs/home';
 
     /**
      * Execute the console command.

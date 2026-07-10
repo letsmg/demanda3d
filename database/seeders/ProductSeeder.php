@@ -136,14 +136,16 @@ class ProductSeeder extends Seeder
                     $tmpPath = tempnam(sys_get_temp_dir(), 'seed_') . '.jpg';
                     file_put_contents($tmpPath, $content);
 
-                    $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
+                        $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
 
                     try {
+                        // Usa slug + índice como nome base para evitar que imagens diferentes
+                        // do mesmo produto tenham o mesmo arquivo no disco.
                         $result = $imageService->processProductUpload(
                             $uploadedFile,
                             $tenantId,
                             $product->id,
-                            $product->slug,
+                            $product->slug . '-' . ($i + 1),
                         );
 
                         ProductImage::create([

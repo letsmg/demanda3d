@@ -27,6 +27,7 @@ const doSearch = (value: string) => {
             {
                 preserveState: true,
                 replace: true,
+                only: ['products'],
             },
         );
     } else if (value.length === 0) {
@@ -36,6 +37,7 @@ const doSearch = (value: string) => {
             {
                 preserveState: true,
                 replace: true,
+                only: ['products'],
             },
         );
     }

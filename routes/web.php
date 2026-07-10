@@ -33,6 +33,15 @@ Route::inertia('/sobre', 'About')->name('about');
 // Public store (loja) — shows all tenants' products
 Route::get('/store', [StoreController::class, 'index'])->name('store.index');
 
+// Public tenant listing — all verified tenants
+Route::get('/tenants', [App\Http\Controllers\TenantProfileController::class, 'index'])->name('tenants.index');
+
+// Public store API endpoint for lazy-loading more products
+Route::get('/api/store/products', [StoreController::class, 'moreProducts'])->name('store.products');
+
+// Public tenant profile page (loja específica) — produtos de um vendedor apenas
+Route::get('/tenant/{fantasy_slug}', [App\Http\Controllers\TenantProfileController::class, 'show'])
+    ->name('tenant.profile');
 
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])

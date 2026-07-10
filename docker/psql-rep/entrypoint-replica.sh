@@ -94,6 +94,13 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
         exit 1
     fi
 
+    # ===========================================================================
+    # PostgreSQL 18+: o entrypoint oficial cria subdiretórios no diretório pai
+    # de $PGDATA (ex.: /var/lib/postgresql/18/). Se o pai pertencer a root,
+    # o entrypoint falha com "Permission denied". Corrigimos o owner aqui.
+    # ===========================================================================
+    PGDATA_PARENT="$(dirname "$PGDATA")"
+    chown -R postgres:postgres "$PGDATA_PARENT" 2>/dev/null || true
     chown -R postgres:postgres "$PGDATA"
     chmod 700 "$PGDATA"
 
@@ -101,6 +108,11 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
 else
     echo "=== [Replica Init] PGDATA já populado (PG_VERSION presente). ==="
     echo "=== [Replica Init] Pulando pg_basebackup — subindo réplica normalmente. ==="
+
+    # Garante permissões mesmo em reinícios (volume pode ter sido recriado)
+    PGDATA_PARENT="$(dirname "$PGDATA")"
+    chown -R postgres:postgres "$PGDATA_PARENT" 2>/dev/null || true
+    chown -R postgres:postgres "$PGDATA" 2>/dev/null || true
 fi
 
 # Entrega o controle para o entrypoint oficial da imagem postgres:alpine.

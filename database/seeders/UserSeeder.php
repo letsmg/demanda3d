@@ -5,8 +5,10 @@ namespace Database\Seeders;
 use App\Enums\UserAccessLevel;
 use App\Models\Tenant;
 use App\Services\EncryptionService;
+use App\Services\ImageOptimizationService;
 use App\Services\UserService;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -78,32 +80,81 @@ class UserSeeder extends Seeder
 
             if ($userData['create_tenant']) {
                 $companyName = $userData['tenant_company'];
-                Tenant::create([
+
+                // Apenas company_name permanece criptografado (LGPD)
+                $tenant = Tenant::create([
                     'user_id' => $user->id,
                     'company_name_encrypted' => EncryptionService::encryptWithHash($companyName)['encrypted'],
                     'company_name_hash' => EncryptionService::encryptWithHash($companyName)['hash'],
-                    'fantasy_name_encrypted' => EncryptionService::encryptWithHash($companyName)['encrypted'],
-                    'fantasy_name_hash' => EncryptionService::encryptWithHash($companyName)['hash'],
-                    'document_encrypted' => EncryptionService::encryptWithHash('00.000.000/0001-00')['encrypted'],
-                    'document_hash' => EncryptionService::encryptWithHash('00.000.000/0001-00')['hash'],
-                    'phone_encrypted' => EncryptionService::encryptWithHash('(11) 99999-0000')['encrypted'],
-                    'phone_hash' => EncryptionService::encryptWithHash('(11) 99999-0000')['hash'],
-                    'address_encrypted' => EncryptionService::encryptWithHash('Av. Principal')['encrypted'],
-                    'address_hash' => EncryptionService::encryptWithHash('Av. Principal')['hash'],
-                    'number_encrypted' => EncryptionService::encryptWithHash('100')['encrypted'],
-                    'number_hash' => EncryptionService::encryptWithHash('100')['hash'],
-                    'district_encrypted' => EncryptionService::encryptWithHash('Centro')['encrypted'],
-                    'district_hash' => EncryptionService::encryptWithHash('Centro')['hash'],
-                    'city_encrypted' => EncryptionService::encryptWithHash('São Paulo')['encrypted'],
-                    'city_hash' => EncryptionService::encryptWithHash('São Paulo')['hash'],
+                    // Campos públicos (texto puro)
+                    'fantasy_name' => $companyName,
+                    'fantasy_slug' => \App\Models\Tenant::generateUniqueFantasySlug($companyName),
+                    'document' => '00.000.000/0001-00',
+                    'phone' => '(11) 99999-0000',
+                    'address' => 'Av. Principal',
+                    'number' => '100',
+                    'district' => 'Centro',
+                    'city' => 'São Paulo',
                     'state' => 'SP',
                     'zipcode' => '01000-000',
                     'active' => true,
                 ]);
-                $this->command->info("✓ Tenant criado para: {$userData['display_name']}");
+
+                $this->command->info("✓ Tenant criado para: {$userData['display_name']} (slug: {$tenant->fantasy_slug})");
+
+                $this->downloadTenantImages($tenant, $userData['display_name']);
             }
         }
 
         $this->command->info('');
+    }
+
+    private function downloadTenantImages(Tenant $tenant, string $displayName): void
+    {
+        $imageService = app(ImageOptimizationService::class);
+
+        try {
+            $logoUrl = "https://picsum.photos/seed/{$tenant->id}-logo/400/400";
+            $this->command?->getOutput()->write("    ⏳ Baixando logo... ");
+            $content = @file_get_contents($logoUrl);
+
+            if ($content !== false) {
+                $tmpPath = tempnam(sys_get_temp_dir(), 'seed_logo_') . '.jpg';
+                file_put_contents($tmpPath, $content);
+
+                $uploadedFile = new UploadedFile($tmpPath, 'logo.jpg', 'image/jpeg', null, true);
+                $logoPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'logo');
+                $tenant->update(['logo_path' => $logoPath]);
+
+                $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+                @unlink($tmpPath);
+            } else {
+                $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+            }
+        } catch (\Exception $e) {
+            $this->command?->getOutput()->writeln("<fg=red>✗ ERRO logo: {$e->getMessage()}</>");
+        }
+
+        try {
+            $bannerUrl = "https://picsum.photos/seed/{$tenant->id}-banner/1200/400";
+            $this->command?->getOutput()->write("    ⏳ Baixando banner... ");
+            $content = @file_get_contents($bannerUrl);
+
+            if ($content !== false) {
+                $tmpPath = tempnam(sys_get_temp_dir(), 'seed_banner_') . '.jpg';
+                file_put_contents($tmpPath, $content);
+
+                $uploadedFile = new UploadedFile($tmpPath, 'banner.jpg', 'image/jpeg', null, true);
+                $bannerPath = $imageService->processTenantProfileUpload($uploadedFile, $tenant->id, 'banner');
+                $tenant->update(['banner_path' => $bannerPath]);
+
+                $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+                @unlink($tmpPath);
+            } else {
+                $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+            }
+        } catch (\Exception $e) {
+            $this->command?->getOutput()->writeln("<fg=red>✗ ERRO banner: {$e->getMessage()}</>");
+        }
     }
 }

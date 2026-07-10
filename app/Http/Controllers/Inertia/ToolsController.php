@@ -132,7 +132,7 @@ class ToolsController extends Controller
     {
         Gate::authorize('admin.only');
 
-        $originalDir = 'imgs/originais';
+        $originalDir = 'imgs/originals';
         $homeDir = 'imgs/home';
 
         // 1. Limpa imgs/home/
@@ -151,7 +151,7 @@ class ToolsController extends Controller
 
         if (empty($originalImages)) {
             return redirect()->route('tools.index')
-                ->with('error', 'Nenhuma imagem original encontrada em imgs/originais/.');
+                ->with('error', 'Nenhuma imagem original encontrada em imgs/originals/.');
         }
 
         $processed = 0;
@@ -184,7 +184,7 @@ class ToolsController extends Controller
         ]);
 
         $filename = basename($request->input('filename'));
-        $originalPath = 'imgs/originais/' . $filename;
+        $originalPath = 'imgs/originals/' . $filename;
         $homePath = 'imgs/home/' . $filename;
         $deleted = 0;
 
