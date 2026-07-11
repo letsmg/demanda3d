@@ -1,6 +1,12 @@
 services:
   # =============================================
-  # PostgreSQL Master (Primary) - DEV
+  # PostgreSQL (Single Instance) - DEV
+  #
+  # Em desenvolvimento local, usamos um único container PostgreSQL.
+  # As conexões de leitura (read) e escrita (write) do Laravel
+  # apontam para o mesmo host para economizar RAM e recursos.
+  # Em produção/homologação, a réplica é mantida nos respectivos
+  # docker-compose-prod.yml e docker-compose-hom.yml.
   # =============================================
   demanda-psql-dev:
     image: postgres:18.4-alpine
@@ -25,41 +31,11 @@ services:
       - demanda-net-dev
 
   # =============================================
-  # PostgreSQL Replica (Hot Standby) - DEV
+  # Redis - DEV (cache + filas + sessões)
   #
-  # NÃO usa docker-entrypoint-initdb.d — usa entrypoint customizado.
-  # Motivo: scripts de initdb.d rodam enquanto um Postgres temporário
-  # já está ativo em $PGDATA, causando corrupção ao tentar fazer
-  # pg_basebackup no mesmo diretório. Ver entrypoint-replica.sh.
-  # =============================================
-  demanda-psql-rep-dev:
-    image: postgres:18.4-alpine
-    container_name: demanda-psql-rep-dev
-    restart: unless-stopped
-    env_file:
-      - .env.docker
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-    entrypoint: ["/entrypoint-replica.sh"]
-    ports:
-      - "5435:5432"
-    volumes:
-      - demanda-psql-rep-dev:/var/lib/postgresql
-      - ./docker/psql-rep/entrypoint-replica.sh:/entrypoint-replica.sh:ro
-    depends_on:
-      demanda-psql-dev:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-    networks:
-      - demanda-net-dev
-
-  # =============================================
-  # Redis - DEV
+  # Redis cumpre dupla função em desenvolvimento:
+  # 1. Cache padrão da aplicação (trending searches, sessões)
+  # 2. Queue driver (filas de jobs em segundo plano, alertas)
   # =============================================
   demanda-redis-dev:
     image: redis:8.0-alpine
@@ -79,13 +55,143 @@ services:
     networks:
       - demanda-net-dev
 
+  # =============================================
+  # OpenSearch - DEV (busca local otimizada)
+  #
+  # ATENÇÃO: Recurso EXCLUSIVO de desenvolvimento local.
+  # Em produção (Oracle Free Tier), OPENSEARCH_ENABLED=false
+  # e as buscas usam PostgreSQL nativamente.
+  # =============================================
+  demanda-opensearch-dev:
+    image: opensearchproject/opensearch:2.19-alpine
+    container_name: demanda-opensearch-dev
+    restart: unless-stopped
+    profiles:
+      - opensearch
+    environment:
+      discovery.type: single-node
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "Demanda3D@OS2026!"
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      bootstrap.memory_lock: "true"
+    ports:
+      - "9201:9200"
+      - "9601:9600"
+    volumes:
+      - demanda-opensearch-dev:/usr/share/opensearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"green\"|\"status\":\"yellow\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - demanda-net-dev
+
+  # =============================================
+  # Loki + Promtail — Pipeline de Logs Local
+  # =============================================
+  demanda-loki-dev:
+    image: grafana/loki:3.6-alpine
+    container_name: demanda-loki-dev
+    restart: unless-stopped
+    user: "0:0"
+    profiles:
+      - grafana
+    ports:
+      - "3101:3100"
+    command: >
+      -config.file=/etc/loki/local-config.yaml
+      -config.expand-env=true
+    volumes:
+      - demanda-loki-dev:/loki
+      - ./docker/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - demanda-net-dev
+
+  demanda-promtail-dev:
+    image: grafana/promtail:3.6-alpine
+    container_name: demanda-promtail-dev
+    restart: unless-stopped
+    profiles:
+      - grafana
+    command: >
+      -config.file=/etc/promtail/config.yml
+      -config.expand-env=true
+    volumes:
+      - ./docker/promtail/config.yml:/etc/promtail/config.yml:ro
+      - ./storage/logs:/var/log/laravel:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      demanda-loki-dev:
+        condition: service_healthy
+    networks:
+      - demanda-net-dev
+
+  # =============================================
+  # Grafana — Dashboards e Alerting Local
+  #
+  # ATENÇÃO: Recurso EXCLUSIVO de desenvolvimento local.
+  # Em produção (Oracle Free Tier), GRAFANA_ENABLED=false.
+  # =============================================
+  demanda-grafana-dev:
+    image: grafana/grafana:12.2-alpine
+    container_name: demanda-grafana-dev
+    restart: unless-stopped
+    profiles:
+      - grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "${MAIL_HOST:-mailhog}:${MAIL_PORT:-1025}"
+      GF_SMTP_FROM_ADDRESS: "grafana@demanda3d.local"
+      GF_SMTP_SKIP_VERIFY: "true"
+      GF_UNIFIED_ALERTING_ENABLED: "true"
+      GF_ALERTING_ENABLED: "true"
+    ports:
+      - "3001:3000"
+    volumes:
+      - demanda-grafana-dev:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      demanda-promtail-dev:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - demanda-net-dev
+
 volumes:
   demanda-psql-dev:
     name: demanda-psql-dev
-  demanda-psql-rep-dev:
-    name: demanda-psql-rep-dev
   demanda-redis-dev:
     name: demanda-redis-dev
+  demanda-opensearch-dev:
+    name: demanda-opensearch-dev
+  demanda-loki-dev:
+    name: demanda-loki-dev
+  demanda-grafana-dev:
+    name: demanda-grafana-dev
 
 networks:
   demanda-net-dev:

@@ -19,6 +19,7 @@ O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta 
 * **Alta Disponibilidade:** Estratégia de replicação PostgreSQL (Master/Replica) para garantir resiliência e performance em leitura.
 * **Segurança por Design:** Conformidade com LGPD através de criptografia em repouso (`AES-256`) e hashing de senhas com `Argon2id`.
 * **Performance:** Camada de cache e filas distribuídas via Redis.
+* **Busca Otimizada:** OpenSearch integrado localmente para indexação e consultas de alto desempenho.
 
 ## 🛠️ Stack Tecnológica
 
@@ -26,7 +27,7 @@ O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta 
 | :--- | :--- |
 | **Backend** | Laravel 11, PHP 8.3, PostgreSQL, Redis |
 | **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
-| **DevOps** | Docker, Kubernetes, CI/CD Pipeline |
+| **DevOps** | Docker, Kubernetes, CI/CD Pipeline, OpenSearch |
 | **Payments** | Stripe API, Pix, Crédito/Débito |
 
 ---
@@ -139,6 +140,120 @@ php artisan images:optimize-batch --force
 ```
 
 > ⚠️ **Important:** Run `php artisan images:optimize-batch` as an initial setup step and after restoring backups. The `originais/` and `home/` folders are Git-ignored — only `.gitkeep` files are versioned to preserve the directory structure.
+
+---
+
+## 🔍 OpenSearch (Busca Local Otimizada)
+
+O projeto utiliza **OpenSearch** como motor de busca complementar ao PostgreSQL, fornecendo buscas full-text rápidas e tolerantes a erros tipográficos (fuzzy search), indexação de documentos e sugestões de autocomplete.
+
+> ⚠️ **Recurso estritamente local:** O OpenSearch está configurado para funcionar **apenas em ambiente de desenvolvimento local** via Docker. Em produção na **Oracle Free Tier**, o container é desabilitado (`OPENSEARCH_ENABLED=false`) e as buscas utilizam o PostgreSQL nativamente, pois a instância gratuita da Oracle possui limitações de hardware (1 GB de RAM, 1 OCPU) que não suportam o OpenSearch. O container usa `profiles: [opensearch]` e não é iniciado por padrão.
+
+| Variável | Valor Local | Produção |
+| :--- | :--- | :--- |
+| `OPENSEARCH_ENABLED` | `true` | `false` |
+| `OPENSEARCH_HOST` | `127.0.0.1` | — |
+| `OPENSEARCH_PORT` | `9201` | — |
+
+### Container Docker
+
+```bash
+# Iniciar OpenSearch via profile dedicado
+docker compose --profile opensearch up -d
+
+# Verificar saúde do cluster
+curl http://localhost:9201/_cluster/health
+```
+
+---
+
+## 📊 Grafana + Loki + Promtail (Monitoramento Local)
+
+Stack de observabilidade 100% local para desenvolvimento:
+- **Loki**: agregação de logs (datasource principal).
+- **Promtail**: agente que coleta logs do Laravel (`storage/logs/*.log`) e envia para o Loki.
+- **Grafana**: dashboards interativos (erros, severidade, live tail) + **Grafana Alerting** nativo para disparar e-mails de alerta em anomalias locais.
+
+> ⚠️ **Recurso estritamente local:** O Grafana e o pipeline Loki+Promtail são exclusivos do ambiente de desenvolvimento local. Em produção na Oracle Free Tier, esses containers **não sobem** (`GRAFANA_ENABLED=false`). O monitoramento de produção é delegado ao Sentry e a serviços externos. Os containers usam `profiles: [grafana]` e não são iniciados por padrão.
+
+| Variável | Valor Local | Produção |
+| :--- | :--- | :--- |
+| `GRAFANA_ENABLED` | `true` | `false` |
+
+### Containers Docker
+
+```bash
+# Iniciar stack Grafana via profile dedicado
+docker compose --profile grafana up -d
+
+# Acessar dashboards
+open http://localhost:3001   # admin / admin
+
+# Verificar saúde
+curl http://localhost:3001/api/health
+curl http://localhost:3101/ready
+```
+
+### Dashboard Padrão
+
+O dashboard **"Demanda3D — Logs & Erros"** é provisionado automaticamente e inclui:
+- Contador de erros críticos (últimos 5 min)
+- Gráfico de logs por severidade (error, warning, critical)
+- Stream de erros em tempo real (Live Tail)
+
+---
+
+## 🗄️ PostgreSQL — Estratégia Unificada (DEV)
+
+Em desenvolvimento local, usamos um **único container PostgreSQL** (`demanda-psql-dev`). As conexões de leitura (`read`) e escrita (`write`) do Laravel apontam para o mesmo host, controladas pela flag `DB_READ_WRITE_SPLIT=false`.
+
+> ℹ️ Em produção e homologação, a réplica hot standby é mantida nos respectivos `docker-compose-prod.yml` e `docker-compose-hom.yml`, com `DB_READ_WRITE_SPLIT=true`.
+
+| Variável | DEV | PROD / HOM |
+| :--- | :--- | :--- |
+| `DB_READ_WRITE_SPLIT` | `false` | `true` |
+| `DB_HOST` | `127.0.0.1` | master host |
+| `DB_REPLICA_HOST` | (ignorado) | replica host |
+
+---
+
+## 🛡️ Moderação de Conteúdo — Mensagens e Disputas
+
+O sistema aplica validação automática e dedutiva em **messages** e **disputes** antes de qualquer inserção no banco de dados, utilizando Custom Validation Rules do Laravel.
+
+### Regras Aplicadas
+
+| Regra | Classe | Comportamento |
+| :--- | :--- | :--- |
+| **Dados de Contato** | `NoContactDataRule` | Bloqueia e-mails e telefones (formato brasileiro com/sem DDD). Exibe o termo suspeito detectado. Retorna HTTP 422. |
+| **Palavras Ofensivas** | `NoOffensiveContentRule` | Utiliza `snipe/banbuilder` + algoritmo próprio de normalização dedutiva. Bloqueia completamente (sem censura ou salvamento). Lista os termos detectados. |
+
+### Algoritmo de Dedução (Anti-Ofuscação)
+
+A regra `NoOffensiveContentRule` aplica um pipeline de normalização que deduz palavrões mesmo quando o usuário tenta burlar o filtro:
+
+| Técnica de Ofuscação | Exemplo | Resultado Deduzido |
+| :--- | :--- | :--- |
+| Letras espaçadas | `c a r a l h o` | `caralho` |
+| Letras repetidas/esticadas | `caralhoooo` | `caralho` |
+| Substituição por números/símbolos (leet) | `c4r4lh0` / `c@r@lho` | `caralho` |
+| Variações de gênero/sufixo | `caralha` / `caralhas` | `caralho` |
+
+### Permissões de Administrador
+
+Os usuários com nível **Admin** (`access_level = 10`) têm permissão total de visualização em todas as conversas (`threads`/`messages`) e disputas (`disputes`) para fins de moderação, conforme definido nas Policies:
+
+- `MessagePolicy` — Admin acessa todas as mensagens
+- `ThreadPolicy` — Admin acessa todas as threads
+- `DisputePolicy` — Admin acessa todas as disputas
+
+Staff (Management e Operational) também possui acesso de leitura, mas clientes só visualizam seus próprios registros.
+
+---
+
+## 📋 Dicionário de Dados
+
+O arquivo **[tables.md](tables.md)** contém um dicionário completo de todas as tabelas do sistema, baseado nas migrations existentes. Consulte-o para entender o propósito e as relações de cada entidade.
 
 ---
 

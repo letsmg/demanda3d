@@ -7,6 +7,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\StaffOnly;
 use App\Http\Middleware\VerifyUserExists;
+use App\Jobs\SendCriticalErrorAlert;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
@@ -124,5 +125,47 @@ return Application::configure(basePath: dirname(__DIR__))
                     break;
                 }
             }
+        });
+
+        // ─────────────────────────────────────────────
+        // Disparo de alerta de erro crítico via fila
+        // Redis em ambiente de desenvolvimento.
+        //
+        // Em produção, o alerta é delegado ao Grafana
+        // Alerting e/ou Sentry — este handler apenas
+        // loga sem enfileirar jobs.
+        // ─────────────────────────────────────────────
+        $exceptions->report(function (Throwable $e) {
+            if (! app()->environment('local')) {
+                return;
+            }
+
+            // Evita loop infinito: não enfileira alertas
+            // para erros de conexão com Redis (a fila não
+            // funcionaria de qualquer forma).
+            $skipPatterns = [
+                'Redis server went away',
+                'Connection refused',
+                'connect() failed',
+                'NOAUTH Authentication required',
+            ];
+
+            foreach ($skipPatterns as $pattern) {
+                if (str_contains($e->getMessage(), $pattern)) {
+                    return;
+                }
+            }
+
+            SendCriticalErrorAlert::dispatch(
+                errorMessage: $e->getMessage(),
+                file: $e->getFile(),
+                line: $e->getLine(),
+                environment: app()->environment(),
+                timestamp: now()->toIso8601String(),
+                context: [
+                    'class' => $e::class,
+                    'trace' => collect($e->getTrace())->take(5)->toArray(),
+                ],
+            );
         });
     })->create();

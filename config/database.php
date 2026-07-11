@@ -93,14 +93,30 @@ return [
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
 
-            // Read/Write Splitting — replica hot standby para alta disponibilidade de leitura
+            // Read/Write Splitting — replica hot standby para alta disponibilidade de leitura.
+            //
             // NOTA: Quando read/write estão presentes, NÃO defina host/port/database/username/password
             // no nível superior — eles conflitam e causam comportamento imprevisível no Schema Builder.
+            //
+            // Estratégia local (DEV): DB_READ_WRITE_SPLIT=false
+            //   → read e write apontam para o mesmo container PostgreSQL.
+            //   → Economiza RAM e recursos na máquina de desenvolvimento.
+            //
+            // Estratégia produção/homologação: DB_READ_WRITE_SPLIT=true
+            //   → read usa DB_REPLICA_HOST/DB_REPLICA_PORT (réplica hot standby).
+            //   → write usa DB_HOST/DB_PORT (master).
+            //
+            // Se DB_REPLICA_HOST não estiver definido, o fallback natural
+            // usa DB_HOST para ambas as conexões (comportamento unificado).
             'read' => [
                 'host' => [
-                    env('DB_REPLICA_HOST', env('DB_HOST', '127.0.0.1')),
+                    env('DB_READ_WRITE_SPLIT', false)
+                        ? env('DB_REPLICA_HOST', env('DB_HOST', '127.0.0.1'))
+                        : env('DB_HOST', '127.0.0.1'),
                 ],
-                'port' => env('DB_REPLICA_PORT', env('DB_PORT', '5432')),
+                'port' => env('DB_READ_WRITE_SPLIT', false)
+                    ? env('DB_REPLICA_PORT', env('DB_PORT', '5432'))
+                    : env('DB_PORT', '5432'),
                 'database' => env('DB_REPLICA_DATABASE', env('DB_DATABASE', 'laravel')),
                 'username' => env('DB_REPLICA_USERNAME', env('DB_USERNAME', 'root')),
                 'password' => env('DB_REPLICA_PASSWORD', env('DB_PASSWORD', '')),
