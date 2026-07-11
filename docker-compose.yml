@@ -2,9 +2,9 @@ services:
   # =============================================
   # PostgreSQL Master (Primary) - DEV
   #
-  # Banco principal: recebe operações de escrita e leitura.
-  # A réplica (abaixo) é mantida em hot standby para simular
-  # arquitetura real de produção localmente.
+  # Container principal: porta 5434, banco demanda_db_dev.
+  # Responsável por operações de escrita e leitura.
+  # Volume em /var/lib/postgresql (padrão PG 18+ Alpine).
   # =============================================
   demanda-psql-dev:
     image: postgres:18.4-alpine
@@ -17,8 +17,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - demanda-psql-dev:/var/lib/postgresql/data
-      - ./docker/psql/00-init-master.sh:/docker-entrypoint-initdb.d/00-init-master.sh:ro
+      - demanda-psql-dev:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 5s
@@ -29,11 +28,11 @@ services:
       - demanda-net-dev
 
   # =============================================
-  # PostgreSQL Replica (Hot Standby) - DEV
+  # PostgreSQL Réplica (Read-Only) - DEV
   #
-  # Réplica de leitura dedicada. Tudo o que é escrito no
-  # master é replicado automaticamente para este container.
-  # O Laravel usa esta réplica para consultas SELECT (read).
+  # Container independente: porta 5435, banco demanda_db_dev_repl.
+  # Simula arquitetura de produção. Sem replicação física
+  # (economia de RAM).
   # =============================================
   demanda-psql-rep-dev:
     image: postgres:18.4-alpine
@@ -43,21 +42,17 @@ services:
       - .env.docker
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
-    entrypoint: ["/entrypoint-replica.sh"]
+      POSTGRES_DB: demanda_db_dev_repl
     ports:
       - "5435:5432"
     volumes:
       - demanda-psql-rep-dev:/var/lib/postgresql
-      - ./docker/psql-rep/entrypoint-replica.sh:/entrypoint-replica.sh:ro
-    depends_on:
-      demanda-psql-dev:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 30s
     networks:
       - demanda-net-dev
 

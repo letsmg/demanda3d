@@ -205,20 +205,22 @@ O dashboard **"Demanda3D — Logs & Erros"** é provisionado automaticamente e i
 
 ## 🗄️ PostgreSQL — Master/Replica (DEV)
 
-O ambiente de desenvolvimento simula a arquitetura real de produção com **dois containers PostgreSQL**:
+O ambiente de desenvolvimento simula a arquitetura real de produção com **dois containers PostgreSQL independentes** (sem replicação física, para economia de RAM):
 
-| Container | Porta | Função |
-| :--- | :--- | :--- |
-| `demanda-psql-dev` | `5434` | Master (escrita + leitura) |
-| `demanda-psql-rep-dev` | `5435` | Réplica (leitura dedicada, hot standby) |
+| Container | Porta | Banco | Função |
+| :--- | :--- | :--- | :--- |
+| `demanda-psql-dev` | `5434` | `demanda_db_dev` | Master (escrita + leitura) |
+| `demanda-psql-rep-dev` | `5435` | `demanda_db_dev_repl` | Réplica (leitura dedicada) |
 
-A replicação é nativa do PostgreSQL via `pg_basebackup` e streaming WAL. O Laravel direciona consultas `SELECT` para a réplica e operações de escrita (`INSERT`, `UPDATE`, `DELETE`) para o master através da flag `DB_READ_WRITE_SPLIT=true` em `config/database.php`.
+O Laravel direciona consultas `SELECT` para a réplica e operações de escrita para o master através da flag `DB_READ_WRITE_SPLIT=true` em `config/database.php`. A réplica é populada via `pg_dump` do master.
 
 | Variável | DEV | PROD / HOM |
 | :--- | :--- | :--- |
 | `DB_READ_WRITE_SPLIT` | `true` | `true` |
-| `DB_HOST` | `127.0.0.1` | master host |
-| `DB_REPLICA_HOST` | `127.0.0.1` | replica host |
+| `DB_HOST` / `DB_PORT` | `127.0.0.1` / `5434` | master host |
+| `DB_REPLICA_HOST` / `DB_REPLICA_PORT` | `127.0.0.1` / `5435` | replica host |
+| `DB_DATABASE` | `demanda_db_dev` | — |
+| `DB_REPLICA_DATABASE` | `demanda_db_dev_repl` | — |
 
 ---
 
