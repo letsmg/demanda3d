@@ -56,6 +56,30 @@ services:
       - demanda-net-dev
 
   # =============================================
+  # Go Notification Service — Microsserviço Assíncrono
+  #
+  # Worker em Go que escuta a fila notifications_queue
+  # no Redis e processa disparos de push, e-mail e SMS.
+  # Alivia o core Laravel de processamento síncrono.
+  # Container ultra-leve (~8MB binário compilado).
+  # =============================================
+  go-notification-service:
+    build:
+      context: ./go-service
+      dockerfile: Dockerfile
+    container_name: go-notification-service
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: demanda-redis-dev
+      REDIS_PORT: "6379"
+      NOTIFICATIONS_QUEUE: notifications_queue
+    depends_on:
+      demanda-redis-dev:
+        condition: service_healthy
+    networks:
+      - demanda-net-dev
+
+  # =============================================
   # OpenSearch - DEV (busca local otimizada)
   #
   # ATENÇÃO: Recurso EXCLUSIVO de desenvolvimento local.

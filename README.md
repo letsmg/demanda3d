@@ -25,7 +25,7 @@ O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta 
 
 | Camada | Tecnologias |
 | :--- | :--- |
-| **Backend** | Laravel 11, PHP 8.3, PostgreSQL, Redis |
+| **Backend** | Laravel 11, PHP 8.3, Go 1.25 (notificações), PostgreSQL, Redis |
 | **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
 | **DevOps** | Docker, Kubernetes, CI/CD Pipeline, OpenSearch |
 | **Payments** | Stripe API, Pix, Crédito/Débito |
@@ -253,7 +253,57 @@ Staff (Management e Operational) também possui acesso de leitura, mas clientes 
 
 ## 📋 Dicionário de Dados
 
-O arquivo **[tables.md](tables.md)** contém um dicionário completo de todas as tabelas do sistema, baseado nas migrations existentes. Consulte-o para entender o propósito e as relações de cada entidade.
+O arquivo **[docs/tables.md](docs/tables.md)** contém um dicionário completo de todas as tabelas do sistema, baseado nas migrations existentes. Consulte-o para entender o propósito e as relações de cada entidade.
+
+---
+
+## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
+
+O sistema utiliza uma arquitetura **híbrida Laravel + Go** para processamento assíncrono de notificações:
+
+```
+┌──────────────┐     RPUSH      ┌──────────────┐     BLPOP      ┌──────────────────────┐
+│   Laravel    │ ──────────────> │    Redis     │ ─────────────> │  Go Notification      │
+│  (Core)      │  notifications │  (Queue)     │  notifications │  Service (Worker)     │
+│              │  _queue        │              │  _queue        │                       │
+│ SendNotifi-  │                │              │                │ Goroutines → Mock      │
+│ cation Job   │                │              │                │ (push/email/sms)       │
+└──────────────┘                └──────────────┘                └──────────────────────┘
+```
+
+### Motivação
+- **Economia de RAM**: O container Go compilado (`scratch`) ocupa ~8 MB em memória, contra 40-80 MB de um worker PHP adicional.
+- **Concorrência nativa**: Goroutines processam múltiplas notificações simultaneamente sem overhead de processo.
+- **Separação de responsabilidades**: O Laravel publica o payload e continua executando; o Go consome e dispara push, e-mail e SMS de forma isolada.
+
+### Fluxo de Uso
+
+```php
+// No Laravel: dispatch o job e o Go processa em background
+SendNotification::dispatch(
+    userId: '42',
+    title: 'Novo pedido recebido!',
+    message: 'Seu pedido #1234 foi confirmado.',
+    channel: 'push',
+    tenantId: '1',
+);
+```
+
+### Container Docker
+
+```bash
+# O container sobe automaticamente com docker compose up
+docker compose up -d go-notification-service
+
+# Verificar logs
+docker logs -f go-notification-service
+```
+
+| Componente | Tecnologia | Propósito |
+| :--- | :--- | :--- |
+| `go-service/main.go` | Go 1.25 + go-redis | Worker que escuta `notifications_queue` via BLPOP com 5 goroutines |
+| `app/Jobs/SendNotification.php` | Laravel | Job que serializa o payload e publica via RPUSH no Redis |
+| `notifications_queue` | Redis List | Fila FIFO compartilhada entre Laravel (produtor) e Go (consumidor) |
 
 ---
 

@@ -37,3 +37,4 @@
 | `jobs` / `job_batches` / `failed_jobs` | — | Fila de jobs (QUEUE_CONNECTION=redis em dev local). |
 | `password_reset_tokens` | — | Tokens de recuperação de senha (Fortify). |
 | `migrations` | — | Controle de versionamento do schema (Laravel). |
+| `notifications_queue` (Redis List) | — | Fila FIFO compartilhada entre Laravel (produtor, via `SendNotification` Job e RPUSH) e Go Notification Service (consumidor, via BLPOP). Não é uma tabela SQL — é uma lista atômica no Redis. |
