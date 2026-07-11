@@ -37,4 +37,5 @@
 | `jobs` / `job_batches` / `failed_jobs` | — | Fila de jobs (QUEUE_CONNECTION=redis em dev local). |
 | `password_reset_tokens` | — | Tokens de recuperação de senha (Fortify). |
 | `migrations` | — | Controle de versionamento do schema (Laravel). |
+| `order_labels` | `OrderLabel` | Etiquetas de envio/postagem para pedidos confirmados. Vincula order_id, carrier_id, tracking_code e status (pending/generated/shipped/delivered). Armazena recipient_name e recipient_address para impressão. Acessível apenas por vendedores/lojas (Operational/Management). |
 | `notifications_queue` (Redis List) | — | Fila FIFO compartilhada entre Laravel (produtor, via `SendNotification` Job e RPUSH) e Go Notification Service (consumidor, via BLPOP). Não é uma tabela SQL — é uma lista atômica no Redis. |

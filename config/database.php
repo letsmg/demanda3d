@@ -98,16 +98,13 @@ return [
             // NOTA: Quando read/write estão presentes, NÃO defina host/port/database/username/password
             // no nível superior — eles conflitam e causam comportamento imprevisível no Schema Builder.
             //
-            // Estratégia local (DEV): DB_READ_WRITE_SPLIT=false
-            //   → read e write apontam para o mesmo container PostgreSQL.
-            //   → Economiza RAM e recursos na máquina de desenvolvimento.
-            //
-            // Estratégia produção/homologação: DB_READ_WRITE_SPLIT=true
+            // Estratégia local (DEV): DB_READ_WRITE_SPLIT=true
             //   → read usa DB_REPLICA_HOST/DB_REPLICA_PORT (réplica hot standby).
             //   → write usa DB_HOST/DB_PORT (master).
+            //   → Simula arquitetura real de produção em desenvolvimento.
             //
-            // Se DB_REPLICA_HOST não estiver definido, o fallback natural
-            // usa DB_HOST para ambas as conexões (comportamento unificado).
+            // Para desabilitar a réplica e usar um único host:
+            //   → DB_READ_WRITE_SPLIT=false → read e write apontam para o mesmo host.
             'read' => [
                 'host' => [
                     env('DB_READ_WRITE_SPLIT', false)

@@ -203,17 +203,22 @@ O dashboard **"Demanda3D — Logs & Erros"** é provisionado automaticamente e i
 
 ---
 
-## 🗄️ PostgreSQL — Estratégia Unificada (DEV)
+## 🗄️ PostgreSQL — Master/Replica (DEV)
 
-Em desenvolvimento local, usamos um **único container PostgreSQL** (`demanda-psql-dev`). As conexões de leitura (`read`) e escrita (`write`) do Laravel apontam para o mesmo host, controladas pela flag `DB_READ_WRITE_SPLIT=false`.
+O ambiente de desenvolvimento simula a arquitetura real de produção com **dois containers PostgreSQL**:
 
-> ℹ️ Em produção e homologação, a réplica hot standby é mantida nos respectivos `docker-compose-prod.yml` e `docker-compose-hom.yml`, com `DB_READ_WRITE_SPLIT=true`.
+| Container | Porta | Função |
+| :--- | :--- | :--- |
+| `demanda-psql-dev` | `5434` | Master (escrita + leitura) |
+| `demanda-psql-rep-dev` | `5435` | Réplica (leitura dedicada, hot standby) |
+
+A replicação é nativa do PostgreSQL via `pg_basebackup` e streaming WAL. O Laravel direciona consultas `SELECT` para a réplica e operações de escrita (`INSERT`, `UPDATE`, `DELETE`) para o master através da flag `DB_READ_WRITE_SPLIT=true` em `config/database.php`.
 
 | Variável | DEV | PROD / HOM |
 | :--- | :--- | :--- |
-| `DB_READ_WRITE_SPLIT` | `false` | `true` |
+| `DB_READ_WRITE_SPLIT` | `true` | `true` |
 | `DB_HOST` | `127.0.0.1` | master host |
-| `DB_REPLICA_HOST` | (ignorado) | replica host |
+| `DB_REPLICA_HOST` | `127.0.0.1` | replica host |
 
 ---
 
@@ -304,6 +309,37 @@ docker logs -f go-notification-service
 | `go-service/main.go` | Go 1.25 + go-redis | Worker que escuta `notifications_queue` via BLPOP com 5 goroutines |
 | `app/Jobs/SendNotification.php` | Laravel | Job que serializa o payload e publica via RPUSH no Redis |
 | `notifications_queue` | Redis List | Fila FIFO compartilhada entre Laravel (produtor) e Go (consumidor) |
+
+---
+
+---
+
+## 🏷️ Geração de Etiquetas (Order Labels)
+
+O sistema inclui um módulo de geração de etiquetas de envio para pedidos confirmados, acessível exclusivamente por **vendedores/lojas** (Staff Operational e Management).
+
+### Funcionalidades
+- Selecionar pedido confirmado e gerar etiqueta de postagem
+- Vincular transportadora e código de rastreio
+- Visualizar status da etiqueta: `pending → generated → shipped → delivered`
+
+### Modelo de Dados
+| Tabela | Model | Propósito |
+| :--- | :--- | :--- |
+| `order_labels` | `OrderLabel` | Etiquetas de envio vinculadas a pedidos, com nome do destinatário e endereço de entrega |
+
+### Restrições de Acesso — Vendedor vs. Cliente
+
+Os vendedores (Operational) têm acesso **estritamente limitado** aos dados do cliente:
+
+| Nível | Permissão |
+| :--- | :--- |
+| **Admin (10)** | Acesso total a todos os dados dos clientes |
+| **Management (1)** | Acesso total a todos os dados dos clientes |
+| **Operational (0)** | Visualiza apenas `display_name` e endereço de entrega (necessários para etiqueta). **Proibido** acessar menu de dados completos dos clientes. |
+| **Customer (5)** | Acesso apenas aos próprios pedidos |
+
+A restrição é aplicada via `OrderPolicy` (métodos `viewClientDetails` e `viewClientFullData`) e reforçada na camada de Controller/Resource do Laravel.
 
 ---
 

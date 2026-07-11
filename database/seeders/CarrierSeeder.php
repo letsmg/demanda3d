@@ -138,5 +138,19 @@ class CarrierSeeder extends Seeder
                 );
             }
         }
+
+        // ─────────────────────────────────────────────
+        // Credenciais de teste para login como transportador
+        // ─────────────────────────────────────────────
+        $this->command->newLine();
+        $this->command->info('═══ TRANSPORTADORAS (CARRIERS) ═══');
+        $this->command->table(
+            ['E-mail', 'Senha', 'Nome'],
+            [
+                ['contato@rapidez.com.br', 'password', 'Transportadora Rapidez Ltda'],
+                ['cariocas@express.com.br', 'password', 'Entregas Cariocas Express'],
+                ['logistica@mineira.com.br', 'password', 'Logística Mineira S.A.'],
+            ]
+        );
     }
 }

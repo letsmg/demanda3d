@@ -1,12 +1,10 @@
 services:
   # =============================================
-  # PostgreSQL (Single Instance) - DEV
+  # PostgreSQL Master (Primary) - DEV
   #
-  # Em desenvolvimento local, usamos um único container PostgreSQL.
-  # As conexões de leitura (read) e escrita (write) do Laravel
-  # apontam para o mesmo host para economizar RAM e recursos.
-  # Em produção/homologação, a réplica é mantida nos respectivos
-  # docker-compose-prod.yml e docker-compose-hom.yml.
+  # Banco principal: recebe operações de escrita e leitura.
+  # A réplica (abaixo) é mantida em hot standby para simular
+  # arquitetura real de produção localmente.
   # =============================================
   demanda-psql-dev:
     image: postgres:18.4-alpine
@@ -27,6 +25,39 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - demanda-net-dev
+
+  # =============================================
+  # PostgreSQL Replica (Hot Standby) - DEV
+  #
+  # Réplica de leitura dedicada. Tudo o que é escrito no
+  # master é replicado automaticamente para este container.
+  # O Laravel usa esta réplica para consultas SELECT (read).
+  # =============================================
+  demanda-psql-rep-dev:
+    image: postgres:18.4-alpine
+    container_name: demanda-psql-rep-dev
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    entrypoint: ["/entrypoint-replica.sh"]
+    ports:
+      - "5435:5432"
+    volumes:
+      - demanda-psql-rep-dev:/var/lib/postgresql
+      - ./docker/psql-rep/entrypoint-replica.sh:/entrypoint-replica.sh:ro
+    depends_on:
+      demanda-psql-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     networks:
       - demanda-net-dev
 
@@ -208,6 +239,8 @@ services:
 volumes:
   demanda-psql-dev:
     name: demanda-psql-dev
+  demanda-psql-rep-dev:
+    name: demanda-psql-rep-dev
   demanda-redis-dev:
     name: demanda-redis-dev
   demanda-opensearch-dev:
