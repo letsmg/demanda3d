@@ -15,10 +15,11 @@ const form = useForm({ email: '', password: '', remember: false });
 
 interface TestCarrierAccount { label: string; email: string; }
 const testAccounts: TestCarrierAccount[] = [
-    { label: 'Transportadora Rápida Ltda', email: 'transportadora@demanda3d.com' },
-    { label: 'Frete Fácil S.A.', email: 'fretefacil@demanda3d.com' },
+    { label: 'Transportadora Rapidez Ltda', email: 'transportadora@demanda3d.com' },
+    { label: 'Entregas Cariocas Express', email: 'cariocas@express.com.br' },
+    { label: 'Logística Mineira S.A.', email: 'logistica@mineira.com.br' },
 ];
-function fillTestCredentials(acc: TestCarrierAccount) { form.email = acc.email; form.password = 'password'; }
+function fillTestCredentials(acc: TestCarrierAccount) { form.email = acc.email; form.password = 'Mudar@123'; }
 
 function submit() { form.post('/login_carrier', { preserveState: true }); }
 </script>
@@ -33,7 +34,7 @@ function submit() { form.post('/login_carrier', { preserveState: true }); }
             </CardHeader>
             <CardContent class="space-y-6">
                 <div class="rounded-lg border border-dashed border-amber-500/50 bg-amber-100/50 p-3">
-                    <p class="mb-2 text-center text-xs font-medium text-amber-700">🧪 Contas de teste (senha: <strong>password</strong>)</p>
+                    <p class="mb-2 text-center text-xs font-medium text-amber-700">🧪 Contas de teste (senha: <strong>Mudar@123</strong>)</p>
                     <div class="flex flex-col gap-1.5">
                         <button v-for="acc in testAccounts" :key="acc.email" type="button"
                             class="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-amber-800 transition-colors hover:bg-amber-200/50"

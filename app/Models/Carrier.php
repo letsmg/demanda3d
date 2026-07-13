@@ -3,62 +3,73 @@
 
 namespace App\Models;
 
-use App\Scopes\TenantScope;
 use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable([
-    'tenant_id', 'name', 'data_nascimento', 'doc_type', 'ie',
+    'user_id',
+    'company_name_encrypted', 'company_name_hash',
+    'fantasy_name', 'slug', 'document_type',
     'document_encrypted', 'document_hash',
-    'address_encrypted', 'address_hash',
-    'number_encrypted', 'number_hash',
-    'district_encrypted', 'district_hash',
-    'city_encrypted', 'city_hash',
-    'state', 'zipcode',
-    'contact1_encrypted', 'contact1_hash',
-    'phone1_encrypted', 'phone1_hash',
-    'contact2_encrypted', 'contact2_hash',
-    'phone2_encrypted', 'phone2_hash',
-    'email', 'password', 'website', 'notes', 'is_active',
-    'is_blocked', 'blocked_at', 'blocked_reason',
-    'state_id',
+    'address_encrypted',
+    'phone_encrypted',
+    'logo_path', 'website_url',
+    'rating_average', 'rating_count',
+    'is_active',
 ])]
-class Carrier extends Authenticatable
+class Carrier extends Model
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
 
     protected $appends = [
-        'document', 'address', 'number', 'district', 'city',
-        'contact1', 'phone1', 'contact2', 'phone2',
+        'company_name', 'document', 'address', 'phone',
     ];
-
-    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
-            'is_active'         => 'boolean',
-            'is_blocked'        => 'boolean',
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'data_nascimento'   => 'date',
+            'is_active'       => 'boolean',
+            'rating_average'  => 'decimal:2',
+            'rating_count'    => 'integer',
         ];
     }
 
     protected static function booted(): void
     {
-        static::addGlobalScope(new TenantScope);
+        static::creating(function (Carrier $carrier) {
+            if (empty($carrier->slug) && ! empty($carrier->fantasy_name)) {
+                $carrier->slug = static::generateUniqueSlug($carrier->fantasy_name);
+            }
+        });
+
+        static::updating(function (Carrier $carrier) {
+            if ($carrier->isDirty('fantasy_name') && ! $carrier->isDirty('slug')) {
+                $carrier->slug = static::generateUniqueSlug($carrier->fantasy_name, $carrier->id);
+            }
+        });
     }
 
-    public function tenant(): BelongsTo
+    // ── Relacionamentos ──────────────────────────────────────
+
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function coverageRanges(): HasMany
+    {
+        return $this->hasMany(CarrierCoverageRange::class);
+    }
+
+    public function tenantAgreements(): HasMany
+    {
+        return $this->hasMany(CarrierTenantAgreement::class);
     }
 
     public function freightContracts(): HasMany
@@ -66,20 +77,77 @@ class Carrier extends Authenticatable
         return $this->hasMany(FreightContract::class);
     }
 
-    public function states(): BelongsToMany
+    public function activeTenants(): BelongsToMany
     {
-        return $this->belongsToMany(State::class, 'carrier_state')
+        return $this->belongsToMany(Tenant::class, 'carrier_tenant_agreements')
+            ->wherePivot('status', 'active')
             ->withTimestamps();
     }
 
-    // ── Accessors ──────────────────────────────────────
-    public function getDocumentAttribute(): ?string { return EncryptionService::decrypt($this->document_encrypted); }
-    public function getAddressAttribute(): ?string { return EncryptionService::decrypt($this->address_encrypted); }
-    public function getNumberAttribute(): ?string { return EncryptionService::decrypt($this->number_encrypted); }
-    public function getDistrictAttribute(): ?string { return EncryptionService::decrypt($this->district_encrypted); }
-    public function getCityAttribute(): ?string { return EncryptionService::decrypt($this->city_encrypted); }
-    public function getContact1Attribute(): ?string { return EncryptionService::decrypt($this->contact1_encrypted); }
-    public function getPhone1Attribute(): ?string { return EncryptionService::decrypt($this->phone1_encrypted); }
-    public function getContact2Attribute(): ?string { return EncryptionService::decrypt($this->contact2_encrypted); }
-    public function getPhone2Attribute(): ?string { return EncryptionService::decrypt($this->phone2_encrypted); }
+    // ── Scopes ───────────────────────────────────────────────
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeCoversCep($query, string $cep)
+    {
+        return $query->whereHas('coverageRanges', function ($q) use ($cep) {
+            $q->where('cep_start', '<=', $cep)
+              ->where('cep_end', '>=', $cep);
+        });
+    }
+
+    // ── Accessors ────────────────────────────────────────────
+
+    public function getCompanyNameAttribute(): ?string { return EncryptionService::decrypt($this->company_name_encrypted); }
+    public function getDocumentAttribute(): ?string    { return EncryptionService::decrypt($this->document_encrypted); }
+    public function getAddressAttribute(): ?string     { return EncryptionService::decrypt($this->address_encrypted); }
+    public function getPhoneAttribute(): ?string       { return EncryptionService::decrypt($this->phone_encrypted); }
+
+    // ── Helpers ──────────────────────────────────────────────
+
+    public function getEmailAttribute(): ?string
+    {
+        return $this->user?->email;
+    }
+
+    public function hasActiveAgreementWith(int $tenantId): bool
+    {
+        return $this->tenantAgreements()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->exists();
+    }
+
+    public function coversCep(string $cep): bool
+    {
+        return $this->coverageRanges()
+            ->where('cep_start', '<=', $cep)
+            ->where('cep_end', '>=', $cep)
+            ->exists();
+    }
+
+    public static function generateUniqueSlug(string $fantasyName, ?int $excludeId = null): string
+    {
+        $baseSlug = Str::slug($fantasyName);
+        $slug     = $baseSlug;
+        $counter  = 1;
+
+        while (true) {
+            $query = static::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+            if (! $query->exists()) {
+                break;
+            }
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
 }
+// Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

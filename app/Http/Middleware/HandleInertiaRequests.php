@@ -16,7 +16,7 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $user = $request->user();
+        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('carriers')->user();
         $clientUser = \Illuminate\Support\Facades\Auth::guard('clients')->user();
 
         $cartCount = 0;

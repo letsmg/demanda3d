@@ -12,16 +12,19 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
-            $table->text('first_name_encrypted')->nullable();
-            $table->string('first_name_hash', 64)->nullable();
-            $table->text('last_name_encrypted')->nullable();
-            $table->string('last_name_hash', 64)->nullable();
+            $table->text('first_name_encrypted');
+            $table->string('first_name_hash', 64);
+            $table->text('last_name_encrypted');
+            $table->string('last_name_hash', 64);
             $table->string('display_name', 255)->nullable();
-            $table->date('data_nascimento')->nullable()->after('display_name');
+            $table->date('birth_date')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->unsignedTinyInteger('access_level')->default(5)->comment('0=operational,1=management,5=customer,10=admin');
+            $table->unsignedTinyInteger('access_level')->default(15)
+                ->comment('1=SELLER_1,2=SELLER_2,5=CARRIER_1,6=CARRIER_2,10=ADMIN,15=CUSTOMER');
+            $table->boolean('is_active')->default(true)->after('access_level');
             $table->index('access_level');
+            $table->index('is_active');
             $table->index('first_name_hash');
             $table->index('last_name_hash');
             $table->rememberToken();

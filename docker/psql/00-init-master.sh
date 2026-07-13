@@ -116,4 +116,21 @@ END
 $$;
 EOSQL
 
+echo "=== [Master Init] Criando banco de dados de réplica lógica (demanda_db_dev_repl) ==="
+
+PGPASSWORD="$PGPASSWORD" psql -U "$PGUSER" -d postgres << 'EOSQL'
+-- Cria o segundo banco lógico dentro do mesmo container para simular
+-- arquitetura de réplica sem consumir RAM de um segundo container.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'demanda_db_dev_repl') THEN
+        CREATE DATABASE demanda_db_dev_repl;
+        RAISE NOTICE 'Banco demanda_db_dev_repl criado com sucesso.';
+    ELSE
+        RAISE NOTICE 'Banco demanda_db_dev_repl já existe.';
+    END IF;
+END
+$$;
+EOSQL
+
 echo "=== [Master Init] Setup concluído com sucesso! ==="

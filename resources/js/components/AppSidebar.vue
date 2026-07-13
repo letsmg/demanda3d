@@ -38,72 +38,97 @@ import { index as freightContractsIndex } from '@/routes/freight-contracts';
 import { index as toolsIndex } from '@/routes/tools';
 import type { NavItem } from '@/types';
 
-const page = usePage<{ auth: { user?: { access_level?: number } } }>();
-const isAdmin = (page.props.auth?.user?.access_level ?? 0) >= 10;
+const page = usePage<{ auth: { user?: { access_level?: number; isCarrier?: boolean } } }>();
+const accessLevel = page.props.auth?.user?.access_level ?? 0;
+const isAdmin = accessLevel >= 10;
+const isCarrier = accessLevel === 5 || accessLevel === 6;
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Painel',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Clientes',
-        href: clientsIndex(),
-        icon: Users,
-    },
-    {
-        title: 'Pedidos',
-        href: ordersIndex(),
-        icon: Package,
-    },
-    {
-        title: 'Fornecedores',
-        href: suppliersIndex(),
-        icon: Truck,
-    },
-    {
-        title: 'Insumos',
-        href: inputsIndex(),
-        icon: BookOpen,
-    },
-    {
-        title: 'Transportadoras',
-        href: carriersIndex(),
-        icon: Ship,
-    },
-    {
-        title: 'Contratos de Frete',
-        href: freightContractsIndex(),
-        icon: FolderGit2,
-    },
-    {
-        title: 'Produtos',
-        href: productsIndex(),
-        icon: ShoppingBag,
-    },
-    // Visível apenas para Admin
-    ...(isAdmin
-        ? [{
-              title: 'Ferramentas',
-              href: toolsIndex(),
-              icon: Wrench,
-          }]
-        : []),
-    {
-        title: 'Relatórios',
-        href: reportsIndex(),
-        icon: BarChart3,
-    },
-    // Visível apenas para Admin
-    ...(isAdmin
-        ? [{
-              title: 'Vendedores',
-              href: '/admin/users',
-              icon: ShieldCheck,
-          }]
-        : []),
-];
+const mainNavItems: NavItem[] = isCarrier
+    ? [
+          {
+              title: 'Painel',
+              href: '/carrier/dashboard',
+              icon: LayoutGrid,
+          },
+          {
+              title: 'Contratos / Acordos',
+              href: '/carrier/agreements',
+              icon: FolderGit2,
+          },
+          {
+              title: 'Pedidos',
+              href: '/carrier/orders',
+              icon: Package,
+          },
+          {
+              title: 'Perfil',
+              href: '/carrier/profile',
+              icon: Users,
+          },
+      ]
+    : [
+          {
+              title: 'Painel',
+              href: dashboard(),
+              icon: LayoutGrid,
+          },
+          {
+              title: 'Clientes',
+              href: clientsIndex(),
+              icon: Users,
+          },
+          {
+              title: 'Pedidos',
+              href: ordersIndex(),
+              icon: Package,
+          },
+          {
+              title: 'Fornecedores',
+              href: suppliersIndex(),
+              icon: Truck,
+          },
+          {
+              title: 'Insumos',
+              href: inputsIndex(),
+              icon: BookOpen,
+          },
+          {
+              title: 'Transportadoras',
+              href: carriersIndex(),
+              icon: Ship,
+          },
+          {
+              title: 'Contratos de Frete',
+              href: freightContractsIndex(),
+              icon: FolderGit2,
+          },
+          {
+              title: 'Produtos',
+              href: productsIndex(),
+              icon: ShoppingBag,
+          },
+          // Visível apenas para Admin
+          ...(isAdmin
+              ? [{
+                    title: 'Ferramentas',
+                    href: toolsIndex(),
+                    icon: Wrench,
+                }]
+              : []),
+          {
+              title: 'Relatórios',
+              href: reportsIndex(),
+              icon: BarChart3,
+          },
+          // Visível apenas para Admin
+          ...(isAdmin
+              ? [{
+                    title: 'Vendedores',
+                    href: '/admin/users',
+                    icon: ShieldCheck,
+                }]
+              : []),
+      ];
 
 const footerNavItems: NavItem[] = [
     {

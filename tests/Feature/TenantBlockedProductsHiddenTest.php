@@ -18,7 +18,7 @@ uses(RefreshDatabase::class);
 it('hides products from blocked tenants in the store', function () {
     // Arrange: criar tenant ativo com usuário e transportadora aprovada
     $user = User::factory()->create([
-        'access_level' => \App\Enums\UserAccessLevel::OPERATIONAL,
+        'access_level' => \App\Enums\UserAccessLevel::SELLER_2,
     ]);
 
     $tenant = Tenant::factory()->create([
@@ -26,7 +26,7 @@ it('hides products from blocked tenants in the store', function () {
         'active' => true,
     ]);
 
-    $carrier = Carrier::factory()->create();
+    $carrier = Carrier::factory()->withUser()->create();
     VendorCarrier::create([
         'user_id' => $user->id,
         'carrier_id' => $carrier->id,
@@ -80,7 +80,7 @@ it('hides products from blocked tenants in the store', function () {
 
 it('returns 404 when accessing a blocked tenant profile', function () {
     $user = User::factory()->create([
-        'access_level' => \App\Enums\UserAccessLevel::OPERATIONAL,
+        'access_level' => \App\Enums\UserAccessLevel::SELLER_2,
     ]);
 
     Tenant::factory()->create([
@@ -95,7 +95,7 @@ it('returns 404 when accessing a blocked tenant profile', function () {
 
 it('returns 200 when accessing an active tenant profile', function () {
     $user = User::factory()->create([
-        'access_level' => \App\Enums\UserAccessLevel::OPERATIONAL,
+        'access_level' => \App\Enums\UserAccessLevel::SELLER_2,
     ]);
 
     Tenant::factory()->create([

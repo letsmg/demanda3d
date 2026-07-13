@@ -6,16 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->string('path', 255)->comment('Caminho relativo da imagem otimizada (ex: imgs/home/uuid.webp)');
-            $table->string('original_path', 255)->nullable()->comment('Caminho relativo da imagem original (ex: imgs/originais/uuid.webp)');
+            $table->string('path', 255);
+            $table->string('original_path', 255)->nullable();
+            $table->string('thumbnail_path')->nullable()->after('original_path');
             $table->unsignedTinyInteger('order')->default(0);
             $table->timestamps();
 
@@ -23,9 +21,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('product_images');

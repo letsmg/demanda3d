@@ -113,9 +113,27 @@ Route::middleware(['auth:clients', 'verify.user.exists'])->group(function () {
 
 // Carrier dashboard routes (authenticated via carriers guard)
 Route::middleware(['auth:carriers'])->group(function () {
-    Route::get('/carrier/dashboard', function () {
-        return inertia('Carriers/Dashboard');
-    })->name('carrier.dashboard');
+    // Dashboard principal
+    Route::get('/carrier/dashboard', [App\Http\Controllers\CarrierDashboardController::class, 'dashboard'])
+        ->name('carrier.dashboard');
+
+    // Perfil da transportadora
+    Route::get('/carrier/profile', [App\Http\Controllers\CarrierDashboardController::class, 'profile'])
+        ->name('carrier.profile');
+    Route::put('/carrier/profile', [App\Http\Controllers\CarrierDashboardController::class, 'updateProfile'])
+        ->name('carrier.profile.update');
+
+    // Acordos / contratos com vendedores
+    Route::get('/carrier/agreements', [App\Http\Controllers\CarrierDashboardController::class, 'agreements'])
+        ->name('carrier.agreements');
+    Route::post('/carrier/agreements/{agreement}/accept', [App\Http\Controllers\CarrierDashboardController::class, 'acceptAgreement'])
+        ->name('carrier.agreements.accept');
+    Route::post('/carrier/agreements/{agreement}/reject', [App\Http\Controllers\CarrierDashboardController::class, 'rejectAgreement'])
+        ->name('carrier.agreements.reject');
+
+    // Pedidos de todos os vendedores com acordo ativo
+    Route::get('/carrier/orders', [App\Http\Controllers\CarrierDashboardController::class, 'orders'])
+        ->name('carrier.orders');
 });
 
 Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->group(function () {
@@ -226,6 +244,21 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::get('/inputs', [ReportController::class, 'inputs'])->name('inputs');
         Route::get('/products', [ReportController::class, 'products'])->name('products');
         Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+    });
+
+    // ── Marketplace B2B: Transportadoras ───────────────────
+    // Acessível apenas para vendedores (usuários com tenant)
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('/carriers', [\App\Http\Controllers\Marketplace\CarrierController::class, 'index'])
+            ->name('carriers.index');
+        Route::get('/carriers/{carrier}', [\App\Http\Controllers\Marketplace\CarrierController::class, 'show'])
+            ->name('carriers.show');
+        Route::post('/carriers/{carrier}/invite', [\App\Http\Controllers\Marketplace\CarrierController::class, 'invite'])
+            ->name('carriers.invite');
+        Route::post('/agreements/{agreement}/accept', [\App\Http\Controllers\Marketplace\CarrierController::class, 'accept'])
+            ->name('agreements.accept');
+        Route::post('/agreements/{agreement}/reject', [\App\Http\Controllers\Marketplace\CarrierController::class, 'reject'])
+            ->name('agreements.reject');
     });
 });
 

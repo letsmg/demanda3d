@@ -77,94 +77,94 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        foreach ($tenants as $tenant) {
-            $tenantId = $tenant->id;
-            $this->command?->info("  ── Tenant: {$tenant->display_name} ──");
+        // foreach ($tenants as $tenant) {
+        //     $tenantId = $tenant->id;
+        //     $this->command?->info("  ── Tenant: {$tenant->display_name} ──");
 
-            foreach ($products as $pd) {
-                $product = Product::withoutGlobalScopes()
-                    ->where('tenant_id', $tenantId)->where('name', $pd['name'])->first();
+        //     foreach ($products as $pd) {
+        //         $product = Product::withoutGlobalScopes()
+        //             ->where('tenant_id', $tenantId)->where('name', $pd['name'])->first();
 
-                if (! $product) {
-                    $product = Product::withoutGlobalScopes()->create([
-                        'tenant_id' => $tenantId,
-                        'name' => $pd['name'],
-                        'slug' => Product::generateUniqueSlug($pd['name'], $tenantId),
-                        'description' => $pd['description'],
-                        'height' => $pd['height'],
-                        'width' => $pd['width'],
-                        'approximate_weight' => $pd['approximate_weight'],
-                        'waste_weight' => $pd['waste_weight'],
-                        'material_type' => $pd['material_type'],
-                        'print_time' => $pd['print_time'],
-                        'pieces_produced' => $pd['pieces_produced'],
-                        'maintenance_fee' => $pd['maintenance_fee'],
-                        'painting_time' => $pd['painting_time'],
-                        'painting_material' => $pd['painting_material'],
-                        'painting_cost' => $pd['painting_cost'],
-                        'extras_cost' => $pd['extras_cost'],
-                        'approximate_cost' => $pd['approximate_cost'],
-                        'sale_price' => $pd['sale_price'],
-                        'is_active' => true,
-                        'moderation_status' => 'approved',
-                    ]);
+        //         if (! $product) {
+        //             $product = Product::withoutGlobalScopes()->create([
+        //                 'tenant_id' => $tenantId,
+        //                 'name' => $pd['name'],
+        //                 'slug' => Product::generateUniqueSlug($pd['name'], $tenantId),
+        //                 'description' => $pd['description'],
+        //                 'height' => $pd['height'],
+        //                 'width' => $pd['width'],
+        //                 'approximate_weight' => $pd['approximate_weight'],
+        //                 'waste_weight' => $pd['waste_weight'],
+        //                 'material_type' => $pd['material_type'],
+        //                 'print_time' => $pd['print_time'],
+        //                 'pieces_produced' => $pd['pieces_produced'],
+        //                 'maintenance_fee' => $pd['maintenance_fee'],
+        //                 'painting_time' => $pd['painting_time'],
+        //                 'painting_material' => $pd['painting_material'],
+        //                 'painting_cost' => $pd['painting_cost'],
+        //                 'extras_cost' => $pd['extras_cost'],
+        //                 'approximate_cost' => $pd['approximate_cost'],
+        //                 'sale_price' => $pd['sale_price'],
+        //                 'is_active' => true,
+        //                 'moderation_status' => 'approved',
+        //             ]);
 
-                    $slugs = $pd['categories'] ?? [];
-                    if ($slugs) {
-                        $ids = Category::whereIn('slug', $slugs)->pluck('id')->toArray();
-                        if ($ids) { $product->categories()->sync($ids); }
-                    }
+        //             $slugs = $pd['categories'] ?? [];
+        //             if ($slugs) {
+        //                 $ids = Category::whereIn('slug', $slugs)->pluck('id')->toArray();
+        //                 if ($ids) { $product->categories()->sync($ids); }
+        //             }
 
-                    $this->command?->line("    ✓ Produto criado: {$product->name}");
-                }
+        //             $this->command?->line("    ✓ Produto criado: {$product->name}");
+        //         }
 
-                $existing = ProductImage::where('product_id', $product->id)->count();
-                $need = self::MAX_IMAGES_PER_PRODUCT - $existing;
+        //         $existing = ProductImage::where('product_id', $product->id)->count();
+        //         $need = self::MAX_IMAGES_PER_PRODUCT - $existing;
 
-                for ($i = $existing; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
-                    $url = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
-                    $this->command?->getOutput()->write("    ⏳ Baixando imagem {$i}/2... ");
-                    $content = @file_get_contents($url);
+        //         for ($i = $existing; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
+        //             $url = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
+        //             $this->command?->getOutput()->write("    ⏳ Baixando imagem {$i}/2... ");
+        //             $content = @file_get_contents($url);
 
-                    if ($content === false) {
-                        $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
+        //             if ($content === false) {
+        //                 $this->command?->getOutput()->writeln('<fg=red>✗ FALHA</>');
 
-                        continue;
-                    }
+        //                 continue;
+        //             }
 
-                    // Salva em temp para criar UploadedFile e passar pelo pipeline
-                    $tmpPath = tempnam(sys_get_temp_dir(), 'seed_') . '.jpg';
-                    file_put_contents($tmpPath, $content);
+        //             // Salva em temp para criar UploadedFile e passar pelo pipeline
+        //             $tmpPath = tempnam(sys_get_temp_dir(), 'seed_') . '.jpg';
+        //             file_put_contents($tmpPath, $content);
 
-                        $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
+        //                 $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
 
-                    try {
-                        // Usa slug + índice como nome base para evitar que imagens diferentes
-                        // do mesmo produto tenham o mesmo arquivo no disco.
-                        $result = $imageService->processProductUpload(
-                            $uploadedFile,
-                            $tenantId,
-                            $product->id,
-                            $product->slug . '-' . ($i + 1),
-                        );
+        //             try {
+        //                 // Usa slug + índice como nome base para evitar que imagens diferentes
+        //                 // do mesmo produto tenham o mesmo arquivo no disco.
+        //                 $result = $imageService->processProductUpload(
+        //                     $uploadedFile,
+        //                     $tenantId,
+        //                     $product->id,
+        //                     $product->slug . '-' . ($i + 1),
+        //                 );
 
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'path' => $result['optimized_path'],
-                            'original_path' => $result['original_path'],
-                            'thumbnail_path' => $result['thumbnail_path'],
-                            'order' => $i,
-                        ]);
+        //                 ProductImage::create([
+        //                     'product_id' => $product->id,
+        //                     'path' => $result['optimized_path'],
+        //                     'original_path' => $result['original_path'],
+        //                     'thumbnail_path' => $result['thumbnail_path'],
+        //                     'order' => $i,
+        //                 ]);
 
-                        $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
-                    } catch (\Exception $e) {
-                        $this->command?->getOutput()->writeln("<fg=red>✗ ERRO: {$e->getMessage()}</>");
-                    } finally {
-                        @unlink($tmpPath);
-                    }
-                }
-            }
-            $this->command?->info('');
-        }
+        //                 $this->command?->getOutput()->writeln('<fg=green>✓ OK</>');
+        //             } catch (\Exception $e) {
+        //                 $this->command?->getOutput()->writeln("<fg=red>✗ ERRO: {$e->getMessage()}</>");
+        //             } finally {
+        //                 @unlink($tmpPath);
+        //             }
+        //         }
+        //     }
+        //     $this->command?->info('');
+        // }
     }
 }

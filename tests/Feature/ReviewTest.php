@@ -19,16 +19,14 @@ beforeEach(function () {
     Queue::fake();
 
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
-    $this->user = User::factory()->management()->create();
+    $this->user = User::factory()->seller1()->create();
     $this->tenant = $this->user->tenant()->create([
         'company_name_encrypted' => $makeEncr('Rated Co')['encrypted'],
         'company_name_hash' => $makeEncr('Rated Co')['hash'],
         'document_encrypted' => $makeEncr('00.000.000/0001-00')['encrypted'],
         'document_hash' => $makeEncr('00.000.000/0001-00')['hash'],
         'phone_encrypted' => $makeEncr('11999999999')['encrypted'],
-        'phone_hash' => $makeEncr('11999999999')['hash'],
         'address_encrypted' => $makeEncr('Rua')['encrypted'],
-        'address_hash' => $makeEncr('Rua')['hash'],
         'number_encrypted' => $makeEncr('1')['encrypted'],
         'number_hash' => $makeEncr('1')['hash'],
         'city_encrypted' => $makeEncr('SP')['encrypted'],

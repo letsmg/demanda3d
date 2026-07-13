@@ -3,9 +3,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserAccessLevel;
 use App\Models\Carrier;
-use App\Models\State;
+use App\Models\CarrierCoverageRange;
+use App\Models\CarrierTenantAgreement;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Services\EncryptionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,129 +17,152 @@ class CarrierSeeder extends Seeder
 {
     public function run(): void
     {
-        $tenant = Tenant::first();
-        if (! $tenant) {
-            $tenant = Tenant::create([
-                'user_id' => 1,
-                'state'   => 'SP',
-                'zipcode' => '01310-000',
-                'active'  => true,
-            ]);
-        }
+        $tenants = Tenant::all();
 
-        $sp = State::where('uf', 'SP')->where('cep_start', '01000-000')->first();
-        $rj = State::where('uf', 'RJ')->first();
-        $mg = State::where('uf', 'MG')->first();
-
-        $carriers = [
+        $carriersData = [
             [
-                'name'            => 'Transportadora Rapidez Ltda',
-                'email'           => 'contato@rapidez.com.br',
-                'password'        => 'password',
-                'doc_type'        => 'CNPJ',
-                'document'        => '11222333000144',
-                'ie'              => '123456789',
-                'state'           => 'SP',
-                'zipcode'         => '01310-000',
-                'city'            => 'São Paulo',
-                'address'         => 'Avenida Paulista',
-                'number'          => '1000',
-                'district'        => 'Bela Vista',
-                'phone1'          => '1131234567',
-                'contact1'        => 'Carlos Gestor',
-                'is_active'       => true,
-                'state_ids'       => [$sp->id, $rj->id, $mg->id],
+                'fantasy_name'   => 'Transportadora Rapidez Ltda',
+                'company_name'   => 'Rapidez Transportes e Logística Ltda',
+                'email'          => 'transportadora@demanda3d.com',
+                'password'       => 'Mudar@123',
+                'document_type'  => 'cnpj',
+                'document'       => '11222333000144',
+                'phone'          => '1131234567',
+                'address'        => 'Avenida Paulista, 1000 — Bela Vista, São Paulo, SP — 01310-000',
+                'website_url'    => 'https://rapidez.com.br',
+                'coverage'       => [
+                    ['title' => 'Grande São Paulo', 'cep_start' => '01000000', 'cep_end' => '09999999'],
+                    ['title' => 'Interior SP',     'cep_start' => '10000000', 'cep_end' => '19999999'],
+                    ['title' => 'Rio de Janeiro',   'cep_start' => '20000000', 'cep_end' => '28999999'],
+                    ['title' => 'Minas Gerais',     'cep_start' => '30000000', 'cep_end' => '39999999'],
+                ],
             ],
             [
-                'name'            => 'Entregas Cariocas Express',
-                'email'           => 'cariocas@express.com.br',
-                'password'        => 'password',
-                'doc_type'        => 'CNPJ',
-                'document'        => '22333444000155',
-                'ie'              => '987654321',
-                'state'           => 'RJ',
-                'zipcode'         => '20040-000',
-                'city'            => 'Rio de Janeiro',
-                'address'         => 'Avenida Rio Branco',
-                'number'          => '200',
-                'district'        => 'Centro',
-                'phone1'          => '2131234567',
-                'contact1'        => 'Ana Gestora',
-                'is_active'       => true,
-                'state_ids'       => [$rj->id, $sp->id],
+                'fantasy_name'   => 'Entregas Cariocas Express',
+                'company_name'   => 'Cariocas Express Logística Ltda',
+                'email'          => 'cariocas@express.com.br',
+                'password'       => 'Mudar@123',
+                'document_type'  => 'cnpj',
+                'document'       => '22333444000155',
+                'phone'          => '2131234567',
+                'address'        => 'Avenida Rio Branco, 200 — Centro, Rio de Janeiro, RJ — 20040-000',
+                'website_url'    => 'https://cariocas.express',
+                'coverage'       => [
+                    ['title' => 'Capital RJ',     'cep_start' => '20000000', 'cep_end' => '23799999'],
+                    ['title' => 'Interior RJ',    'cep_start' => '23800000', 'cep_end' => '28999999'],
+                    ['title' => 'Grande São Paulo','cep_start' => '01000000', 'cep_end' => '09999999'],
+                ],
             ],
             [
-                'name'            => 'Logística Mineira S.A.',
-                'email'           => 'logistica@mineira.com.br',
-                'password'        => 'password',
-                'doc_type'        => 'CNPJ',
-                'document'        => '33444555000166',
-                'ie'              => '555666777',
-                'state'           => 'MG',
-                'zipcode'         => '30130-000',
-                'city'            => 'Belo Horizonte',
-                'address'         => 'Rua da Bahia',
-                'number'          => '500',
-                'district'        => 'Centro',
-                'phone1'          => '3131234567',
-                'contact1'        => 'Pedro Logística',
-                'is_active'       => true,
-                'state_ids'       => [$mg->id],
+                'fantasy_name'   => 'Logística Mineira S.A.',
+                'company_name'   => 'Logística Mineira S.A.',
+                'email'          => 'logistica@mineira.com.br',
+                'password'       => 'Mudar@123',
+                'document_type'  => 'cnpj',
+                'document'       => '33444555000166',
+                'phone'          => '3131234567',
+                'address'        => 'Rua da Bahia, 500 — Centro, Belo Horizonte, MG — 30130-000',
+                'website_url'    => 'https://mineira.log.br',
+                'coverage'       => [
+                    ['title' => 'Belo Horizonte e Região', 'cep_start' => '30000000', 'cep_end' => '35999999'],
+                    ['title' => 'Interior MG',             'cep_start' => '36000000', 'cep_end' => '39999999'],
+                ],
+            ],
+            [
+                'fantasy_name'   => 'Frete Fácil S.A.',
+                'company_name'   => 'Frete Fácil Logística Integrada S.A.',
+                'email'          => 'fretefacil@demanda3d.com',
+                'password'       => 'Mudar@123',
+                'document_type'  => 'cnpj',
+                'document'       => '44555666000177',
+                'phone'          => '1143215678',
+                'address'        => 'Rua Augusta, 1500 — Consolação, São Paulo, SP — 01310-000',
+                'website_url'    => 'https://fretefacil.com.br',
+                'access_level'   => UserAccessLevel::CARRIER_2,
+                'coverage'       => [
+                    ['title' => 'Grande São Paulo', 'cep_start' => '01000000', 'cep_end' => '09999999'],
+                ],
             ],
         ];
 
-        foreach ($carriers as $data) {
-            $docData = EncryptionService::encryptWithHash($data['document']);
-            $addrData = EncryptionService::encryptWithHash($data['address']);
-            $numData = EncryptionService::encryptWithHash($data['number']);
-            $districtData = EncryptionService::encryptWithHash($data['district']);
-            $cityData = EncryptionService::encryptWithHash($data['city']);
-            $phone1Data = EncryptionService::encryptWithHash($data['phone1']);
-            $contact1Data = EncryptionService::encryptWithHash($data['contact1']);
+        foreach ($carriersData as $i => $data) {
+            try {
+                // Paridade LGPD para User (first_name/last_name)
+                $nameParts     = explode(' ', $data['fantasy_name'], 2);
+                $firstName     = $nameParts[0];
+                $lastName      = $nameParts[1] ?? 'Transportes';
+                $firstNameData = EncryptionService::encryptWithHash($firstName);
+                $lastNameData  = EncryptionService::encryptWithHash($lastName);
 
+                // Paridade LGPD para Carrier (company_name, document, phone, address)
+                $docData     = EncryptionService::encryptWithHash($data['document']);
+                $companyData = EncryptionService::encryptWithHash($data['company_name']);
+                $phoneData   = EncryptionService::encryptWithHash($data['phone']);
+                $addressData = EncryptionService::encryptWithHash($data['address']);
+
+                // 1. Cria User global (o cast 'hashed' cuida da senha)
+                $user = User::create([
+                    'email'                => $data['email'],
+                    'display_name'         => $data['fantasy_name'],
+                    'password'             => $data['password'],
+                    'access_level'         => $data['access_level'] ?? UserAccessLevel::CARRIER_1,
+                    'email_verified_at'    => now(),
+                    'first_name_encrypted' => $firstNameData['encrypted'],
+                    'first_name_hash'      => $firstNameData['hash'],
+                    'last_name_encrypted'  => $lastNameData['encrypted'],
+                    'last_name_hash'       => $lastNameData['hash'],
+                ]);
+
+                $this->command->info("  ✓ User criado: {$user->email} (id={$user->id}, level={$user->access_level->value})");
+            } catch (\Throwable $e) {
+                $this->command->error("  ✗ ERRO no carrier #{$i} ({$data['email']}): " . $e->getMessage());
+                $this->command->error("    Trace: " . $e->getTraceAsString());
+                throw $e; // Interrompe o seed para diagnóstico
+            }
+
+            // 2. Cria perfil Carrier
             $carrier = Carrier::create([
-                'tenant_id'          => $tenant->id,
-                'name'               => $data['name'],
-                'email'              => $data['email'],
-                'password'           => Hash::make($data['password']),
-                'doc_type'           => $data['doc_type'],
-                'document_encrypted' => $docData['encrypted'],
-                'document_hash'      => $docData['hash'],
-                'ie'                 => $data['ie'] ?? null,
-                'state'              => $data['state'],
-                'zipcode'            => $data['zipcode'],
-                'address_encrypted'  => $addrData['encrypted'],
-                'address_hash'       => $addrData['hash'],
-                'number_encrypted'   => $numData['encrypted'],
-                'number_hash'        => $numData['hash'],
-                'district_encrypted' => $districtData['encrypted'],
-                'district_hash'      => $districtData['hash'],
-                'city_encrypted'     => $cityData['encrypted'],
-                'city_hash'          => $cityData['hash'],
-                'phone1_encrypted'   => $phone1Data['encrypted'],
-                'phone1_hash'        => $phone1Data['hash'],
-                'contact1_encrypted' => $contact1Data['encrypted'],
-                'contact1_hash'      => $contact1Data['hash'],
-                'is_active'          => $data['is_active'],
+                'user_id'               => $user->id,
+                'fantasy_name'          => $data['fantasy_name'],
+                'slug'                  => Carrier::generateUniqueSlug($data['fantasy_name']),
+                'company_name_encrypted'=> $companyData['encrypted'],
+                'company_name_hash'     => $companyData['hash'],
+                'document_type'         => $data['document_type'],
+                'document_encrypted'    => $docData['encrypted'],
+                'document_hash'         => $docData['hash'],
+                'address_encrypted'     => $addressData['encrypted'],
+                'phone_encrypted'       => $phoneData['encrypted'],
+                'website_url'           => $data['website_url'] ?? null,
+                'is_active'             => true,
             ]);
 
-            // Vincula estados de atuação
-            if (! empty($data['state_ids'])) {
-                $carrier->states()->sync($data['state_ids']);
+            // 3. Cria faixas de cobertura
+            foreach ($data['coverage'] as $range) {
+                CarrierCoverageRange::create([
+                    'carrier_id' => $carrier->id,
+                    'title'      => $range['title'],
+                    'cep_start'  => $range['cep_start'],
+                    'cep_end'    => $range['cep_end'],
+                ]);
+            }
+
+            // 4. Acordos ativos com todos os tenants
+            foreach ($tenants as $tenant) {
+                CarrierTenantAgreement::create([
+                    'tenant_id'  => $tenant->id,
+                    'carrier_id' => $carrier->id,
+                    'status'     => CarrierTenantAgreement::STATUS_ACTIVE,
+                ]);
             }
         }
 
-        // Vincula transportadoras aos vendedores (usuários staff que possuem tenant)
-        $staffUsers = \App\Models\User::whereIn('access_level', [0, 1, 10])->has('tenant')->get();
-        $allCarriers = Carrier::all();
-
-        foreach ($staffUsers as $user) {
-            foreach ($allCarriers as $carrier) {
-                \App\Models\VendorCarrier::firstOrCreate(
-                    ['user_id' => $user->id, 'carrier_id' => $carrier->id],
-                    ['status' => 'approved', 'responded_at' => now()],
-                );
-            }
-        }
+        $this->command->newLine();
+        $this->command->info('═══ CREDENCIAIS DE LOGIN — TRANSPORTADORAS ═══');
+        $this->command->table(
+            ['E-mail', 'Senha', 'Transportadora'],
+            collect($carriersData)->map(fn ($d) => [$d['email'], $d['password'], $d['fantasy_name']])->toArray()
+        );
+        $this->command->info('');
+        $this->command->info('   👉 Use: transportadora@demanda3d.com / Mudar@123');
     }
 }

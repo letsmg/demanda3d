@@ -46,17 +46,31 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function management(): static
+    public function seller1(): static
     {
         return $this->state(fn (array $attributes) => [
-            'access_level' => UserAccessLevel::MANAGEMENT,
+            'access_level' => UserAccessLevel::SELLER_1,
         ]);
     }
 
-    public function operational(): static
+    public function seller2(): static
     {
         return $this->state(fn (array $attributes) => [
-            'access_level' => UserAccessLevel::OPERATIONAL,
+            'access_level' => UserAccessLevel::SELLER_2,
+        ]);
+    }
+
+    public function carrier1(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'access_level' => UserAccessLevel::CARRIER_1,
+        ]);
+    }
+
+    public function carrier2(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'access_level' => UserAccessLevel::CARRIER_2,
         ]);
     }
 

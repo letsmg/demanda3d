@@ -3,8 +3,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserAccessLevel;
 use App\Http\Controllers\Controller;
-use App\Models\Carrier;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,11 @@ class LoginCarrierController extends Controller
         return Inertia::render('auth/LoginCarrier');
     }
 
+    /**
+     * Autentica transportadores pelo guard 'carriers' (provider: users).
+     *
+     * Só permite login de usuários com access_level CARRIER_1 ou CARRIER_2.
+     */
     public function store(Request $request)
     {
         $credentials = $request->validate([
@@ -27,19 +33,26 @@ class LoginCarrierController extends Controller
         $credentials['email']    = trim(strip_tags($credentials['email']));
         $credentials['password'] = trim(strip_tags($credentials['password']));
 
-        // Login manual para evitar TenantScope no momento da busca
-        $carrier = Carrier::withoutGlobalScopes()->where('email', $credentials['email'])->first();
+        // Busca o User — o guard carriers agora usa o provider users
+        $user = User::where('email', $credentials['email'])->first();
 
-        if ($carrier && Hash::check($credentials['password'], $carrier->password)) {
-            Auth::guard('carriers')->login($carrier, $request->boolean('remember'));
-            $request->session()->regenerate();
-
-            return redirect()->intended('/carrier/dashboard');
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'email' => 'Credenciais inválidas.',
+            ])->onlyInput('email');
         }
 
-        return back()->withErrors([
-            'email' => 'Credenciais inválidas.',
-        ])->onlyInput('email');
+        // Apenas transportadores (CARRIER_1 ou CARRIER_2) podem logar aqui
+        if (! $user->isCarrier()) {
+            return back()->withErrors([
+                'email' => 'Acesso restrito a transportadoras.',
+            ])->onlyInput('email');
+        }
+
+        Auth::guard('carriers')->login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect()->intended('/carrier/dashboard');
     }
 
     public function destroy(Request $request)

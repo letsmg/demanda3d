@@ -5,30 +5,7 @@ use Pdo\Mysql;
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Database Connection Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify which of the database connections below you wish
-    | to use as your default connection for database operations. This is
-    | the connection which will be utilized unless another connection
-    | is explicitly specified when you execute a query / statement.
-    |
-    */
-
     'default' => env('DB_CONNECTION', 'sqlite'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Database Connections
-    |--------------------------------------------------------------------------
-    |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
-    |
-    */
 
     'connections' => [
 
@@ -93,17 +70,35 @@ return [
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
 
-            // Read/Write Splitting — replica hot standby para alta disponibilidade de leitura
+            // Read/Write Splitting — replica hot standby para alta disponibilidade de leitura.
+            //
             // NOTA: Quando read/write estão presentes, NÃO defina host/port/database/username/password
             // no nível superior — eles conflitam e causam comportamento imprevisível no Schema Builder.
+            //
+            // Estratégia DEV: DB_READ_WRITE_SPLIT=true
+            //   → read usa DB_REPLICA_* (container independente, porta 5435).
+            //   → write usa DB_* (master, porta 5434).
+            //
+            // Para desabilitar (migrate): DB_READ_WRITE_SPLIT=false
+            //   → read e write apontam para o mesmo host/database.
             'read' => [
                 'host' => [
-                    env('DB_REPLICA_HOST', env('DB_HOST', '127.0.0.1')),
+                    env('DB_READ_WRITE_SPLIT', false)
+                        ? env('DB_REPLICA_HOST', env('DB_HOST', '127.0.0.1'))
+                        : env('DB_HOST', '127.0.0.1'),
                 ],
-                'port' => env('DB_REPLICA_PORT', env('DB_PORT', '5432')),
-                'database' => env('DB_REPLICA_DATABASE', env('DB_DATABASE', 'laravel')),
-                'username' => env('DB_REPLICA_USERNAME', env('DB_USERNAME', 'root')),
-                'password' => env('DB_REPLICA_PASSWORD', env('DB_PASSWORD', '')),
+                'port' => env('DB_READ_WRITE_SPLIT', false)
+                    ? env('DB_REPLICA_PORT', env('DB_PORT', '5432'))
+                    : env('DB_PORT', '5432'),
+                'database' => env('DB_READ_WRITE_SPLIT', false)
+                    ? env('DB_REPLICA_DATABASE', env('DB_DATABASE', 'laravel'))
+                    : env('DB_DATABASE', 'laravel'),
+                'username' => env('DB_READ_WRITE_SPLIT', false)
+                    ? env('DB_REPLICA_USERNAME', env('DB_USERNAME', 'root'))
+                    : env('DB_USERNAME', 'root'),
+                'password' => env('DB_READ_WRITE_SPLIT', false)
+                    ? env('DB_REPLICA_PASSWORD', env('DB_PASSWORD', ''))
+                    : env('DB_PASSWORD', ''),
             ],
             'write' => [
                 'host' => [
@@ -115,8 +110,6 @@ return [
                 'password' => env('DB_PASSWORD', ''),
             ],
 
-            // Laravel will try the read host first for SELECTs;
-            // if it fails, falls back to write host automatically.
             'sticky' => true,
         ],
 
@@ -131,49 +124,22 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Migration Repository Table
-    |--------------------------------------------------------------------------
-    |
-    | This table keeps track of all the migrations that have already run for
-    | your application. Using this information, we can determine which of
-    | the migrations on disk haven't actually been run on the database.
-    |
-    */
 
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Redis Databases
-    |--------------------------------------------------------------------------
-    |
-    | Redis is an open source, fast, and advanced key-value store that also
-    | provides a richer body of commands than a typical key-value system
-    | such as Memcached. You may define your connection settings here.
-    |
-    */
-
     'redis' => [
-
         'client' => env('REDIS_CLIENT', 'phpredis'),
-
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
-
         'default' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -186,7 +152,6 @@ return [
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
-
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -199,7 +164,6 @@ return [
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
-
     ],
 
 ];

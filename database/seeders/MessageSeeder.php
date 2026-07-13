@@ -22,7 +22,7 @@ class MessageSeeder extends Seeder
 
         $this->command->info('=== Criando mensagens ===');
 
-        $staffUsers = User::whereIn('access_level', UserAccessLevel::staffValues())->get();
+        $staffUsers = User::whereIn('access_level', UserAccessLevel::staffPanelValues())->get();
         $encrypt = fn ($v) => Crypt::encryptString($v);
 
         $clientMessages = [

@@ -11,38 +11,49 @@ return new class extends Migration
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            // Company name (LGPD: encrypted + hash, campo sensível único)
             $table->text('company_name_encrypted')->nullable();
             $table->string('company_name_hash', 64)->nullable();
-            $table->text('fantasy_name_encrypted')->nullable();
-            $table->string('fantasy_name_hash', 64)->nullable();
+
+            // Fantasy name + slug (público)
+            $table->string('fantasy_name', 255)->nullable();
+            $table->string('fantasy_slug')->nullable()->unique();
+
+            // Document type + document (LGPD: encrypted + hash)
+            $table->string('document_type', 4)->default('cnpj')->comment('cnpj ou cpf');
             $table->text('document_encrypted')->nullable();
             $table->string('document_hash', 64)->nullable();
+
+            // Phone (LGPD: encrypted)
             $table->text('phone_encrypted')->nullable();
-            $table->string('phone_hash', 64)->nullable();
+
+            // Address (LGPD: encrypted)
             $table->text('address_encrypted')->nullable();
-            $table->string('address_hash', 64)->nullable();
-            $table->text('number_encrypted')->nullable();
-            $table->string('number_hash', 64)->nullable();
-            $table->text('district_encrypted')->nullable();
-            $table->string('district_hash', 64)->nullable();
-            $table->text('city_encrypted')->nullable();
-            $table->string('city_hash', 64)->nullable();
-            $table->string('state', 2);
-            $table->string('zipcode', 10);
+
+            // Address complement (público, não sensível isoladamente)
+            $table->string('number', 20)->nullable();
+            $table->string('district', 100)->nullable();
+            $table->string('city', 100)->nullable();
+            $table->string('state', 2)->nullable();
+            $table->string('zipcode', 10)->nullable();
+
+            // Images
+            $table->string('logo_path', 500)->nullable();
+            $table->string('banner_path', 500)->nullable();
+
+            // Status + ratings
             $table->boolean('active')->default(true);
-            $table->decimal('rating_average', 3, 2)->default(0)->comment('Nota média consolidada (ex: 4.85)');
-            $table->integer('rating_count')->default(0)->comment('Total de avaliações recebidas');
+            $table->decimal('rating_average', 3, 2)->default(0);
+            $table->integer('rating_count')->default(0);
+
             $table->timestamps();
 
+            // Índices
             $table->index('user_id');
             $table->index('company_name_hash');
-            $table->index('fantasy_name_hash');
             $table->index('document_hash');
-            $table->index('phone_hash');
-            $table->index('address_hash');
-            $table->index('number_hash');
-            $table->index('district_hash');
-            $table->index('city_hash');
+            $table->index('active');
         });
     }
 

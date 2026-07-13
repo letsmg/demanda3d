@@ -2,8 +2,6 @@
 
 namespace App\Scopes;
 
-use App\Enums\UserAccessGroup;
-use App\Enums\UserAccessLevel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
@@ -26,8 +24,8 @@ class TenantScope implements Scope
             return;
         }
 
-        // Staff: filter by their own tenant
-        if ($user->access_level?->isStaff()) {
+        // Staff (sellers + admin): filter by their own tenant
+        if ($user->isStaff()) {
             $tenantId = $user->tenant?->id;
             if ($tenantId) {
                 $builder->where('tenant_id', $tenantId);

@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
 
 #[Fillable([
     'email',
@@ -24,16 +23,14 @@ use Illuminate\Support\Carbon;
     'password',
     'access_level',
     'is_active',
-    'data_nascimento',
+    'birth_date',
+    'email_verified_at',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Atributos virtuais descriptografados para serialização JSON/Inertia.
-     */
     protected $appends = [
         'first_name',
         'last_name',
@@ -43,15 +40,22 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'access_level' => UserAccessLevel::class,
-            'data_nascimento' => 'date',
+            'password'          => 'hashed',
+            'access_level'      => UserAccessLevel::class,
+            'birth_date'        => 'date',
         ];
     }
+
+    // ── Relacionamentos ──────────────────────────────────────
 
     public function tenant(): HasOne
     {
         return $this->hasOne(Tenant::class);
+    }
+
+    public function carrier(): HasOne
+    {
+        return $this->hasOne(Carrier::class);
     }
 
     public function vendorCarriers(): HasMany
@@ -59,29 +63,18 @@ class User extends Authenticatable
         return $this->hasMany(VendorCarrier::class);
     }
 
-    public function isAdmin(): bool
-    {
-        return $this->access_level === UserAccessLevel::ADMIN;
-    }
+    // ── Verificações ─────────────────────────────────────────
 
-    public function isManagement(): bool
-    {
-        return $this->access_level === UserAccessLevel::MANAGEMENT;
-    }
-
-    public function isOperational(): bool
-    {
-        return $this->access_level === UserAccessLevel::OPERATIONAL;
-    }
+    public function isAdmin(): bool    { return $this->access_level === UserAccessLevel::ADMIN; }
+    public function isSeller(): bool   { return $this->access_level->isSeller(); }
+    public function isSeller1(): bool  { return $this->access_level === UserAccessLevel::SELLER_1; }
+    public function isSeller2(): bool  { return $this->access_level === UserAccessLevel::SELLER_2; }
+    public function isCarrier(): bool  { return $this->access_level->isCarrier(); }
+    public function isCustomer(): bool { return $this->access_level === UserAccessLevel::CUSTOMER; }
 
     public function isStaff(): bool
     {
-        return $this->access_level->isStaff();
-    }
-
-    public function isCustomer(): bool
-    {
-        return $this->access_level === UserAccessLevel::CUSTOMER;
+        return $this->access_level->isSeller() || $this->access_level->isAdmin();
     }
 
     public function canAccessFinancials(): bool
@@ -89,57 +82,40 @@ class User extends Authenticatable
         return $this->access_level->canAccessFinancials();
     }
 
-    /**
-     * Retorna a idade do usuário baseada na data_nascimento.
-     * Retorna null se data_nascimento não estiver definida.
-     */
     public function getAge(): ?int
     {
-        if (!$this->data_nascimento) {
+        if (! $this->birth_date) {
             return null;
         }
-
-        return (int) $this->data_nascimento->diffInYears(now());
+        return (int) $this->birth_date->diffInYears(now());
     }
 
-    /**
-     * Verifica se o usuário tem 18 anos ou mais.
-     * Usuários sem data_nascimento definida são tratados como menores.
-     */
     public function is18Plus(): bool
     {
         $age = $this->getAge();
-
         return $age !== null && $age >= 18;
     }
 
-    /**
-     * Determina se o usuário pode visualizar conteúdo adulto.
-     * Staff (Admin, Management, Operational) sempre pode.
-     * Customers precisam ter 18+ anos.
-     */
     public function canAccessAdultContent(): bool
     {
         if ($this->isStaff()) {
             return true;
         }
-
         return $this->is18Plus();
     }
+
+    // ── Display name ─────────────────────────────────────────
 
     public function getDisplayName(): string
     {
         if ($this->display_name) {
             return $this->display_name;
         }
-
         $firstName = $this->getDecryptedFirstName();
-        $lastName = $this->getDecryptedLastName();
-
+        $lastName  = $this->getDecryptedLastName();
         if ($firstName && $lastName) {
             return trim($firstName . ' ' . $lastName);
         }
-
         return 'Usuário';
     }
 
@@ -152,8 +128,6 @@ class User extends Authenticatable
     {
         return EncryptionService::decrypt($this->last_name_encrypted);
     }
-
-    // ── Accessors para serialização automática ──────────────
 
     public function getFirstNameAttribute(): ?string
     {
@@ -174,6 +148,5 @@ class User extends Authenticatable
     {
         return $query->where('last_name_hash', $hash);
     }
-
 }
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
