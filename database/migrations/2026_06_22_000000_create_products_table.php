@@ -29,16 +29,11 @@ return new class extends Migration
             $table->decimal('approximate_cost', 12, 2)->nullable()->comment('Custo total calculado');
             $table->decimal('sale_price', 12, 2)->comment('Valor final de venda');
             $table->boolean('is_active')->default(true);
-            // SEO fields
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
-            $table->string('meta_keywords')->nullable();
-            $table->text('schema_markup')->nullable();
-            $table->text('google_tag_manager')->nullable();
             // Moderation
             $table->string('moderation_status')->default('pending')->comment('pending, approved, rejected');
             $table->text('moderation_notes')->nullable();
             $table->integer('adult_category')->default(0)->comment('0=normal, 1=+18');
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('tenant_id');

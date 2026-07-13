@@ -34,12 +34,12 @@ class CarrierController extends Controller
                 $q->where('tenant_id', $tenant->id);
             }])
             ->when($request->filled('search'), function ($q) use ($request) {
-                $q->where('name', 'ilike', '%' . $request->search . '%');
+                $q->where('fantasy_name', 'ilike', '%' . $request->search . '%');
             })
             ->when($request->filled('cep'), function ($q) use ($request) {
                 $q->coversCep($request->cep);
             })
-            ->orderBy('name')
+            ->orderBy('fantasy_name')
             ->paginate($request->get('per_page', 12))
             ->withQueryString();
 
@@ -107,7 +107,7 @@ class CarrierController extends Controller
             ]);
         });
 
-        return back()->with('success', "Convite enviado para {$carrier->name}.");
+        return back()->with('success', "Convite enviado para {$carrier->fantasy_name}.");
     }
 
     /**

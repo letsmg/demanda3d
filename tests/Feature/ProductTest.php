@@ -11,16 +11,14 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
-    $this->management = User::factory()->management()->create();
-    $this->management->tenant()->create([
+    $this->seller1 = User::factory()->seller1()->create();
+    $this->seller1->tenant()->create([
         'company_name_encrypted' => $makeEncr('Co')['encrypted'],
         'company_name_hash' => $makeEncr('Co')['hash'],
         'document_encrypted' => $makeEncr('00.000.000/0001-00')['encrypted'],
         'document_hash' => $makeEncr('00.000.000/0001-00')['hash'],
         'phone_encrypted' => $makeEncr('11999999999')['encrypted'],
-        'phone_hash' => $makeEncr('11999999999')['hash'],
         'address_encrypted' => $makeEncr('Rua')['encrypted'],
-        'address_hash' => $makeEncr('Rua')['hash'],
         'number_encrypted' => $makeEncr('1')['encrypted'],
         'number_hash' => $makeEncr('1')['hash'],
         'city_encrypted' => $makeEncr('SP')['encrypted'],
@@ -32,7 +30,7 @@ beforeEach(function () {
 
 test('management can create product with 3d printing fields', function () {
     $product = Product::factory()->create([
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
         'name' => 'Vaso Geométrico',
         'description' => 'Vaso decorativo',
         'sale_price' => 45.90,
@@ -66,7 +64,7 @@ test('product nullable painting fields accepted', function () {
         'painting_time' => null,
         'painting_material' => null,
         'painting_cost' => null,
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
     ]);
     expect($product->painting_time)->toBeNull();
     expect($product->painting_material)->toBeNull();
@@ -85,17 +83,17 @@ test('customer cannot create product', function () {
 test('product name unique per tenant', function () {
     Product::factory()->create([
         'name' => 'Vaso Único',
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
     ]);
 
     expect(fn () => Product::factory()->create([
         'name' => 'Vaso Único',
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
     ]))->toThrow(\Illuminate\Database\UniqueConstraintViolationException::class);
 });
 
 test('product creation auto-generates SEO fields via service', function () {
-    actingAs($this->management);
+    actingAs($this->seller1);
 
     $mockModeration = Mockery::mock(\App\Services\ImageModerationService::class);
     $mockModeration->shouldReceive('moderateUpload')->andReturn(['adult_category_id' => null, 'status' => 'approved', 'category' => 'safe']);
@@ -134,7 +132,7 @@ test('product creation auto-generates SEO fields via service', function () {
 });
 
 test('product SEO fields are always derived dynamically from native attributes', function () {
-    actingAs($this->management);
+    actingAs($this->seller1);
 
     $mockModeration = Mockery::mock(\App\Services\ImageModerationService::class);
     $mockModeration->shouldReceive('moderateUpload')->andReturn(['adult_category_id' => null, 'status' => 'approved', 'category' => 'safe']);
@@ -162,7 +160,7 @@ test('product SEO fields are always derived dynamically from native attributes',
 });
 
 test('product SEO fields update correctly when name changes', function () {
-    actingAs($this->management);
+    actingAs($this->seller1);
 
     $mockModeration = Mockery::mock(\App\Services\ImageModerationService::class);
     $mockModeration->shouldReceive('moderateUpload')->andReturn(['adult_category_id' => null, 'status' => 'approved', 'category' => 'safe']);

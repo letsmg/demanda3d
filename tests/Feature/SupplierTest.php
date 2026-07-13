@@ -12,19 +12,17 @@ use function Pest\Laravel\deleteJson;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->management = User::factory()->management()->create();
+    $this->seller1 = User::factory()->seller1()->create();
     $this->customer = User::factory()->customer()->create();
     // Create tenant for both
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
-    $this->management->tenant()->create([
+    $this->seller1->tenant()->create([
         'company_name_encrypted' => $makeEncr('Mgmt Co')['encrypted'],
         'company_name_hash' => $makeEncr('Mgmt Co')['hash'],
         'document_encrypted' => $makeEncr('12.345.678/0001-90')['encrypted'],
         'document_hash' => $makeEncr('12.345.678/0001-90')['hash'],
         'phone_encrypted' => $makeEncr('11999999999')['encrypted'],
-        'phone_hash' => $makeEncr('11999999999')['hash'],
         'address_encrypted' => $makeEncr('Rua Test')['encrypted'],
-        'address_hash' => $makeEncr('Rua Test')['hash'],
         'number_encrypted' => $makeEncr('123')['encrypted'],
         'number_hash' => $makeEncr('123')['hash'],
         'district_encrypted' => $makeEncr('Centro')['encrypted'],
@@ -36,7 +34,7 @@ beforeEach(function () {
 });
 
 test('management can create supplier with lgpd parity', function () {
-    $response = actingAs($this->management)->postJson('/api/suppliers', [
+    $response = actingAs($this->seller1)->postJson('/api/suppliers', [
         'name' => 'Fornecedor Teste Ltda',
         'doc_type' => 'CNPJ',
         'document' => '12.345.678/0001-90',
@@ -72,9 +70,7 @@ test('supplier tenant isolation', function () {
         'document_encrypted' => $makeEncr('00.000.000/0001-00')['encrypted'],
         'document_hash' => $makeEncr('00.000.000/0001-00')['hash'],
         'phone_encrypted' => $makeEncr('11111111111')['encrypted'],
-        'phone_hash' => $makeEncr('11111111111')['hash'],
         'address_encrypted' => $makeEncr('A')['encrypted'],
-        'address_hash' => $makeEncr('A')['hash'],
         'number_encrypted' => $makeEncr('1')['encrypted'],
         'number_hash' => $makeEncr('1')['hash'],
         'city_encrypted' => $makeEncr('A')['encrypted'],
@@ -83,10 +79,10 @@ test('supplier tenant isolation', function () {
     ]);
 
     $supplierA = Supplier::factory()->create(['tenant_id' => $tenantAUser->tenant->id]);
-    $supplierB = Supplier::factory()->create(['tenant_id' => $this->management->tenant->id]);
+    $supplierB = Supplier::factory()->create(['tenant_id' => $this->seller1->tenant->id]);
 
     // Management should only see their own supplier via global scope
-    $response = actingAs($this->management)->get("/api/suppliers/{$supplierA->id}");
+    $response = actingAs($this->seller1)->get("/api/suppliers/{$supplierA->id}");
     expect(in_array($response->status(), [403, 404]))->toBeTrue();
 });
 
@@ -94,7 +90,7 @@ test('document hash unique per tenant', function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
 
     Supplier::create([
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
         'name' => 'Supplier 1',
         'document_hash' => $makeEncr('12.345.678/0001-90')['hash'],
         'document_encrypted' => $makeEncr('12.345.678/0001-90')['encrypted'],
@@ -102,7 +98,7 @@ test('document hash unique per tenant', function () {
     ]);
 
     expect(fn () => Supplier::create([
-        'tenant_id' => $this->management->tenant->id,
+        'tenant_id' => $this->seller1->tenant->id,
         'name' => 'Supplier 2',
         'document_hash' => $makeEncr('12.345.678/0001-90')['hash'],
         'document_encrypted' => $makeEncr('12.345.678/0001-90')['encrypted'],

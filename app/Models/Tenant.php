@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use App\Models\Review;
+use App\Services\EncryptionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Tenant extends Model
 {
@@ -19,9 +20,11 @@ class Tenant extends Model
         'company_name_hash',
         'fantasy_name',
         'fantasy_slug',
-        'document',
-        'phone',
-        'address',
+        'document_type',
+        'document_encrypted',
+        'document_hash',
+        'phone_encrypted',
+        'address_encrypted',
         'number',
         'district',
         'city',
@@ -34,15 +37,11 @@ class Tenant extends Model
         'rating_count',
     ];
 
-    /**
-     * Apenas company_name (razão social) permanece criptografado por LGPD.
-     * Todos os outros campos são públicos — dados da empresa visíveis na loja.
-     *
-     * ATENÇÃO: Não informe dados pessoais nos campos da empresa.
-     * Nome fantasia, CNPJ e endereço comercial são públicos por lei.
-     */
     protected $appends = [
         'company_name',
+        'document',
+        'phone',
+        'address',
         'logo_url',
         'banner_url',
     ];
@@ -50,22 +49,22 @@ class Tenant extends Model
     protected function casts(): array
     {
         return [
-            'active' => 'boolean',
+            'active'         => 'boolean',
             'rating_average' => 'decimal:2',
-            'rating_count' => 'integer',
+            'rating_count'   => 'integer',
         ];
     }
 
     protected static function booted(): void
     {
         static::creating(function (Tenant $tenant) {
-            if (empty($tenant->fantasy_slug) && !empty($tenant->fantasy_name)) {
+            if (empty($tenant->fantasy_slug) && ! empty($tenant->fantasy_name)) {
                 $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name);
             }
         });
 
         static::updating(function (Tenant $tenant) {
-            if ($tenant->isDirty('fantasy_name') && !$tenant->isDirty('fantasy_slug')) {
+            if ($tenant->isDirty('fantasy_name') && ! $tenant->isDirty('fantasy_slug')) {
                 $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name, $tenant->id);
             }
         });
@@ -73,16 +72,16 @@ class Tenant extends Model
 
     public static function generateUniqueFantasySlug(string $fantasyName, ?int $excludeId = null): string
     {
-        $baseSlug = \Illuminate\Support\Str::slug($fantasyName);
-        $slug = $baseSlug;
-        $counter = 1;
+        $baseSlug = Str::slug($fantasyName);
+        $slug     = $baseSlug;
+        $counter  = 1;
 
         while (true) {
             $query = static::where('fantasy_slug', $slug);
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 break;
             }
             $slug = $baseSlug . '-' . $counter;
@@ -92,9 +91,26 @@ class Tenant extends Model
         return $slug;
     }
 
+    // ── Accessors ────────────────────────────────────────────
+
     public function getCompanyNameAttribute(): ?string
     {
-        return \App\Services\EncryptionService::decrypt($this->company_name_encrypted);
+        return EncryptionService::decrypt($this->company_name_encrypted);
+    }
+
+    public function getDocumentAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->document_encrypted);
+    }
+
+    public function getPhoneAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->phone_encrypted);
+    }
+
+    public function getAddressAttribute(): ?string
+    {
+        return EncryptionService::decrypt($this->address_encrypted);
     }
 
     public function getLogoUrlAttribute(): ?string
@@ -112,6 +128,8 @@ class Tenant extends Model
         }
         return url('storage/' . $this->banner_path);
     }
+
+    // ── Relacionamentos ──────────────────────────────────────
 
     public function user(): BelongsTo
     {
@@ -143,9 +161,6 @@ class Tenant extends Model
         return $this->hasMany(CarrierTenantAgreement::class);
     }
 
-    /**
-     * Transportadoras com acordo ativo com este tenant.
-     */
     public function activeCarriers(): BelongsToMany
     {
         return $this->belongsToMany(Carrier::class, 'carrier_tenant_agreements')

@@ -24,8 +24,8 @@ class TenantScope implements Scope
             return;
         }
 
-        // Staff: filter by their own tenant
-        if ($user->access_level?->isStaff()) {
+        // Staff (sellers + admin): filter by their own tenant
+        if ($user->isStaff()) {
             $tenantId = $user->tenant?->id;
             if ($tenantId) {
                 $builder->where('tenant_id', $tenantId);

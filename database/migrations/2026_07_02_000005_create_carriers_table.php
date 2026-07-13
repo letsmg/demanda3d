@@ -11,58 +11,45 @@ return new class extends Migration
     {
         Schema::create('carriers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('name', 255);
-            $table->date('data_nascimento')->nullable()->after('name');
-            $table->string('doc_type', 4)->default('CNPJ');
-            $table->string('ie', 20)->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 
-            // Documento (paridade)
+            // Company name (LGPD: encrypted + hash)
+            $table->text('company_name_encrypted')->nullable();
+            $table->string('company_name_hash', 64)->nullable();
+
+            // Fantasy name + slug (público)
+            $table->string('fantasy_name', 255);
+            $table->string('slug', 255)->nullable()->unique();
+
+            // Document type + document (LGPD: encrypted + hash)
+            $table->string('document_type', 4)->default('cnpj')->comment('cnpj ou cpf');
             $table->text('document_encrypted');
             $table->string('document_hash', 64);
-            $table->unique(['tenant_id', 'document_hash']);
 
-            // Endereço (paridade)
+            // Address (LGPD: encrypted)
             $table->text('address_encrypted')->nullable();
-            $table->string('address_hash', 64)->nullable();
-            $table->text('number_encrypted')->nullable();
-            $table->string('number_hash', 64)->nullable();
-            $table->text('district_encrypted')->nullable();
-            $table->string('district_hash', 64)->nullable();
-            $table->text('city_encrypted')->nullable();
-            $table->string('city_hash', 64)->nullable();
-            $table->string('state', 2)->nullable();
-            $table->string('zipcode', 9)->nullable();
-            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
 
-            // Contato
-            $table->text('contact1_encrypted')->nullable();
-            $table->string('contact1_hash', 64)->nullable();
-            $table->text('phone1_encrypted')->nullable();
-            $table->string('phone1_hash', 64)->nullable();
-            $table->text('contact2_encrypted')->nullable();
-            $table->string('contact2_hash', 64)->nullable();
-            $table->text('phone2_encrypted')->nullable();
-            $table->string('phone2_hash', 64)->nullable();
+            // Phone (LGPD: encrypted)
+            $table->text('phone_encrypted')->nullable();
 
-            // Auth
-            $table->string('email', 255)->nullable();
-            $table->string('password')->nullable()->after('email');
-            $table->timestamp('email_verified_at')->nullable()->after('password');
-            $table->rememberToken()->after('email_verified_at');
-
-            // Dados públicos + bloqueio
-            $table->string('website', 255)->nullable();
-            $table->text('notes')->nullable();
+            // Public profile
+            $table->string('logo_path', 500)->nullable();
+            $table->string('website_url', 500)->nullable();
+            $table->decimal('rating_average', 3, 2)->default(0);
+            $table->integer('rating_count')->default(0);
             $table->boolean('is_active')->default(true);
-            $table->boolean('is_blocked')->default(false);
-            $table->timestamp('blocked_at')->nullable();
-            $table->text('blocked_reason')->nullable();
 
             $table->timestamps();
-            $table->index('tenant_id');
-            $table->index('doc_type');
+
+            // Índices
+            $table->index('user_id');
+            $table->index('fantasy_name');
+            $table->index('slug');
+            $table->index('document_type');
+            $table->index('company_name_hash');
+            $table->index('document_hash');
             $table->index('is_active');
+            $table->index('rating_average');
         });
     }
 

@@ -29,47 +29,55 @@ class RegisterCarrierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'            => ['required', 'string', 'max:255'],
-            'email'           => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'        => ['required', 'string', 'min:8', 'confirmed'],
-            'doc_type'        => ['required', 'in:CNPJ,CPF'],
-            'document'        => ['required', 'string', 'max:20'],
-            'data_nascimento' => ['nullable', 'date', 'before:today'],
-            'accept_terms'    => ['required', 'accepted'],
+            'fantasy_name'   => ['required', 'string', 'max:255'],
+            'company_name'     => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'       => ['required', 'string', 'min:8', 'confirmed'],
+            'document_type'  => ['required', 'in:cnpj,cpf'],
+            'document'       => ['required', 'string', 'max:20'],
+            'phone'          => ['required', 'string', 'max:20'],
+            'address'        => ['required', 'string', 'max:500'],
+            'accept_terms'   => ['required', 'accepted'],
         ], [
-            'accept_terms.required'  => 'Você deve aceitar os Termos de Uso para se cadastrar.',
-            'accept_terms.accepted'  => 'Você deve aceitar os Termos de Uso para se cadastrar.',
-            'document.required'      => 'O documento (CPF/CNPJ) é obrigatório.',
-            'data_nascimento.before' => 'A data de nascimento deve ser anterior a hoje.',
+            'accept_terms.required' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'accept_terms.accepted' => 'Você deve aceitar os Termos de Uso para se cadastrar.',
+            'document.required'     => 'O documento (CPF/CNPJ) é obrigatório.',
         ]);
 
         // Sanitização
-        $validated['name']     = trim(strip_tags($validated['name']));
-        $validated['email']    = trim(strip_tags($validated['email']));
-        $validated['document'] = preg_replace('/[^0-9]/', '', $validated['document']);
+        $validated['fantasy_name'] = trim(strip_tags($validated['fantasy_name']));
+        $validated['company_name']   = trim(strip_tags($validated['company_name']));
+        $validated['email']        = trim(strip_tags($validated['email']));
+        $validated['document']     = preg_replace('/[^0-9]/', '', $validated['document']);
 
-        // Paridade LGPD: criptografa documento
+        // Paridade LGPD: criptografa dados sensíveis
         $documentData = EncryptionService::encryptWithHash($validated['document']);
+        $legalData    = EncryptionService::encryptWithHash($validated['company_name']);
+        $phoneData    = EncryptionService::encryptWithHash($validated['phone']);
+        $addressData  = EncryptionService::encryptWithHash($validated['address']);
 
-        DB::transaction(function () use ($validated, $documentData) {
+        DB::transaction(function () use ($validated, $documentData, $legalData, $phoneData, $addressData) {
             // 1. Cria o User global com nível CARRIER_1 (Transportador Admin)
             $user = User::create([
                 'email'        => $validated['email'],
-                'display_name' => $validated['name'],
-                'password'     => Hash::make($validated['password']),
+                'display_name' => $validated['fantasy_name'],
+                'password'     => $validated['password'],
                 'access_level' => UserAccessLevel::CARRIER_1,
-                'data_nascimento' => $validated['data_nascimento'] ?? null,
             ]);
 
             // 2. Cria o perfil Carrier vinculado ao User
             Carrier::create([
-                'user_id'            => $user->id,
-                'name'               => $validated['name'],
-                'doc_type'           => $validated['doc_type'],
-                'document_encrypted' => $documentData['encrypted'],
-                'document_hash'      => $documentData['hash'],
-                'data_nascimento'    => $validated['data_nascimento'] ?? null,
-                'is_active'          => true,
+                'user_id'             => $user->id,
+                'fantasy_name'        => $validated['fantasy_name'],
+                'slug'                => Carrier::generateUniqueSlug($validated['fantasy_name']),
+                'company_name_encrypted'=> $legalData['encrypted'],
+                'company_name_hash'     => $legalData['hash'],
+                'document_type'       => $validated['document_type'],
+                'document_encrypted'  => $documentData['encrypted'],
+                'document_hash'       => $documentData['hash'],
+                'address_encrypted'   => $addressData['encrypted'],
+                'phone_encrypted'     => $phoneData['encrypted'],
+                'is_active'           => true,
             ]);
         });
 

@@ -38,7 +38,7 @@ return [
 
         'carriers' => [
             'driver' => 'session',
-            'provider' => 'carriers',
+            'provider' => 'users',
         ],
     ],
 
@@ -62,7 +62,7 @@ return [
 
         'carriers' => [
             'driver' => 'eloquent',
-            'model' => Carrier::class,
+            'model' => User::class,
         ],
     ],
 

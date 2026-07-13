@@ -9,16 +9,14 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 beforeEach(function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);
 
-    $this->tenantAUser = User::factory()->management()->create();
+    $this->tenantAUser = User::factory()->seller1()->create();
     $this->tenantA = $this->tenantAUser->tenant()->create([
         'company_name_encrypted' => $makeEncr('A')['encrypted'],
         'company_name_hash' => $makeEncr('A')['hash'],
         'document_encrypted' => $makeEncr('00.000.000/0001-00')['encrypted'],
         'document_hash' => $makeEncr('00.000.000/0001-00')['hash'],
         'phone_encrypted' => $makeEncr('11111111111')['encrypted'],
-        'phone_hash' => $makeEncr('11111111111')['hash'],
         'address_encrypted' => $makeEncr('Rua A')['encrypted'],
-        'address_hash' => $makeEncr('Rua A')['hash'],
         'number_encrypted' => $makeEncr('100')['encrypted'],
         'number_hash' => $makeEncr('100')['hash'],
         'city_encrypted' => $makeEncr('SP')['encrypted'],
@@ -26,16 +24,14 @@ beforeEach(function () {
         'state' => 'SP', 'zipcode' => '01000-000', 'active' => true,
     ]);
 
-    $this->tenantBUser = User::factory()->management()->create();
+    $this->tenantBUser = User::factory()->seller1()->create();
     $this->tenantB = $this->tenantBUser->tenant()->create([
         'company_name_encrypted' => $makeEncr('B')['encrypted'],
         'company_name_hash' => $makeEncr('B')['hash'],
         'document_encrypted' => $makeEncr('11.111.111/0001-11')['encrypted'],
         'document_hash' => $makeEncr('11.111.111/0001-11')['hash'],
         'phone_encrypted' => $makeEncr('22222222222')['encrypted'],
-        'phone_hash' => $makeEncr('22222222222')['hash'],
         'address_encrypted' => $makeEncr('Rua B')['encrypted'],
-        'address_hash' => $makeEncr('Rua B')['hash'],
         'number_encrypted' => $makeEncr('200')['encrypted'],
         'number_hash' => $makeEncr('200')['hash'],
         'city_encrypted' => $makeEncr('RJ')['encrypted'],
@@ -92,19 +88,19 @@ test('admin can access clients from any tenant via unscoped query', function () 
     expect($found->tenant_id)->toBe($this->tenantB->id);
 });
 
-test('management user type value', function () {
-    $management = User::factory()->management()->create();
-    expect($management->access_level->value)->toBe(1);
+test('seller_1 user type value', function () {
+    $seller1 = User::factory()->seller1()->create();
+    expect($seller1->access_level->value)->toBe(1);
 });
 
 test('customer is not staff', function () {
     $customer = User::factory()->customer()->create();
-    expect($customer->access_level->value)->toBe(5);
-    expect(in_array($customer->access_level->value, [0, 1, 10]))->toBeFalse();
+    expect($customer->access_level->value)->toBe(15);
+    expect(in_array($customer->access_level->value, [1, 2, 10]))->toBeFalse();
 });
 
 test('all business tables have tenant id', function () {
-    $tables = ['clients', 'orders', 'inputs', 'products', 'suppliers', 'carriers'];
+    $tables = ['clients', 'orders', 'inputs', 'products', 'suppliers'];
     foreach ($tables as $table) {
         expect(\Illuminate\Support\Facades\Schema::hasColumn($table, 'tenant_id'))->toBeTrue();
     }

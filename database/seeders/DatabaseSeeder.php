@@ -56,18 +56,13 @@ class DatabaseSeeder extends Seeder
         $this->command->info('╔══════════════════════════════════════════╗');
         $this->command->info('║  ✓ SEED COMPLETO COM SUCESSO!           ║');
         $this->command->info('╠══════════════════════════════════════════╣');
-        $this->command->info('║  Carriers: 3 (com estados vinculados)   ║');
-        $this->command->info('║  Coupons: BEMVINDO10, FRETE50, CATEGORIA20 ║');
-        $this->command->info('');
-        $this->command->info('╔══════════════════════════════════════════╗');
-        $this->command->info('║  ✓ SEED COMPLETO COM SUCESSO!           ║');
-        $this->command->info('╠══════════════════════════════════════════╣');
-        $this->command->info('║  Admin:   admin@demanda3d.com           ║');
-        $this->command->info('║  Senha:   Mudar@123                     ║');
+        $this->command->info('║  Admin:     admin@demanda3d.com         ║');
+        $this->command->info('║  Senha:     Mudar@123                     ║');
         $this->command->info('║                                          ║');
-        $this->command->info('║  Management: tech3d, maker, prototype   ║');
-        $this->command->info('║  Customer: cliente@demanda3d.com.br     ║');
-        $this->command->info('║  Senha:   Mudar@123                     ║');
+        $this->command->info('║  Vendedores: tech3d, maker, prototype     ║');
+        $this->command->info('║  Customer:  cliente@demanda3d.com.br      ║');
+        $this->command->info('║  Carrier:   transportadora@demanda3d.com  ║');
+        $this->command->info('║  Senha:     Mudar@123                     ║');
         $this->command->info('╚══════════════════════════════════════════╝');
     }
 }
