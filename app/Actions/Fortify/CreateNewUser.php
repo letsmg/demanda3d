@@ -59,7 +59,7 @@ class CreateNewUser implements CreatesNewUsers
             'last_name_encrypted' => $lastNameData['encrypted'],
             'last_name_hash' => $lastNameData['hash'],
             'password' => Hash::make($input['password']),
-            'access_level' => UserAccessLevel::MANAGEMENT,
+            'access_level' => UserAccessLevel::SELLER_1,
         ]);
 
         // Registrar consentimentos legais

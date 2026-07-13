@@ -227,6 +227,21 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::get('/products', [ReportController::class, 'products'])->name('products');
         Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
     });
+
+    // ── Marketplace B2B: Transportadoras ───────────────────
+    // Acessível apenas para vendedores (usuários com tenant)
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('/carriers', [\App\Http\Controllers\Marketplace\CarrierController::class, 'index'])
+            ->name('carriers.index');
+        Route::get('/carriers/{carrier}', [\App\Http\Controllers\Marketplace\CarrierController::class, 'show'])
+            ->name('carriers.show');
+        Route::post('/carriers/{carrier}/invite', [\App\Http\Controllers\Marketplace\CarrierController::class, 'invite'])
+            ->name('carriers.invite');
+        Route::post('/agreements/{agreement}/accept', [\App\Http\Controllers\Marketplace\CarrierController::class, 'accept'])
+            ->name('agreements.accept');
+        Route::post('/agreements/{agreement}/reject', [\App\Http\Controllers\Marketplace\CarrierController::class, 'reject'])
+            ->name('agreements.reject');
+    });
 });
 
 require __DIR__.'/settings.php';

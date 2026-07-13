@@ -2,8 +2,6 @@
 
 namespace App\Scopes;
 
-use App\Enums\UserAccessGroup;
-use App\Enums\UserAccessLevel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;

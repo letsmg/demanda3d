@@ -52,7 +52,7 @@ class CreateStaffUser extends Command
             'display_name' => $displayName,
             'email' => $email,
             'password' => Hash::make($password),
-            'access_level' => UserAccessLevel::MANAGEMENT,
+            'access_level' => UserAccessLevel::SELLER_1,
             'email_verified_at' => now(),
         ]);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Services\CheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,6 +13,10 @@ use Stripe\Stripe;
 
 class CheckoutController extends Controller
 {
+    public function __construct(
+        private CheckoutService $checkoutService,
+    ) {}
+
     /**
      * Exibe a tela multi-etapas de checkout.
      */
@@ -54,7 +59,8 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Create a Stripe Checkout Session and redirect the client.
+     * Cria uma Stripe Checkout Session, persiste o pedido via CheckoutService
+     * e redireciona o cliente para o Stripe.
      */
     public function store(Request $request)
     {
@@ -64,9 +70,9 @@ class CheckoutController extends Controller
         }
 
         $validated = $request->validate([
-            'address_id'    => ['nullable', 'integer'],
-            'coupon_code'   => ['nullable', 'string', 'max:50'],
-            'carrier_id'    => ['nullable', 'integer', 'exists:carriers,id'],
+            'address_id'     => ['nullable', 'integer'],
+            'coupon_code'    => ['nullable', 'string', 'max:50'],
+            'carrier_id'     => ['nullable', 'integer', 'exists:carriers,id'],
             'payment_method' => ['required', 'in:card,boleto,pix'],
         ]);
 
@@ -98,10 +104,10 @@ class CheckoutController extends Controller
             $unitAmount = (int) round((float) $item->product->sale_price * 100);
             return [
                 'price_data' => [
-                    'currency' => 'brl',
+                    'currency'    => 'brl',
                     'product_data' => [
-                        'name'       => $item->product->name,
-                        'metadata'   => ['product_id' => $item->product->id],
+                        'name'     => $item->product->name,
+                        'metadata' => ['product_id' => $item->product->id],
                     ],
                     'unit_amount' => $unitAmount,
                 ],
@@ -118,44 +124,36 @@ class CheckoutController extends Controller
 
         $session = Session::create([
             'payment_method_types' => $paymentMethodTypes,
-            'mode'                => 'payment',
-            'line_items'          => $lineItems,
-            'success_url'         => route('checkout.success', [], true).'?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'          => route('checkout.cancel', [], true),
-            'metadata'            => [
-                'client_id'      => $client->id,
-                'coupon_code'    => $validated['coupon_code'] ?? null,
-                'carrier_id'     => $validated['carrier_id'] ?? null,
+            'mode'                 => 'payment',
+            'line_items'           => $lineItems,
+            'success_url'          => route('checkout.success', [], true).'?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url'           => route('checkout.cancel', [], true),
+            'metadata'             => [
+                'client_id'   => $client->id,
+                'coupon_code' => $validated['coupon_code'] ?? null,
+                'carrier_id'  => $validated['carrier_id'] ?? null,
             ],
         ]);
 
-        // Persiste pedidos individuais por item do carrinho
-        foreach ($cartItems as $item) {
-            Order::create([
-                'tenant_id'                      => $item->product->tenant_id ?? 1,
-                'client_id'                      => $client->id,
-                'product_id'                     => $item->product->id,
-                'order_date'                     => now()->toDateString(),
-                'delivery_date'                  => now()->addDays(15)->toDateString(),
-                'price'                          => (float) $item->product->sale_price * $item->quantity,
-                'contracted_description_encrypted' => \App\Services\EncryptionService::encryptWithHash(
-                    $item->product->name . ' — Quantidade: ' . $item->quantity
-                )['encrypted'],
-                'contracted_description_hash'    => \App\Services\EncryptionService::encryptWithHash(
-                    $item->product->name . ' — Quantidade: ' . $item->quantity
-                )['hash'],
-                'stripe_session_id' => $session->id,
-                'amount_total'      => null,
-                'currency'          => null,
-                'status'            => 'pending',
-            ]);
-        }
+        // ── Persiste o pedido via CheckoutService (DB::transaction) ──
+        //
+        // O service cria Order + OrderItems (snapshots imutáveis) +
+        // OrderLabel (snapshot do destinatário) e limpa o carrinho.
+        $this->checkoutService->createOrderFromCart($client, [
+            'stripe_session_id' => $session->id,
+            'carrier_id'        => $validated['carrier_id'] ?? null,
+            'coupon_code'       => $validated['coupon_code'] ?? null,
+            'currency'          => 'brl',
+        ]);
 
         return Inertia::location($session->url);
     }
 
     /**
-     * Show success page after Stripe redirect.
+     * Página de sucesso após redirecionamento do Stripe.
+     *
+     * Confirma o pagamento e atualiza o status da Order.
+     * O carrinho já foi limpo pelo CheckoutService no momento da criação.
      */
     public function success(Request $request)
     {
@@ -166,16 +164,9 @@ class CheckoutController extends Controller
             $session = Session::retrieve($sessionId);
 
             if ($session->payment_status === 'paid') {
-                $order = Order::where('stripe_session_id', $sessionId)->first();
-                if ($order && $order->status === 'pending') {
-                    $order->update(['status' => 'paid']);
-
-                    // Clear the cart
-                    $client = Auth::guard('clients')->user();
-                    if ($client) {
-                        CartItem::where('client_id', $client->id)->delete();
-                    }
-                }
+                Order::where('stripe_session_id', $sessionId)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'paid']);
             }
         }
 
@@ -185,7 +176,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Show cancel page.
+     * Página de cancelamento do checkout.
      */
     public function cancel()
     {

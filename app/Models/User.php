@@ -43,15 +43,22 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'access_level' => UserAccessLevel::class,
-            'data_nascimento' => 'date',
+            'password'          => 'hashed',
+            'access_level'      => UserAccessLevel::class,
+            'data_nascimento'   => 'date',
         ];
     }
+
+    // ── Relacionamentos ──────────────────────────────────────
 
     public function tenant(): HasOne
     {
         return $this->hasOne(Tenant::class);
+    }
+
+    public function carrier(): HasOne
+    {
+        return $this->hasOne(Carrier::class);
     }
 
     public function vendorCarriers(): HasMany
@@ -59,24 +66,31 @@ class User extends Authenticatable
         return $this->hasMany(VendorCarrier::class);
     }
 
+    // ── Verificações de identidade ───────────────────────────
+
     public function isAdmin(): bool
     {
         return $this->access_level === UserAccessLevel::ADMIN;
     }
 
-    public function isManagement(): bool
+    public function isSeller(): bool
     {
-        return $this->access_level === UserAccessLevel::MANAGEMENT;
+        return $this->access_level->isSeller();
     }
 
-    public function isOperational(): bool
+    public function isSeller1(): bool
     {
-        return $this->access_level === UserAccessLevel::OPERATIONAL;
+        return $this->access_level === UserAccessLevel::SELLER_1;
     }
 
-    public function isStaff(): bool
+    public function isSeller2(): bool
     {
-        return $this->access_level->isStaff();
+        return $this->access_level === UserAccessLevel::SELLER_2;
+    }
+
+    public function isCarrier(): bool
+    {
+        return $this->access_level->isCarrier();
     }
 
     public function isCustomer(): bool
@@ -84,28 +98,33 @@ class User extends Authenticatable
         return $this->access_level === UserAccessLevel::CUSTOMER;
     }
 
+    /**
+     * Pode acessar o painel de staff (sellers + admin).
+     */
+    public function isStaff(): bool
+    {
+        return $this->access_level->isSeller() || $this->access_level->isAdmin();
+    }
+
+    /**
+     * Pode acessar o painel financeiro.
+     */
     public function canAccessFinancials(): bool
     {
         return $this->access_level->canAccessFinancials();
     }
 
-    /**
-     * Retorna a idade do usuário baseada na data_nascimento.
-     * Retorna null se data_nascimento não estiver definida.
-     */
+    // ── Idade e conteúdo adulto ──────────────────────────────
+
     public function getAge(): ?int
     {
-        if (!$this->data_nascimento) {
+        if (! $this->data_nascimento) {
             return null;
         }
 
         return (int) $this->data_nascimento->diffInYears(now());
     }
 
-    /**
-     * Verifica se o usuário tem 18 anos ou mais.
-     * Usuários sem data_nascimento definida são tratados como menores.
-     */
     public function is18Plus(): bool
     {
         $age = $this->getAge();
@@ -114,8 +133,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Determina se o usuário pode visualizar conteúdo adulto.
-     * Staff (Admin, Management, Operational) sempre pode.
+     * Sellers (SELLER_1, SELLER_2) e Admin sempre podem acessar conteúdo adulto.
      * Customers precisam ter 18+ anos.
      */
     public function canAccessAdultContent(): bool
@@ -127,6 +145,8 @@ class User extends Authenticatable
         return $this->is18Plus();
     }
 
+    // ── Display name ─────────────────────────────────────────
+
     public function getDisplayName(): string
     {
         if ($this->display_name) {
@@ -134,7 +154,7 @@ class User extends Authenticatable
         }
 
         $firstName = $this->getDecryptedFirstName();
-        $lastName = $this->getDecryptedLastName();
+        $lastName  = $this->getDecryptedLastName();
 
         if ($firstName && $lastName) {
             return trim($firstName . ' ' . $lastName);
@@ -174,6 +194,5 @@ class User extends Authenticatable
     {
         return $query->where('last_name_hash', $hash);
     }
-
 }
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

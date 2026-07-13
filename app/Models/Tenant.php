@@ -6,6 +6,7 @@ use App\Models\Review;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends Model
@@ -135,6 +136,21 @@ class Tenant extends Model
     public function inputs(): HasMany
     {
         return $this->hasMany(Input::class);
+    }
+
+    public function carrierTenantAgreements(): HasMany
+    {
+        return $this->hasMany(CarrierTenantAgreement::class);
+    }
+
+    /**
+     * Transportadoras com acordo ativo com este tenant.
+     */
+    public function activeCarriers(): BelongsToMany
+    {
+        return $this->belongsToMany(Carrier::class, 'carrier_tenant_agreements')
+            ->wherePivot('status', 'active')
+            ->withTimestamps();
     }
 }
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

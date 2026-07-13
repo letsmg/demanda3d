@@ -47,8 +47,8 @@ class OrderPolicy
      */
     public function viewClientDetails(User $user, Order $order): bool
     {
-        // Admin e Management podem ver todos os dados do cliente
-        if (in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::MANAGEMENT], true)) {
+        // Admin e SELLER_1 podem ver todos os dados do cliente
+        if (in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::SELLER_1], true)) {
             return true;
         }
 
@@ -63,7 +63,7 @@ class OrderPolicy
      */
     public function viewClientFullData(User $user): bool
     {
-        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::MANAGEMENT], true);
+        return in_array($user->access_level, [UserAccessLevel::ADMIN, UserAccessLevel::SELLER_1], true);
     }
 
     /**

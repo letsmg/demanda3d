@@ -52,7 +52,7 @@ class AdminUserController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
-            'access_level' => ['required', 'integer', Rule::in(UserAccessLevel::staffValues())],
+            'access_level' => ['required', 'integer', Rule::in(UserAccessLevel::staffPanelValues())],
         ]);
 
         $user->update($validated);

@@ -3,12 +3,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserAccessLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Carrier;
-use App\Models\Tenant;
+use App\Models\User;
 use App\Services\EncryptionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -20,11 +20,17 @@ class RegisterCarrierController extends Controller
         return Inertia::render('auth/RegisterCarrier');
     }
 
+    /**
+     * Autocadastro de transportadora.
+     *
+     * Cria um User global (access_level = CARRIER_1) e vincula
+     * o perfil Carrier via user_id (1:1).
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'email'           => ['required', 'email', 'max:255', 'unique:carriers,email'],
+            'email'           => ['required', 'email', 'max:255', 'unique:users,email'],
             'password'        => ['required', 'string', 'min:8', 'confirmed'],
             'doc_type'        => ['required', 'in:CNPJ,CPF'],
             'document'        => ['required', 'string', 'max:20'],
@@ -45,18 +51,20 @@ class RegisterCarrierController extends Controller
         // Paridade LGPD: criptografa documento
         $documentData = EncryptionService::encryptWithHash($validated['document']);
 
-        $carrier = DB::transaction(function () use ($validated, $documentData) {
-            // Busca ou cria tenant
-            $tenant = Tenant::firstOrCreate(
-                ['slug' => 'carrier'],
-                ['display_name' => 'Transportadoras'],
-            );
+        DB::transaction(function () use ($validated, $documentData) {
+            // 1. Cria o User global com nível CARRIER_1 (Transportador Admin)
+            $user = User::create([
+                'email'        => $validated['email'],
+                'display_name' => $validated['name'],
+                'password'     => Hash::make($validated['password']),
+                'access_level' => UserAccessLevel::CARRIER_1,
+                'data_nascimento' => $validated['data_nascimento'] ?? null,
+            ]);
 
-            return Carrier::create([
-                'tenant_id'          => $tenant->id,
+            // 2. Cria o perfil Carrier vinculado ao User
+            Carrier::create([
+                'user_id'            => $user->id,
                 'name'               => $validated['name'],
-                'email'              => $validated['email'],
-                'password'           => Hash::make($validated['password']),
                 'doc_type'           => $validated['doc_type'],
                 'document_encrypted' => $documentData['encrypted'],
                 'document_hash'      => $documentData['hash'],
@@ -65,8 +73,7 @@ class RegisterCarrierController extends Controller
             ]);
         });
 
-        Auth::guard('carriers')->login($carrier);
-
-        return redirect()->intended('/carrier/dashboard');
+        return redirect()->route('login.carrier')
+            ->with('success', 'Cadastro realizado com sucesso! Faça login para continuar.');
     }
 }
