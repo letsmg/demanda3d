@@ -32,13 +32,13 @@ class DashboardController extends Controller
         // 3. Métricas de Receita (Filtradas diretamente no banco, sem carregar todos os registros)
         $monthlyRevenue = Order::whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
-            ->sum('price');
+            ->sum('amount_total');
 
         $monthlyOrdersCount = Order::whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
             ->count();
 
-        $totalRevenue = Order::sum('price');
+        $totalRevenue = Order::sum('amount_total');
         $avgOrderValue = $ordersCount > 0 ? $totalRevenue / $ordersCount : 0;
 
         // 4. Entregas Pendentes (Filtro eficiente no banco)

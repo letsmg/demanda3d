@@ -4,7 +4,6 @@ use App\Models\Client;
 use App\Models\User;
 use App\Services\EncryptionService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);

@@ -43,6 +43,10 @@ Route::get('/api/store/products', [StoreController::class, 'moreProducts'])->nam
 Route::get('/tenant/{fantasy_slug}', [App\Http\Controllers\TenantProfileController::class, 'show'])
     ->name('tenant.profile');
 
+// API lazy-loading para produtos de um tenant específico ("Mostrar mais")
+Route::get('/api/tenant/{fantasy_slug}/products', [App\Http\Controllers\TenantProfileController::class, 'moreProducts'])
+    ->name('tenant.products');
+
 // Public product detail page (store) — rota dinâmica por slug com verificação de idade
 Route::get('/store/{slug}', [StoreDetailController::class, 'show'])
     ->middleware(['check.age'])

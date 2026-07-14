@@ -47,7 +47,7 @@ class ReportService
      */
     public function salesReport(int $perPage = 15, ?string $dateFrom = null, ?string $dateTo = null): LengthAwarePaginator
     {
-        $query = Order::with(['client', 'product']);
+        $query = Order::with(['client', 'items']);
 
         if ($dateFrom) {
             $query->whereDate('created_at', '>=', $dateFrom);
@@ -76,7 +76,7 @@ class ReportService
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
-        $totalRevenue = (float) $query->sum('price');
+        $totalRevenue = (float) $query->sum('amount_total');
         $totalOrders = $query->count();
         $avgTicket = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 

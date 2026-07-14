@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $seller = User::factory()->seller1()->create();
@@ -22,6 +21,10 @@ beforeEach(function () {
         'active'                 => true,
     ]);
 
+    $this->client = \App\Models\Client::factory()->create([
+        'tenant_id' => $this->tenant->id,
+    ]);
+
     $this->product = Product::create([
         'tenant_id' => $this->tenant->id,
         'name'      => 'Produto Snapshot',
@@ -32,7 +35,7 @@ beforeEach(function () {
 
     $this->order = Order::create([
         'tenant_id'     => $this->tenant->id,
-        'client_id'     => 1,
+        'client_id'     => $this->client->id,
         'order_date'    => now()->toDateString(),
         'delivery_date' => now()->addDays(15)->toDateString(),
         'status'        => 'pending',

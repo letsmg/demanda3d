@@ -12,26 +12,25 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            // Company name (LGPD: encrypted + hash, campo sensível único)
+            // Company name (LGPD: encrypted + hash — única exceção operacional)
             $table->text('company_name_encrypted')->nullable();
             $table->string('company_name_hash', 64)->nullable();
 
-            // Fantasy name + slug (público)
+            // Fantasy name + slug (público, NOT NULL via booted no Model)
             $table->string('fantasy_name', 255)->nullable();
-            $table->string('fantasy_slug')->nullable()->unique();
+            $table->string('fantasy_slug')->unique();
 
-            // Document type + document (LGPD: encrypted + hash)
+            // Document type + document (texto puro)
             $table->string('document_type', 4)->default('cnpj')->comment('cnpj ou cpf');
-            $table->text('document_encrypted')->nullable();
-            $table->string('document_hash', 64)->nullable();
+            $table->string('document', 18)->nullable();
 
-            // Phone (LGPD: encrypted)
-            $table->text('phone_encrypted')->nullable();
+            // Phone (texto puro)
+            $table->string('phone', 20)->nullable();
 
-            // Address (LGPD: encrypted)
-            $table->text('address_encrypted')->nullable();
+            // Address (texto puro)
+            $table->string('address', 255)->nullable();
 
-            // Address complement (público, não sensível isoladamente)
+            // Address complement
             $table->string('number', 20)->nullable();
             $table->string('district', 100)->nullable();
             $table->string('city', 100)->nullable();
@@ -52,7 +51,6 @@ return new class extends Migration
             // Índices
             $table->index('user_id');
             $table->index('company_name_hash');
-            $table->index('document_hash');
             $table->index('active');
         });
     }

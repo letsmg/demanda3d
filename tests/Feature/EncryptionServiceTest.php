@@ -2,7 +2,6 @@
 
 use App\Services\EncryptionService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('encrypt with hash returns array with encrypted and hash', function () {
     $value = 'Test Value 123';
