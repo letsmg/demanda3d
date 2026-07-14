@@ -180,12 +180,7 @@ class ProductService
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
-                $q->where('active', true)
-                  ->whereHas('user', function ($sq) {
-                      $sq->whereHas('vendorCarriers', function ($vc) {
-                          $vc->where('status', 'approved');
-                      });
-                  });
+                $q->where('active', true);
             })
             ->with(['images', 'tenant.user', 'categories']);
 
@@ -239,12 +234,7 @@ class ProductService
         $query = Product::withoutGlobalScopes()
             ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
-                $q->where('active', true)
-                  ->whereHas('user', function ($sq) {
-                      $sq->whereHas('vendorCarriers', function ($vc) {
-                          $vc->where('status', 'approved');
-                      });
-                  });
+                $q->where('active', true);
             })
             ->with(['images', 'tenant.user', 'categories']);
 

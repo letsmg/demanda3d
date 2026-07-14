@@ -7,6 +7,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Tenant;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -32,8 +33,7 @@ class TenantProfileController extends Controller
             'sort_dir' => 'nullable|in:asc,desc',
         ]);
 
-        $query = Tenant::with(['user:id,display_name,first_name_encrypted,last_name_encrypted', 'address'])
-            ->whereNotNull('verified_at');
+        $query = Tenant::with(['user:id,display_name,first_name_encrypted,last_name_encrypted']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -147,6 +147,75 @@ class TenantProfileController extends Controller
             'products'   => $productResources,
             'categories' => $categories,
             'filters'    => $filters,
+        ]);
+    }
+
+    /**
+     * API endpoint for lazy-loading more products from a specific tenant.
+     */
+    public function moreProducts(string $fantasySlug, Request $request): JsonResponse
+    {
+        $tenant = Tenant::where('fantasy_slug', $fantasySlug)
+            ->where('active', true)
+            ->firstOrFail();
+
+        $filters = $request->validate([
+            'search'    => 'nullable|string|max:255',
+            'min_price' => 'nullable|numeric|min:0',
+            'max_price' => 'nullable|numeric|min:0',
+            'sort'      => 'nullable|in:name,sale_price,created_at',
+            'sort_dir'  => 'nullable|in:asc,desc',
+            'category'  => 'nullable|string|exists:categories,slug',
+            'page'      => 'required|integer|min:1',
+        ]);
+
+        $page = (int) ($filters['page'] ?? 1);
+
+        $canViewAdult = false;
+        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('clients')->user();
+        if ($user && method_exists($user, 'canAccessAdultContent')) {
+            $canViewAdult = $user->canAccessAdultContent();
+        }
+
+        $query = Product::withoutGlobalScopes()
+            ->where('is_active', true)
+            ->where('tenant_id', $tenant->id)
+            ->with(['images', 'categories']);
+
+        if (! $canViewAdult) {
+            $query->withoutAdultCategories();
+        }
+
+        if (! empty($filters['search'])) {
+            $s = $filters['search'];
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'ilike', "%{$s}%")
+                  ->orWhere('description', 'ilike', "%{$s}%");
+            });
+        }
+
+        if (! empty($filters['min_price'])) {
+            $query->where('sale_price', '>=', (float) $filters['min_price']);
+        }
+        if (! empty($filters['max_price'])) {
+            $query->where('sale_price', '<=', (float) $filters['max_price']);
+        }
+        if (! empty($filters['category'])) {
+            $query->whereHas('categories', fn ($q) => $q->where('slug', $filters['category']));
+        }
+
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir   = $filters['sort_dir'] ?? 'asc';
+        if (in_array($sortField, ['name', 'sale_price', 'created_at'])) {
+            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
+        }
+
+        $products = $query->paginate(8, ['*'], 'page', $page);
+        $data = ProductResource::collection($products)->resolve();
+
+        return response()->json([
+            'data'     => array_values($data), // JSON array (não objeto paginado)
+            'has_more' => $products->hasMorePages(),
         ]);
     }
 }

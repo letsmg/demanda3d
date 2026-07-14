@@ -118,12 +118,17 @@ class ProductSeeder extends Seeder
                     $this->command?->line("    ✓ Produto criado: {$product->name}");
                 }
 
-                $existing = ProductImage::where('product_id', $product->id)->count();
-                $need = self::MAX_IMAGES_PER_PRODUCT - $existing;
+                // Remove imagens antigas para garantir exatamente MAX_IMAGES_PER_PRODUCT
+                $oldImages = ProductImage::where('product_id', $product->id)->get();
+                foreach ($oldImages as $old) {
+                    Storage::disk('public')->delete([$old->path, $old->original_path, $old->thumbnail_path]);
+                    $old->delete();
+                }
 
-                for ($i = $existing; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
-                    $url = "https://picsum.photos/seed/{$product->id}-{$i}/800/800";
-                    $this->command?->getOutput()->write("    ⏳ Baixando imagem {$i}/2... ");
+                for ($i = 0; $i < self::MAX_IMAGES_PER_PRODUCT; $i++) {
+                    $seed = $product->id . '-' . $i;
+                    $url = "https://picsum.photos/seed/{$seed}/800/800";
+                    $this->command?->getOutput()->write("    ⏳ Baixando imagem " . ($i + 1) . "/" . self::MAX_IMAGES_PER_PRODUCT . "... ");
                     $content = @file_get_contents($url);
 
                     if ($content === false) {
@@ -132,15 +137,12 @@ class ProductSeeder extends Seeder
                         continue;
                     }
 
-                    // Salva em temp para criar UploadedFile e passar pelo pipeline
                     $tmpPath = tempnam(sys_get_temp_dir(), 'seed_') . '.jpg';
                     file_put_contents($tmpPath, $content);
 
-                        $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
+                    $uploadedFile = new UploadedFile($tmpPath, "seed-{$i}.jpg", 'image/jpeg', null, true);
 
                     try {
-                        // Usa slug + índice como nome base para evitar que imagens diferentes
-                        // do mesmo produto tenham o mesmo arquivo no disco.
                         $result = $imageService->processProductUpload(
                             $uploadedFile,
                             $tenantId,
