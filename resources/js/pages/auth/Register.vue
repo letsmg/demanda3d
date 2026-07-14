@@ -56,17 +56,29 @@ const acceptPrivacy = ref(true);
                             <Label for="password_confirmation" class="text-amber-800">Confirmar Senha</Label>
                             <PasswordInput id="password_confirmation" name="password_confirmation" required :tabindex="4" placeholder="Repita a senha" />
                         </div>
-                        <div class="rounded-md bg-amber-100 p-3 flex items-start gap-2">
-                            <Checkbox id="accept_terms_v" v-model:checked="acceptTerms" :tabindex="5" class="border-amber-900" />
-                            <Label for="accept_terms_v" class="text-sm leading-relaxed text-amber-800">
-                                Li e aceito os <a href="/legal/terms" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Termos de Uso</a>
-                                e a <a href="/legal/privacy" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Política de Privacidade</a>
-                            </Label>
+                        <div class="rounded-md bg-amber-100 p-3 space-y-2">
+                            <div class="flex items-start gap-2">
+                                <Checkbox id="accept_terms_v" v-model:checked="acceptTerms" :tabindex="5" class="border-amber-900" />
+                                <Label for="accept_terms_v" class="text-sm leading-relaxed text-amber-800">
+                                    Li e aceito os <a href="/legal/terms" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Termos de Uso</a>
+                                </Label>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <Checkbox id="accept_privacy_v" v-model:checked="acceptPrivacy" :tabindex="6" class="border-amber-900" />
+                                <Label for="accept_privacy_v" class="text-sm leading-relaxed text-amber-800">
+                                    Li e aceito a <a href="/legal/privacy" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Política de Privacidade</a>
+                                </Label>
+                            </div>
                         </div>
                         <InputError :message="errors.accept_terms" />
-                        <Button type="submit" class="mt-2 w-full bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="6" :disabled="processing">
-                            <Spinner v-if="processing" /> Criar Conta de Vendedor
-                        </Button>
+                        <div class="flex gap-2">
+                            <Button type="submit" class="flex-1 bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="7" :disabled="processing">
+                                <Spinner v-if="processing" /> Criar Conta de Vendedor
+                            </Button>
+                            <Button type="reset" variant="outline" class="border-amber-900 text-amber-700 hover:bg-amber-50" :tabindex="8">
+                                Limpar
+                            </Button>
+                        </div>
                     </div>
                     <div class="text-center text-sm text-amber-600">
                         Já tem uma conta? <a href="/login" class="font-medium text-amber-700 hover:text-amber-900">Faça login</a>

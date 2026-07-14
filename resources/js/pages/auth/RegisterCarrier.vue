@@ -15,7 +15,7 @@ defineOptions({ layout: WelcomeLayout });
 
 const form = useForm({
     name: '', email: '', password: '', password_confirmation: '',
-    doc_type: 'CNPJ', document: '', data_nascimento: '', accept_terms: false,
+    doc_type: 'CNPJ', document: '', data_nascimento: '', accept_terms: false, accept_privacy: false,
 });
 
 function submit() { form.post('/register_carrier', { preserveState: true }); }
@@ -74,17 +74,29 @@ function submit() { form.post('/register_carrier', { preserveState: true }); }
                             <Input id="data_nascimento" type="date" v-model="form.data_nascimento" :tabindex="7"
                                 class="border-amber-900 bg-white text-amber-900" />
                         </div>
-                        <div class="rounded-md bg-amber-100 p-3 flex items-start gap-2">
-                            <Checkbox id="accept_terms" v-model:checked="form.accept_terms" :tabindex="8" class="border-amber-900" />
-                            <Label for="accept_terms" class="text-sm leading-relaxed text-amber-800">
-                                Li e aceito os <a href="/legal/terms" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Termos de Uso</a>
-                                e a <a href="/legal/privacy" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Política de Privacidade</a>
-                            </Label>
+                        <div class="rounded-md bg-amber-100 p-3 space-y-2">
+                            <div class="flex items-start gap-2">
+                                <Checkbox id="accept_terms" v-model:checked="form.accept_terms" :tabindex="8" class="border-amber-900" />
+                                <Label for="accept_terms" class="text-sm leading-relaxed text-amber-800">
+                                    Li e aceito os <a href="/legal/terms" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Termos de Uso</a>
+                                </Label>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <Checkbox id="accept_privacy" v-model:checked="form.accept_privacy" :tabindex="9" class="border-amber-900" />
+                                <Label for="accept_privacy" class="text-sm leading-relaxed text-amber-800">
+                                    Li e aceito a <a href="/legal/privacy" target="_blank" class="font-medium text-amber-700 hover:text-amber-900">Política de Privacidade</a>
+                                </Label>
+                            </div>
                         </div>
                         <InputError :message="form.errors.accept_terms" />
-                        <Button type="submit" class="mt-2 w-full bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="9" :disabled="form.processing">
-                            <Spinner v-if="form.processing" /> Criar Conta de Transportadora
-                        </Button>
+                        <div class="flex gap-2">
+                            <Button type="submit" class="flex-1 bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="10" :disabled="form.processing">
+                                <Spinner v-if="form.processing" /> Criar Conta de Transportadora
+                            </Button>
+                            <Button type="reset" variant="outline" class="border-amber-900 text-amber-700 hover:bg-amber-50" :tabindex="11">
+                                Limpar
+                            </Button>
+                        </div>
                     </div>
                     <div class="text-center text-sm text-amber-600">
                         Já tem uma conta? <a href="/login_carrier" class="font-medium text-amber-700 hover:text-amber-900">Faça login</a>

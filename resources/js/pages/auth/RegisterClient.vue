@@ -69,9 +69,14 @@ function submit() { form.post('/register_cli', { preserveState: true }); }
                             </div>
                         </div>
                         <InputError :message="form.errors.accept_terms" />
-                        <Button type="submit" class="mt-2 w-full bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="7" :disabled="form.processing" data-test="register-client-button">
-                            <Spinner v-if="form.processing" /> Criar Conta de Cliente
-                        </Button>
+                        <div class="flex gap-2">
+                            <Button type="submit" class="flex-1 bg-amber-500 font-semibold text-amber-950 hover:bg-amber-910" :tabindex="7" :disabled="form.processing" data-test="register-client-button">
+                                <Spinner v-if="form.processing" /> Criar Conta de Cliente
+                            </Button>
+                            <Button type="reset" variant="outline" class="border-amber-900 text-amber-700 hover:bg-amber-50" :tabindex="8">
+                                Limpar
+                            </Button>
+                        </div>
                     </div>
                     <div class="text-center text-sm text-amber-600">
                         Já tem uma conta? <a href="/login_cli" class="font-medium text-amber-700 hover:text-amber-900">Faça login</a>
