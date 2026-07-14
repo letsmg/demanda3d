@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\UserAccessLevel;
+use App\Observers\UserObserver;
 use App\Services\EncryptionService;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +29,7 @@ use Illuminate\Notifications\Notifiable;
     'email_verified_at',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -35,6 +37,11 @@ class User extends Authenticatable
         'first_name',
         'last_name',
     ];
+
+    protected static function booted(): void
+    {
+        static::observe(UserObserver::class);
+    }
 
     protected function casts(): array
     {

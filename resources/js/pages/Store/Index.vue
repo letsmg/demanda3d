@@ -480,10 +480,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             <div v-if="visibleProducts.length === 0" class="py-16 text-center">
                 <ShoppingBag class="mx-auto h-12 w-12 text-amber-900" />
                 <h3 class="mt-2 text-sm font-semibold text-amber-800">
-                    Nenhum produto encontrado
+                    Nenhum produto disponível no momento.
                 </h3>
                 <p class="mt-1 text-sm text-amber-600">
-                    Tente ajustar os filtros ou buscar por outros termos.
+                    Se você é o administrador do sistema, verifique os logs do sistema para mais detalhes.
                 </p>
                 <Button variant="outline" class="mt-4" @click="clearStoreFilters"
                     >Limpar filtros</Button

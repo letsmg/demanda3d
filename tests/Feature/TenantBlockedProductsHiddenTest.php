@@ -1,42 +1,54 @@
 <?php
 
-use App\Models\Category;
 use App\Models\Carrier;
+use App\Models\CarrierTenantAgreement;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\VendorCarrier;
 use App\Services\ProductService;
-
 
 /**
  * Testa que produtos de tenant bloqueado (active = false) NÃO aparecem na store pública,
  * mas seu campo is_active permanece inalterado.
  */
 it('hides products from blocked tenants in the store', function () {
-    // Arrange: criar tenant ativo com usuário e transportadora aprovada
-    $user = User::factory()->create([
-        'access_level' => \App\Enums\UserAccessLevel::SELLER_2,
+    // Arrange: criar tenant ativo com usuário, transportadora ativa e contrato
+    $seller = User::factory()->create([
+        'access_level'      => \App\Enums\UserAccessLevel::SELLER_2,
+        'email_verified_at' => now(),
     ]);
 
     $tenant = Tenant::factory()->create([
-        'user_id' => $user->id,
-        'active' => true,
+        'user_id' => $seller->id,
+        'active'  => true,
     ]);
 
-    $carrier = Carrier::factory()->withUser()->create();
-    VendorCarrier::create([
-        'user_id' => $user->id,
+    $carrierUser = User::factory()->carrier1()->create([
+        'email_verified_at' => now(),
+    ]);
+
+    $carrier = Carrier::factory()->create([
+        'user_id'             => $carrierUser->id,
+        'fantasy_name'        => 'Express Transportes',
+        'is_active'           => true,
+        'company_name_encrypted' => makeEncr('Express Ltda')['encrypted'],
+        'company_name_hash'     => makeEncr('Express Ltda')['hash'],
+        'slug'                => Carrier::generateUniqueSlug('Express Transportes'),
+    ]);
+
+    CarrierTenantAgreement::create([
+        'tenant_id'  => $tenant->id,
         'carrier_id' => $carrier->id,
-        'status' => 'approved',
+        'status'     => CarrierTenantAgreement::STATUS_ACTIVE,
     ]);
 
     $category = Category::create(['name' => 'Decoração', 'slug' => 'decoracao']);
 
     $product = Product::factory()->create([
         'tenant_id' => $tenant->id,
-        'name' => 'Vaso 3D',
-        'slug' => 'vaso-3d',
+        'name'      => 'Vaso 3D',
+        'slug'      => 'vaso-3d',
         'is_active' => true,
         'sale_price' => 49.90,
         'moderation_status' => 'approved',

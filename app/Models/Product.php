@@ -212,6 +212,37 @@ class Product extends Model
         });
     }
 
+    /**
+     * Scope: produtos disponíveis para venda na loja pública.
+     *
+     * Critérios cumulativos (todos devem ser atendidos):
+     * 1. Produto ativo (is_active = true)
+     * 2. Vendedor (tenant) ativo (tenants.active = true)
+     * 3. Vendedor com e-mail verificado (users.email_verified_at IS NOT NULL)
+     * 4. Pelo menos 1 transportadora ativa com contrato vinculado ao vendedor
+     * 5. Pelo menos 1 transportadora vinculada com e-mail verificado
+     */
+    public function scopeAvailableForSale($query)
+    {
+        return $query
+            ->where('is_active', true)
+            ->whereHas('tenant', function ($q) {
+                $q->where('active', true)
+                  ->whereHas('user', function ($uq) {
+                      $uq->whereNotNull('email_verified_at');
+                  })
+                  ->whereHas('carrierTenantAgreements', function ($aq) {
+                      $aq->where('status', 'active')
+                        ->whereHas('carrier', function ($cq) {
+                            $cq->where('is_active', true)
+                              ->whereHas('user', function ($cuq) {
+                                  $cuq->whereNotNull('email_verified_at');
+                              });
+                        });
+                  });
+            });
+    }
+
     public static function generateUniqueSlug(string $name, ?int $tenantId = null, ?int $excludeId = null): string
     {
         $baseSlug = Str::slug($name);
