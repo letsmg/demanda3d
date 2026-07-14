@@ -13,6 +13,7 @@ class BankDetail extends Model
 
     protected $fillable = [
         'tenant_id',
+        'carrier_id',
         'bank_name',
         'routing_number_encrypted',
         'account_number_encrypted',
@@ -24,6 +25,9 @@ class BankDetail extends Model
         'consented_at',
         'consent_ip',
         'consent_term_version',
+        'pending_token',
+        'pending_data',
+        'pending_at',
     ];
 
     protected $appends = [
@@ -34,13 +38,19 @@ class BankDetail extends Model
     ];
 
     protected $casts = [
-        'consented'   => 'boolean',
-        'consented_at' => 'datetime',
+        'consented'    => 'boolean',
+        'consented_at'  => 'datetime',
+        'pending_at'    => 'datetime',
     ];
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function carrier(): BelongsTo
+    {
+        return $this->belongsTo(Carrier::class);
     }
 
     // Accessors — descriptografam em memória

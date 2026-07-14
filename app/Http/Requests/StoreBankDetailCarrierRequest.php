@@ -2,22 +2,21 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Tenant;
+use App\Models\Carrier;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 
-class StoreBankDetailRequest extends FormRequest
+class StoreBankDetailCarrierRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = Auth::user();
-        return $user && $user->access_level->canAccessFinancials();
+        $user = Auth::guard('carriers')->user();
+        return $user && $user->isCarrier();
     }
 
     public function rules(): array
     {
-        $tenant = Tenant::where('user_id', Auth::id())->first();
+        $carrier = Carrier::where('user_id', Auth::guard('carriers')->id())->first();
 
         return [
             'bank_name'            => ['required', 'string', 'max:100'],
@@ -29,13 +28,12 @@ class StoreBankDetailRequest extends FormRequest
                 'required',
                 'string',
                 'max:18',
-                function ($attribute, $value, $fail) use ($tenant) {
-                    // Valida que o documento do titular bancário é o mesmo do tenant
+                function ($attribute, $value, $fail) use ($carrier) {
                     $doc = preg_replace('/\D/', '', $value);
-                    $tenantDoc = preg_replace('/\D/', '', $tenant->document ?? '');
+                    $carrierDoc = preg_replace('/\D/', '', $carrier->document ?? '');
 
-                    if ($doc !== $tenantDoc) {
-                        $fail('O CPF/CNPJ do titular da conta bancária deve ser o mesmo do responsável legal cadastrado nesta loja.');
+                    if ($doc !== $carrierDoc) {
+                        $fail('O CPF/CNPJ do titular da conta bancária deve ser o mesmo do responsável legal cadastrado nesta transportadora.');
                     }
                 },
             ],

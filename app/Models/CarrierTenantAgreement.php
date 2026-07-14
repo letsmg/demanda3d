@@ -10,7 +10,7 @@ class CarrierTenantAgreement extends Model
 {
     protected $table = 'carrier_tenant_agreements';
 
-    protected $fillable = ['tenant_id', 'carrier_id', 'status'];
+    protected $fillable = ['tenant_id', 'carrier_id', 'status', 'blocked_by'];
 
     /**
      * Status possíveis para o acordo comercial.
@@ -19,6 +19,7 @@ class CarrierTenantAgreement extends Model
     public const STATUS_PENDING_CARRIER = 'pending_carrier';
     public const STATUS_ACTIVE = 'active';
     public const STATUS_REJECTED = 'rejected';
+    public const STATUS_SUSPENDED = 'suspended';
 
     // ── Relacionamentos ──────────────────────────────────────
 
@@ -70,6 +71,32 @@ class CarrierTenantAgreement extends Model
             self::STATUS_PENDING_TENANT,
             self::STATUS_PENDING_CARRIER,
         ], true);
+    }
+
+    public function blockBy(string $role): void
+    {
+        $this->update([
+            'status'    => self::STATUS_SUSPENDED,
+            'blocked_by' => $role,
+        ]);
+    }
+
+    public function unblock(): void
+    {
+        $this->update([
+            'status'    => self::STATUS_ACTIVE,
+            'blocked_by' => null,
+        ]);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    public function blockedBy(): ?string
+    {
+        return $this->blocked_by;
     }
 }
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

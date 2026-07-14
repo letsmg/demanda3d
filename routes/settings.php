@@ -27,12 +27,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 
-    // Bank details (dados bancários)
-    Route::get('settings/bank', [BankDetailController::class, 'edit'])->name('bank.edit');
-    Route::post('settings/bank', [BankDetailController::class, 'store'])->name('bank.store');
+    // Bank details (dados bancários) — apenas Admin e SELLER_1 (acesso financeiro)
+    Route::get('settings/bank', [BankDetailController::class, 'edit'])
+        ->middleware(\App\Http\Middleware\CheckAccessLevel::class . ':10,1')
+        ->name('bank.edit');
+    Route::post('settings/bank', [BankDetailController::class, 'store'])
+        ->middleware(\App\Http\Middleware\CheckAccessLevel::class . ':10,1')
+        ->name('bank.store');
 });
 
 // BrasilAPI — CNPJ lookup (API interna)
 Route::middleware(['auth'])->group(function () {
     Route::get('/api/brasilapi/cnpj', [BankDetailController::class, 'lookupCnpj'])->name('brasilapi.cnpj');
 });
+
+// Dados bancários da transportadora (guard: carriers)
+Route::middleware(['auth:carriers'])->group(function () {
+    Route::get('/carrier/bank', [BankDetailController::class, 'editCarrier'])->name('carrier.bank.edit');
+    Route::post('/carrier/bank', [BankDetailController::class, 'storeCarrier'])->name('carrier.bank.store');
+});
+
+// Verificação de dados bancários via e-mail (link público, sem auth)
+Route::get('/bank/verify', [BankDetailController::class, 'verify'])->name('bank.verify');

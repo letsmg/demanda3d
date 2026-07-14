@@ -41,12 +41,14 @@ class StoreCarrierRequest extends FormRequest
     {
         $validator->after(function (Validator $validator) {
             $document = $this->input('document');
-            if (empty($document)) return;
-            $tenant = auth()->user()->tenant;
-            if (!$tenant) return;
+            if (empty($document)) {
+                return;
+            }
+
             $digits = preg_replace('/[.\-\/()\s]/', '', $document);
             $hash = hash('sha256', $digits);
-            if (Carrier::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('document_hash', $hash)->exists()) {
+
+            if (Carrier::where('document_hash', $hash)->exists()) {
                 $validator->errors()->add('document', 'Já existe uma transportadora com este documento.');
             }
         });
