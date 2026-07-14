@@ -31,6 +31,7 @@ class Tenant extends Model
         'zipcode',
         'logo_path',
         'banner_path',
+        'legal_responsible_name',
         'active',
         'rating_average',
         'rating_count',

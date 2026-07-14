@@ -17,7 +17,7 @@ class CarrierApiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return response()->json(Carrier::orderBy('name')->paginate($request->get('per_page', 10)));
+        return response()->json(Carrier::orderBy('fantasy_name')->paginate($request->get('per_page', 10)));
     }
 
     public function show(Carrier $carrier): JsonResponse

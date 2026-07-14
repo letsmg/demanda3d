@@ -54,7 +54,7 @@ class ClientProfileController extends Controller
     {
         $client = $this->guardClient();
 
-        $orders = \App\Models\Order::with('product:id,name,slug')
+        $orders = \App\Models\Order::with('items')
             ->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->paginate(10);

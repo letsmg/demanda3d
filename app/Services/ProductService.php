@@ -178,10 +178,7 @@ class ProductService
 
         // --- Build query ---
         $query = Product::withoutGlobalScopes()
-            ->where('is_active', true)
-            ->whereHas('tenant', function ($q) {
-                $q->where('active', true);
-            })
+            ->availableForSale()
             ->with(['images', 'tenant.user', 'categories']);
 
         // Filtro de conteúdo adulto
@@ -218,6 +215,11 @@ class ProductService
 
         $results = $query->take(8)->get();
 
+        // Diagnóstico: se a vitrine está vazia, logar o motivo
+        if ($results->isEmpty()) {
+            $this->logEmptyStoreDiagnostics();
+        }
+
         // --- Store in cache for future searches ---
         if ($useCache && isset($cacheKey)) {
             Cache::put($cacheKey, $results, now()->addMinutes(10));
@@ -232,10 +234,7 @@ class ProductService
     private function buildActiveStoreQuery(array $filters = [], bool $canViewAdult = false)
     {
         $query = Product::withoutGlobalScopes()
-            ->where('is_active', true)
-            ->whereHas('tenant', function ($q) {
-                $q->where('active', true);
-            })
+            ->availableForSale()
             ->with(['images', 'tenant.user', 'categories']);
 
         if (! $canViewAdult) {
@@ -309,7 +308,7 @@ class ProductService
         $categorySlug = $filters['category'] ?? null;
 
         $query = Product::withoutGlobalScopes()
-            ->where('is_active', true)
+            ->availableForSale()
             ->with(['images', 'categories']);
 
         // Filtro de conteúdo adulto
@@ -344,6 +343,58 @@ class ProductService
         }
 
         return $query->get();
+    }
+
+    /**
+     * Executa diagnóstico quando a vitrine está vazia.
+     *
+     * Identifica o motivo real (regra de negócio) e registra em Log::warning
+     * para que o administrador possa diagnosticar via Grafana/Loki.
+     */
+    private function logEmptyStoreDiagnostics(): void
+    {
+        $totalProducts = \App\Models\Product::withoutGlobalScopes()->where('is_active', true)->count();
+        $tenants = \App\Models\Tenant::where('active', true)->with('user')->get();
+
+        foreach ($tenants as $tenant) {
+            $tenantProducts = \App\Models\Product::withoutGlobalScopes()
+                ->where('is_active', true)
+                ->where('tenant_id', $tenant->id)
+                ->count();
+
+            if ($tenantProducts === 0) {
+                continue; // Vendedor sem produtos — não é bloqueio, é ausência
+            }
+
+            // Verifica e-mail do vendedor
+            if (! $tenant->user?->email_verified_at) {
+                Log::warning('Vitrine vazia: Vendedor com e-mail pendente de verificação.', [
+                    'tenant_id' => $tenant->id,
+                    'tenant_name' => $tenant->fantasy_name,
+                    'user_id' => $tenant->user_id,
+                ]);
+                continue;
+            }
+
+            // Verifica transportadoras ativas vinculadas
+            $hasActiveCarriers = \App\Models\CarrierTenantAgreement::where('tenant_id', $tenant->id)
+                ->where('status', 'active')
+                ->whereHas('carrier', function ($q) {
+                    $q->where('is_active', true)
+                      ->whereHas('user', function ($uq) {
+                          $uq->whereNotNull('email_verified_at');
+                      });
+                })
+                ->exists();
+
+            if (! $hasActiveCarriers) {
+                Log::warning('Vitrine vazia: Vendedor não possui transportadora ativa com e-mail verificado.', [
+                    'tenant_id' => $tenant->id,
+                    'tenant_name' => $tenant->fantasy_name,
+                    'user_id' => $tenant->user_id,
+                ]);
+            }
+        }
     }
 
     /**

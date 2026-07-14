@@ -34,7 +34,7 @@ class FreightContractController extends Controller
     public function create(): Response
     {
         return Inertia::render('FreightContracts/Create', [
-            'carriers' => Carrier::orderBy('name')->get(),
+            'carriers' => Carrier::orderBy('fantasy_name')->get(),
         ]);
     }
 
@@ -50,7 +50,7 @@ class FreightContractController extends Controller
     {
         return Inertia::render('FreightContracts/Edit', [
             'contract' => $contract,
-            'carriers' => Carrier::orderBy('name')->get(),
+            'carriers' => Carrier::orderBy('fantasy_name')->get(),
         ]);
     }
 

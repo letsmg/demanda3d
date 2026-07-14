@@ -80,12 +80,15 @@ function statusColor(status: string): string {
                         </div>
 
                         <div class="ml-8 space-y-1 text-sm">
-                            <p v-if="order.product" class="text-amber-800">
-                                <span class="text-muted-foreground">Produto:</span>
-                                <Link :href="`/store/${order.product.slug}`" class="font-medium text-amber-700 hover:underline">
-                                    {{ order.product.name }}
-                                </Link>
-                            </p>
+                            <div v-if="order.items && order.items.length > 0" class="text-amber-800">
+                                <span class="text-muted-foreground">Produtos:</span>
+                                <template v-for="item in order.items" :key="item.id">
+                                    <Link :href="`/store/${item.snapshot_product_name?.toLowerCase().replace(/ /g, '-')}`" class="font-medium text-amber-700 hover:underline ml-1">
+                                        {{ item.snapshot_product_name }}
+                                    </Link>
+                                    <span class="text-muted-foreground text-xs">x{{ item.quantity }}</span>
+                                </template>
+                            </div>
                             <p class="text-muted-foreground">
                                 Data: {{ new Date(order.order_date).toLocaleDateString('pt-BR') }}
                             </p>

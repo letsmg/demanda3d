@@ -40,7 +40,7 @@ class OrderController extends Controller
 
     public function create(): Response
     {
-        $clients = Client::orderBy('name')->get(['id', 'name', 'doc']);
+        $clients = Client::orderBy('display_name')->get(['id', 'name', 'doc']);
 
         return Inertia::render('Orders/Create', [
             'clients' => $clients,
@@ -58,7 +58,7 @@ class OrderController extends Controller
     public function edit(Order $order): Response
     {
         $order->load('client');
-        $clients = Client::orderBy('name')->get(['id', 'name', 'doc']);
+        $clients = Client::orderBy('display_name')->get(['id', 'name', 'doc']);
 
         return Inertia::render('Orders/Edit', [
             'order' => $order,

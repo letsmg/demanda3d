@@ -45,6 +45,6 @@ class LoginClientController extends Controller
         Auth::guard('clients')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/store');
+        return redirect('/login_cli');
     }
 }

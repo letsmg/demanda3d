@@ -39,15 +39,12 @@ class CheckoutController extends Controller
 
         // Busca transportadoras vinculadas aos vendedores dos produtos no carrinho
         $productTenantIds = $cartItems->pluck('product.tenant_id')->unique()->filter();
-        $carriers = \App\Models\Carrier::whereIn('id', function ($query) use ($productTenantIds) {
-            $query->select('carrier_id')
-                ->from('vendor_carrier')
-                ->whereIn('user_id', function ($sub) use ($productTenantIds) {
-                    $sub->select('id')->from('users')
-                        ->whereIn('id', \App\Models\Tenant::whereIn('id', $productTenantIds)->pluck('user_id'));
-                })
-                ->where('status', 'approved');
-        })->where('is_active', true)->where('is_blocked', false)->get(['id', 'name']);
+        $carriers = \App\Models\Carrier::where('is_active', true)
+            ->whereHas('tenantAgreements', function ($q) use ($productTenantIds) {
+                $q->whereIn('tenant_id', $productTenantIds)
+                  ->where('status', \App\Models\CarrierTenantAgreement::STATUS_ACTIVE);
+            })
+            ->get(['id', 'fantasy_name']);
 
         return Inertia::render('Client/Checkout', [
             'client'    => $client,

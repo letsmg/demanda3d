@@ -41,6 +41,8 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ClientSeeder::class,
             CarrierSeeder::class,
+            CarrierTenantAgreementSeeder::class,
+            BankDetailSeeder::class,
             ProductSeeder::class,
             SecurityLogSeeder::class,
             InputSeeder::class,
