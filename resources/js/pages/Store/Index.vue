@@ -50,8 +50,8 @@ const props = defineProps<{
         search?: string;
         min_price?: number;
         max_price?: number;
-        sort_by?: string;
-        sort_order?: string;
+        sort?: string;
+        sort_dir?: string;
         category?: string;
     };
 }>();
@@ -103,8 +103,8 @@ async function loadMoreProducts(): Promise<void> {
 const searchTerm = ref(props.filters.search || '');
 const priceMin = ref(props.filters.min_price?.toString() || '');
 const priceMax = ref(props.filters.max_price?.toString() || '');
-const sortBy = ref(props.filters.sort_by || 'name');
-const sortOrder = ref(props.filters.sort_order || 'asc');
+const sortBy = ref(props.filters.sort || 'name');
+const sortOrder = ref(props.filters.sort_dir || 'asc');
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -299,7 +299,6 @@ function applyStoreFilters(): void {
         preserveState: true,
         preserveScroll: true,
         replace: true,
-        only: ['products', 'categories', 'filters'],
     });
 }
 
@@ -309,6 +308,7 @@ function clearStoreFilters(): void {
     priceMax.value = '';
     sortBy.value = 'name';
     sortOrder.value = 'asc';
+    activeCategory.value = '';
     applyStoreFilters();
 }
 

@@ -17,26 +17,24 @@ class TenantScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        /** @var \App\Models\User|null $user */
         $user = auth()->user();
 
         if (! $user) {
             return;
         }
 
+        // Se o usuário autenticado é um Client (guard clients),
+        // não aplicar TenantScope — cliente acessa apenas seus próprios dados
+        if ($user instanceof \App\Models\Client) {
+            return;
+        }
+
         // Staff (sellers + admin): filter by their own tenant
-        if ($user->isStaff()) {
+        if ($user instanceof \App\Models\User && $user->isStaff()) {
             $tenantId = $user->tenant?->id;
             if ($tenantId) {
                 $builder->where('tenant_id', $tenantId);
             }
-            return;
-        }
-
-        // Customer: filter by their own tenant
-        $tenantId = $user->tenant?->id;
-        if ($tenantId) {
-            $builder->where('tenant_id', $tenantId);
         }
     }
 }

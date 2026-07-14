@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -16,21 +17,27 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('carriers')->user();
-        $clientUser = \Illuminate\Support\Facades\Auth::guard('clients')->user();
+        // Staff user (guard: web)
+        $staffUser = Auth::guard('web')->user();
+        // Carrier user (guard: carriers)
+        $carrierUser = Auth::guard('carriers')->user();
+        // Cliente autenticado (guard: clients)
+        $clientUser = Auth::guard('clients')->user();
 
         $cartCount = 0;
         if ($clientUser) {
             $cartCount = \App\Models\CartItem::where('client_id', $clientUser->id)->sum('quantity');
         }
 
+        // Detecta qual é o usuário ativo principal
+        $activeUser = $staffUser ?? $carrierUser;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $user ? array_merge($user->toArray(), [
-                    'name' => $user->display_name ?? $user->getDisplayName(),
-                ]) : null,
+                'user' => $activeUser ? $activeUser->toArray() : null,
+                'role' => $staffUser ? 'staff' : ($carrierUser ? 'carrier' : null),
             ],
             'auth_client' => [
                 'user' => $clientUser ? $clientUser->toArray() : null,

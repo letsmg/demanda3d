@@ -150,7 +150,7 @@ services:
   # Loki + Promtail — Pipeline de Logs Local
   # =============================================
   demanda-loki-dev:
-    image: grafana/loki:3.6-alpine
+    image: grafana/loki:3.3
     container_name: demanda-loki-dev
     restart: unless-stopped
     user: "0:0"
@@ -174,7 +174,7 @@ services:
       - demanda-net-dev
 
   demanda-promtail-dev:
-    image: grafana/promtail:3.6-alpine
+    image: grafana/promtail:3.3
     container_name: demanda-promtail-dev
     restart: unless-stopped
     profiles:
@@ -199,7 +199,7 @@ services:
   # Em produção (Oracle Free Tier), GRAFANA_ENABLED=false.
   # =============================================
   demanda-grafana-dev:
-    image: grafana/grafana:12.2-alpine
+    image: grafana/grafana:11.5
     container_name: demanda-grafana-dev
     restart: unless-stopped
     profiles:

@@ -22,26 +22,33 @@ class VerifyUserExists
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Verifica guard web (staff)
-        $user = Auth::user();
+        // Detecta qual guard está ativo nesta requisição
+        $guards = ['web', 'clients', 'carriers'];
 
-        if ($user && !\App\Models\User::where('id', $user->id)->exists()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        foreach ($guards as $guard) {
+            $user = Auth::guard($guard)->user();
 
-            return redirect('/login')->with('error', 'Sua sessão expirou. Faça login novamente.');
-        }
+            if (! $user) {
+                continue;
+            }
 
-        // Verifica guard clients (clientes)
-        $clientUser = Auth::guard('clients')->user();
+            $modelClass = $guard === 'clients' ? \App\Models\Client::class : \App\Models\User::class;
 
-        if ($clientUser && !\App\Models\Client::where('id', $clientUser->id)->exists()) {
-            Auth::guard('clients')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            if (! $modelClass::where('id', $user->id)->exists()) {
+                Auth::guard($guard)->logout();
 
-            return redirect('/login_cli')->with('error', 'Sua sessão expirou. Faça login novamente.');
+                $redirects = [
+                    'web'      => '/login',
+                    'clients'  => '/login_cli',
+                    'carriers' => '/login_carrier',
+                ];
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect($redirects[$guard] ?? '/login')
+                    ->with('error', 'Sua sessão expirou. Faça login novamente.');
+            }
         }
 
         return $next($request);

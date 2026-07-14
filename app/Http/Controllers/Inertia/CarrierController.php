@@ -20,7 +20,7 @@ class CarrierController extends Controller
 
     public function index(Request $request): Response
     {
-        $carriers = Carrier::orderBy('name')
+        $carriers = Carrier::orderBy('fantasy_name')
             ->paginate($request->get('per_page', 10))
             ->withQueryString();
 
