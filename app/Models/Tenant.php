@@ -38,9 +38,6 @@ class Tenant extends Model
 
     protected $appends = [
         'company_name',
-        'document',
-        'phone',
-        'address',
         'logo_url',
         'banner_url',
     ];
