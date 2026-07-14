@@ -121,7 +121,7 @@ class Carrier extends Model
             ->exists();
     }
 
-    public function coversCep(string $cep): bool
+    public function doesCoverCep(string $cep): bool
     {
         return $this->coverageRanges()
             ->where('cep_start', '<=', $cep)

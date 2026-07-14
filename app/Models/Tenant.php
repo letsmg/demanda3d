@@ -21,10 +21,9 @@ class Tenant extends Model
         'fantasy_name',
         'fantasy_slug',
         'document_type',
-        'document_encrypted',
-        'document_hash',
-        'phone_encrypted',
-        'address_encrypted',
+        'document',
+        'phone',
+        'address',
         'number',
         'district',
         'city',
@@ -39,9 +38,6 @@ class Tenant extends Model
 
     protected $appends = [
         'company_name',
-        'document',
-        'phone',
-        'address',
         'logo_url',
         'banner_url',
     ];
@@ -58,14 +54,21 @@ class Tenant extends Model
     protected static function booted(): void
     {
         static::creating(function (Tenant $tenant) {
-            if (empty($tenant->fantasy_slug) && ! empty($tenant->fantasy_name)) {
-                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name);
+            if (empty($tenant->fantasy_slug)) {
+                $source = ! empty($tenant->fantasy_name)
+                    ? $tenant->fantasy_name
+                    : 'tenant-' . uniqid();
+
+                $tenant->fantasy_slug = static::generateUniqueFantasySlug($source);
             }
         });
 
         static::updating(function (Tenant $tenant) {
             if ($tenant->isDirty('fantasy_name') && ! $tenant->isDirty('fantasy_slug')) {
-                $tenant->fantasy_slug = static::generateUniqueFantasySlug($tenant->fantasy_name, $tenant->id);
+                $tenant->fantasy_slug = static::generateUniqueFantasySlug(
+                    ! empty($tenant->fantasy_name) ? $tenant->fantasy_name : 'tenant-' . uniqid(),
+                    $tenant->id
+                );
             }
         });
     }
@@ -96,21 +99,6 @@ class Tenant extends Model
     public function getCompanyNameAttribute(): ?string
     {
         return EncryptionService::decrypt($this->company_name_encrypted);
-    }
-
-    public function getDocumentAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->document_encrypted);
-    }
-
-    public function getPhoneAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->phone_encrypted);
-    }
-
-    public function getAddressAttribute(): ?string
-    {
-        return EncryptionService::decrypt($this->address_encrypted);
     }
 
     public function getLogoUrlAttribute(): ?string

@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\CheckoutService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seller = User::factory()->seller1()->create();
@@ -33,17 +32,23 @@ beforeEach(function () {
     ]);
 
     $this->client = Client::create([
-        'tenant_id'    => $this->tenant->id,
-        'display_name' => 'Cliente Teste',
-        'first_name'   => 'Cliente',
-        'last_name'    => 'Teste',
-        'email'        => 'cliente@test.com',
-        'address'      => 'Rua Teste',
-        'number'       => '100',
-        'district'     => 'Centro',
-        'city'         => 'São Paulo',
-        'state'        => 'SP',
-        'zipcode'      => '01000-000',
+        'tenant_id'           => $this->tenant->id,
+        'display_name'        => 'Cliente Teste',
+        'first_name_encrypted' => makeEncr('Cliente')['encrypted'],
+        'first_name_hash'      => makeEncr('Cliente')['hash'],
+        'last_name_encrypted'  => makeEncr('Teste')['encrypted'],
+        'last_name_hash'       => makeEncr('Teste')['hash'],
+        'email'               => 'cliente@test.com',
+        'address_encrypted'   => makeEncr('Rua Teste')['encrypted'],
+        'address_hash'        => makeEncr('Rua Teste')['hash'],
+        'number_encrypted'    => makeEncr('100')['encrypted'],
+        'number_hash'         => makeEncr('100')['hash'],
+        'city_encrypted'      => makeEncr('São Paulo')['encrypted'],
+        'city_hash'           => makeEncr('São Paulo')['hash'],
+        'state_encrypted'     => makeEncr('SP')['encrypted'],
+        'state_hash'          => makeEncr('SP')['hash'],
+        'zipcode_encrypted'   => makeEncr('01000-000')['encrypted'],
+        'zipcode_hash'        => makeEncr('01000-000')['hash'],
     ]);
 
     $this->service = app(CheckoutService::class);
@@ -143,7 +148,12 @@ test('order item survives product soft delete', function () {
     // Soft delete do produto
     $this->product->delete();
 
-    $item = OrderItem::with('product')->find($order->items->first()->id);
+    $item = OrderItem::find($order->items->first()->id);
     expect($item->snapshot_product_name)->toBe('Produto Teste');
-    expect($item->product)->toBeNull(); // FK nullable + nullOnDelete
+
+    // Soft delete (UPDATE em deleted_at) não aciona ON DELETE SET NULL da FK.
+    // O registro do produto ainda existe, mas está marcado como deletado.
+    // O snapshot imutável no order_item garante que o histórico de pedido permanece correto.
+    expect($this->product->fresh())->not->toBeNull();
+    expect($this->product->fresh()->trashed())->toBeTrue();
 });

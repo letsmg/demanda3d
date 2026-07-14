@@ -11,7 +11,6 @@ use function Pest\Laravel\get;
 use function Pest\Laravel\put;
 use function Pest\Laravel\withSession;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('security page is displayed', function () {
     if (!Features::enabled(Features::twoFactorAuthentication())) {

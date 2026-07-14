@@ -6,7 +6,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('confirm password screen can be rendered', function () {
     $user = User::factory()->create();

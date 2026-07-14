@@ -90,28 +90,24 @@ class UserSeeder extends Seeder
 
             if ($userData['create_tenant']) {
                 $companyName = $userData['tenant_company'];
-                $docData     = EncryptionService::encryptWithHash('00.000.000/0001-00');
                 $legalData   = EncryptionService::encryptWithHash($companyName);
-                $phoneData   = EncryptionService::encryptWithHash('(11) 99999-0000');
-                $addressData = EncryptionService::encryptWithHash('Av. Principal, 100, Centro');
 
                 $tenant = Tenant::create([
-                    'user_id'              => $user->id,
+                    'user_id'                => $user->id,
                     'company_name_encrypted' => $legalData['encrypted'],
                     'company_name_hash'      => $legalData['hash'],
-                    'fantasy_name'         => $companyName,
-                    'fantasy_slug'         => \App\Models\Tenant::generateUniqueFantasySlug($companyName),
-                    'document_type'        => 'cnpj',
-                    'document_encrypted'   => $docData['encrypted'],
-                    'document_hash'        => $docData['hash'],
-                    'phone_encrypted'      => $phoneData['encrypted'],
-                    'address_encrypted'    => $addressData['encrypted'],
-                    'number'               => '100',
-                    'district'             => 'Centro',
-                    'city'                 => 'São Paulo',
-                    'state'                => 'SP',
-                    'zipcode'              => '01000-000',
-                    'active'               => true,
+                    'fantasy_name'           => $companyName,
+                    'fantasy_slug'           => \App\Models\Tenant::generateUniqueFantasySlug($companyName),
+                    'document_type'          => 'cnpj',
+                    'document'               => '00.000.000/0001-00',
+                    'phone'                  => '(11) 99999-0000',
+                    'address'                => 'Av. Principal, 100, Centro',
+                    'number'                 => '100',
+                    'district'               => 'Centro',
+                    'city'                   => 'São Paulo',
+                    'state'                  => 'SP',
+                    'zipcode'                => '01000-000',
+                    'active'                 => true,
                 ]);
 
                 $this->command->info("✓ Tenant criado para: {$userData['display_name']} (slug: {$tenant->fantasy_slug})");

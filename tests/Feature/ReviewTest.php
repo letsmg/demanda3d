@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Queue;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     Queue::fake();
@@ -23,30 +22,14 @@ beforeEach(function () {
     $this->tenant = $this->user->tenant()->create([
         'company_name_encrypted' => $makeEncr('Rated Co')['encrypted'],
         'company_name_hash' => $makeEncr('Rated Co')['hash'],
-        'document_encrypted' => $makeEncr('00.000.000/0001-00')['encrypted'],
-        'document_hash' => $makeEncr('00.000.000/0001-00')['hash'],
-        'phone_encrypted' => $makeEncr('11999999999')['encrypted'],
-        'address_encrypted' => $makeEncr('Rua')['encrypted'],
-        'number_encrypted' => $makeEncr('1')['encrypted'],
-        'number_hash' => $makeEncr('1')['hash'],
-        'city_encrypted' => $makeEncr('SP')['encrypted'],
-        'city_hash' => $makeEncr('SP')['hash'],
         'state' => 'SP', 'zipcode' => '00000-000',
         'active' => true,
     ]);
     $this->client = Client::factory()->create(['tenant_id' => $this->tenant->id]);
 
-    // Create product needed for order FK
-    $product = \App\Models\Product::factory()->create([
-        'tenant_id' => $this->tenant->id,
-        'name' => 'Product for Review Test',
-        'sale_price' => 50.00,
-    ]);
-
     $this->order = Order::factory()->create([
         'tenant_id' => $this->tenant->id,
         'client_id' => $this->client->id,
-        'product_id' => $product->id,
         'status' => 'delivered',
     ]);
 });

@@ -7,7 +7,6 @@ use App\Services\EncryptionService;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\postJson;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $makeEncr = fn ($v) => EncryptionService::encryptWithHash($v);

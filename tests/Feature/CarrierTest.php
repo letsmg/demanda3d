@@ -7,7 +7,6 @@ use App\Models\CarrierTenantAgreement;
 use App\Models\User;
 use App\Services\EncryptionService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seller = User::factory()->seller1()->create();
@@ -68,9 +67,9 @@ test('carrier has coverage ranges', function () {
     ]);
 
     expect($carrier->coverageRanges)->toHaveCount(2);
-    expect($carrier->coversCep('05000000'))->toBeTrue();
-    expect($carrier->coversCep('15000000'))->toBeTrue();
-    expect($carrier->coversCep('25000000'))->toBeFalse();
+    expect($carrier->doesCoverCep('05000000'))->toBeTrue();
+    expect($carrier->doesCoverCep('15000000'))->toBeTrue();
+    expect($carrier->doesCoverCep('25000000'))->toBeFalse();
 });
 
 test('carrier scope coversCep filters correctly', function () {

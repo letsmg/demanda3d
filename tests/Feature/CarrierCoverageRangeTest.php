@@ -3,7 +3,6 @@
 use App\Models\Carrier;
 use App\Models\CarrierCoverageRange;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('coverage range covers cep within boundaries', function () {
     $range = new CarrierCoverageRange([
@@ -31,10 +30,10 @@ test('coverage range does not cover cep outside boundaries', function () {
 
     $carrier->refresh();
 
-    expect($carrier->coversCep('05000000'))->toBeTrue();
-    expect($carrier->coversCep('15000000'))->toBeFalse();
-    expect($carrier->coversCep('01000000'))->toBeTrue(); // Limite inferior
-    expect($carrier->coversCep('09999999'))->toBeTrue(); // Limite superior
+    expect($carrier->doesCoverCep('05000000'))->toBeTrue();
+    expect($carrier->doesCoverCep('15000000'))->toBeFalse();
+    expect($carrier->doesCoverCep('01000000'))->toBeTrue(); // Limite inferior
+    expect($carrier->doesCoverCep('09999999'))->toBeTrue(); // Limite superior
 });
 
 test('coverage range can be created for carrier', function () {

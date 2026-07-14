@@ -10,7 +10,6 @@ use function Pest\Laravel\patch;
 use function Pest\Laravel\delete;
 use function Pest\Laravel\get;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();

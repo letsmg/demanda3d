@@ -9,7 +9,6 @@ use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\deleteJson;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seller1 = User::factory()->seller1()->create();

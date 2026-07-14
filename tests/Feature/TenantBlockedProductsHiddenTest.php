@@ -7,9 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VendorCarrier;
 use App\Services\ProductService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 /**
  * Testa que produtos de tenant bloqueado (active = false) NÃO aparecem na store pública,
