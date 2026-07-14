@@ -373,7 +373,9 @@ jobs:
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
-              php artisan storage:link --force
+              
+              rm -rf public/storage
+              ln -sfn "$SHARED/storage/app/public" public/storage
               
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
