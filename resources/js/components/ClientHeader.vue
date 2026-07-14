@@ -1,28 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { User, MapPin, LogOut, ShoppingBag } from '@lucide/vue';
-import AppLogo from '@/components/AppLogo.vue';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cartCount, setCartCount } from '@/stores/cartStore';
+import { ShoppingBag, Menu, X } from '@lucide/vue';
+import { setCartCount } from '@/stores/cartStore';
 
 const props = defineProps<{
     client: any;
 }>();
 
+const mobileMenuOpen = ref(false);
+
 function getCsrfToken(): string {
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? (meta as HTMLMetaElement).content : '';
 }
+
+const cartCount = ref(0);
 
 async function fetchCartCount() {
     try {
@@ -32,6 +25,7 @@ async function fetchCartCount() {
         });
         if (res.ok) {
             const data = await res.json();
+            cartCount.value = data.count || 0;
             setCartCount(data.count || 0);
         }
     } catch {
@@ -44,9 +38,7 @@ onMounted(() => {
 });
 
 const initials = computed(() => {
-    if (!props.client?.display_name) {
-        return '?';
-    }
+    if (!props.client?.display_name) return '?';
     const parts = props.client.display_name.split(' ');
     if (parts.length >= 2) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -60,102 +52,87 @@ function logout() {
 </script>
 
 <template>
-    <header
-        class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md"
-    >
+    <header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
-                <Link href="/store" class="flex items-center gap-2">
-                    <AppLogo class="brightness-0 invert" />
+                <!-- Logo -->
+                <Link href="/store" class="flex items-center gap-2 text-xl font-bold text-white">
+                    🏪 Demanda3D
                 </Link>
 
-                <nav class="flex items-center gap-3">
-                    <!-- Cart icon with badge -->
-                    <Link
-                        href="/cart"
-                        class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 transition hover:bg-amber-800 hover:text-amber-100"
-                    >
+                <!-- Desktop nav -->
+                <nav class="hidden md:flex items-center gap-4">
+                    <Link href="/store" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                        Loja
+                    </Link>
+                    <Link href="/perfil" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                        Meu Perfil
+                    </Link>
+                    <Link href="/perfil/enderecos" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                        Meus Endereços
+                    </Link>
+                    <Link href="/perfil/pedidos" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                        Meus Pedidos
+                    </Link>
+
+                    <!-- Cart -->
+                    <Link href="/cart" class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 hover:bg-amber-800 hover:text-amber-100 transition">
                         <ShoppingBag class="h-5 w-5" />
-                        <span
-                            v-if="cartCount > 0"
-                            class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow"
-                        >
+                        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow">
                             {{ cartCount > 99 ? '99+' : cartCount }}
                         </span>
                     </Link>
 
-                    <!-- User menu -->
-                    <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                            <Button
-                                variant="ghost"
-                                class="relative h-9 gap-2 px-2 text-amber-100 hover:bg-amber-800 hover:text-amber-50"
-                            >
-                                <Avatar class="h-8 w-8">
-                                    <AvatarFallback
-                                        class="bg-amber-600 text-xs font-medium text-white"
-                                    >
-                                        {{ initials }}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span
-                                    class="hidden max-w-[150px] truncate text-sm font-medium sm:inline-block"
-                                >
-                                    {{ client.display_name || 'Cliente' }}
-                                </span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            class="w-56 border-amber-200 bg-white shadow-lg"
-                            align="end"
-                        >
-                            <DropdownMenuLabel class="font-normal">
-                                <div class="flex flex-col space-y-1">
-                                    <p
-                                        class="text-sm leading-none font-medium text-amber-900"
-                                    >
-                                        {{ client.display_name }}
-                                    </p>
-                                    <p
-                                        class="text-xs leading-none text-amber-500"
-                                    >
-                                        {{ client.email }}
-                                    </p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator class="bg-amber-100" />
-                            <DropdownMenuItem
-                                as-child
-                                class="text-amber-800 focus:bg-amber-50 focus:text-amber-900"
-                            >
-                                <Link href="/perfil" class="cursor-pointer">
-                                    <User class="mr-2 h-4 w-4" />
-                                    <span>Meu Perfil</span>
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                as-child
-                                class="text-amber-800 focus:bg-amber-50 focus:text-amber-900"
-                            >
-                                <Link
-                                    href="/perfil/enderecos"
-                                    class="cursor-pointer"
-                                >
-                                    <MapPin class="mr-2 h-4 w-4" />
-                                    <span>Meus Endereços</span>
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator class="bg-amber-100" />
-                            <DropdownMenuItem
-                                @click="logout"
-                                class="cursor-pointer text-rose-600 focus:bg-rose-50 focus:text-rose-700"
-                            >
-                                <LogOut class="mr-2 h-4 w-4" />
-                                <span>Logout</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <!-- User avatar + logout -->
+                    <div class="flex items-center gap-2 ml-4 pl-4 border-l border-amber-700">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white">
+                            {{ initials }}
+                        </div>
+                        <span class="text-sm text-amber-200 max-w-[120px] truncate">{{ client.display_name || 'Cliente' }}</span>
+                        <button @click="logout" class="text-xs text-amber-300 hover:text-amber-100 ml-2 transition">
+                            Sair
+                        </button>
+                    </div>
                 </nav>
+
+                <!-- Mobile hamburger -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <Link href="/cart" class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 hover:bg-amber-800 transition">
+                        <ShoppingBag class="h-5 w-5" />
+                        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow">
+                            {{ cartCount > 99 ? '99+' : cartCount }}
+                        </span>
+                    </Link>
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 text-amber-200 hover:bg-amber-800 rounded-md transition">
+                        <Menu v-if="!mobileMenuOpen" class="h-5 w-5" />
+                        <X v-else class="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div v-if="mobileMenuOpen" class="md:hidden pb-4 space-y-2">
+                <Link href="/store" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                    Loja
+                </Link>
+                <Link href="/perfil" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                    Meu Perfil
+                </Link>
+                <Link href="/perfil/enderecos" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                    Meus Endereços
+                </Link>
+                <Link href="/perfil/pedidos" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                    Meus Pedidos
+                </Link>
+                <div class="flex items-center gap-2 px-3 py-2">
+                    <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white">
+                        {{ initials }}
+                    </div>
+                    <span class="text-sm text-amber-200">{{ client.display_name || 'Cliente' }}</span>
+                </div>
+                <button @click="logout" class="block w-full text-left px-3 py-2 text-sm text-amber-300 hover:bg-amber-800 rounded-md transition">
+                    Sair
+                </button>
             </div>
         </div>
     </header>

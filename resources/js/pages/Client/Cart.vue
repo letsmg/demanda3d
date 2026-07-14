@@ -173,10 +173,10 @@ function formatPrice(value: string | number): string {
                     Your cart is empty
                 </h2>
                 <p class="mt-1 text-sm text-amber-500">
-                    Add products from the store to continue.
+                    Adicione produtos da loja para continuar.
                 </p>
                 <Link href="/store">
-                    <Button class="mt-6">Go to Store</Button>
+                    <Button class="mt-6">Ir para a Loja</Button>
                 </Link>
             </div>
 

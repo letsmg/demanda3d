@@ -150,7 +150,7 @@ services:
   # Loki + Promtail — Pipeline de Logs Local
   # =============================================
   demanda-loki-dev:
-    image: grafana/loki:3.3
+    image: grafana/loki:latest
     container_name: demanda-loki-dev
     restart: unless-stopped
     user: "0:0"
@@ -165,16 +165,16 @@ services:
       - demanda-loki-dev:/loki
       - ./docker/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "wget --no-check-certificate -q --spider http://localhost:3100/ready 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
       retries: 5
       start_period: 30s
     networks:
       - demanda-net-dev
 
   demanda-promtail-dev:
-    image: grafana/promtail:3.3
+    image: grafana/promtail:latest
     container_name: demanda-promtail-dev
     restart: unless-stopped
     profiles:
@@ -188,7 +188,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       demanda-loki-dev:
-        condition: service_healthy
+        condition: service_started
     networks:
       - demanda-net-dev
 
@@ -199,7 +199,7 @@ services:
   # Em produção (Oracle Free Tier), GRAFANA_ENABLED=false.
   # =============================================
   demanda-grafana-dev:
-    image: grafana/grafana:11.5
+    image: grafana/grafana:latest
     container_name: demanda-grafana-dev
     restart: unless-stopped
     profiles:
