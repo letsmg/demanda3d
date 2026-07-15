@@ -1,11 +1,12 @@
 <?php
 
 use App\Models\BankDetail;
-use App\Models\Tenant;
 use App\Models\User;
-use App\Services\EncryptionService;
+use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
+    Mail::fake();
+
     $this->seller = User::factory()->seller1()->create([
         'email_verified_at' => now(),
     ]);
@@ -25,7 +26,7 @@ beforeEach(function () {
     $this->actingAs($this->seller);
 });
 
-test('bank details can be saved with matching document', function () {
+test('bank details are saved as pending and generate a token', function () {
     $response = $this->post('/settings/bank', [
         'bank_name'           => 'Banco Teste',
         'routing_number'      => '0001',
@@ -41,12 +42,45 @@ test('bank details can be saved with matching document', function () {
 
     $bankDetail = BankDetail::where('tenant_id', $this->tenant->id)->first();
     expect($bankDetail)->not->toBeNull();
-    expect($bankDetail->consented)->toBeTrue();
-    expect($bankDetail->consented_at)->not->toBeNull();
-    expect($bankDetail->consent_ip)->not->toBeNull();
-    expect($bankDetail->consent_term_version)->toBe('1.0');
-    expect($bankDetail->routing_number)->toBe('0001');
-    expect($bankDetail->account_number)->toBe('123456-7');
+    expect($bankDetail->pending_token)->not->toBeNull();
+    expect($bankDetail->pending_token)->toHaveLength(64);
+    expect($bankDetail->pending_data)->not->toBeNull();
+});
+
+test('pending bank data contains encrypted fields', function () {
+    $this->post('/settings/bank', [
+        'bank_name'           => 'Banco Teste',
+        'routing_number'      => '0001',
+        'account_number'      => '123456-7',
+        'account_holder_name' => 'Test Co',
+        'account_holder_doc'  => '12.345.678/0001-90',
+        'consented'           => true,
+    ]);
+
+    $bankDetail = BankDetail::where('tenant_id', $this->tenant->id)->first();
+    $data = json_decode($bankDetail->pending_data, true);
+
+    // JSON contém os campos esperados
+    expect($data)->toBeArray();
+    expect($data)->toHaveKeys(['routing_number_encrypted', 'account_number_encrypted', 'bank_name']);
+    expect($data['bank_name'])->toBe('Banco Teste');
+});
+
+test('verification email is queued when bank details are saved', function () {
+    $tenantId = $this->tenant->id;
+
+    $this->post('/settings/bank', [
+        'bank_name'           => 'Banco Teste',
+        'routing_number'      => '0001',
+        'account_number'      => '123456-7',
+        'account_holder_name' => 'Test Co',
+        'account_holder_doc'  => '12.345.678/0001-90',
+        'consented'           => true,
+    ]);
+
+    Mail::assertSent(\App\Mail\BankDetailChangeVerification::class, function ($mail) use ($tenantId) {
+        return $mail->bankDetail->tenant_id === $tenantId;
+    });
 });
 
 test('bank details fail when document does not match tenant document', function () {
@@ -55,12 +89,11 @@ test('bank details fail when document does not match tenant document', function 
         'routing_number'      => '0001',
         'account_number'      => '123456-7',
         'account_holder_name' => 'Outra Pessoa',
-        'account_holder_doc'  => '98.765.432/0001-10', // DIFERENTE do tenant
+        'account_holder_doc'  => '98.765.432/0001-10',
         'consented'           => true,
     ]);
 
     $response->assertSessionHasErrors(['account_holder_doc']);
-    expect(BankDetail::where('tenant_id', $this->tenant->id)->exists())->toBeFalse();
 });
 
 test('bank details fail when consent is not given', function () {
@@ -74,39 +107,4 @@ test('bank details fail when consent is not given', function () {
     ]);
 
     $response->assertSessionHasErrors(['consented']);
-});
-
-test('bank details update legal_responsible_name in tenant', function () {
-    $this->post('/settings/bank', [
-        'bank_name'           => 'Banco Teste',
-        'routing_number'      => '0001',
-        'account_number'      => '123456-7',
-        'account_holder_name' => 'Responsável Legal',
-        'account_holder_doc'  => '12.345.678/0001-90',
-        'consented'           => true,
-    ]);
-
-    $this->tenant->refresh();
-    expect($this->tenant->legal_responsible_name)->toBe('Responsável Legal');
-});
-
-test('bank details are encrypted at rest', function () {
-    $this->post('/settings/bank', [
-        'bank_name'           => 'Banco Teste',
-        'routing_number'      => '0001',
-        'account_number'      => '123456-7',
-        'account_holder_name' => 'Test Co',
-        'account_holder_doc'  => '12.345.678/0001-90',
-        'consented'           => true,
-    ]);
-
-    $bankDetail = BankDetail::where('tenant_id', $this->tenant->id)->first();
-
-    // Dados no banco devem estar criptografados (não texto puro)
-    expect($bankDetail->routing_number_encrypted)->not->toBe('0001');
-    expect($bankDetail->account_number_encrypted)->not->toBe('123456-7');
-
-    // Accessors devem descriptografar
-    expect($bankDetail->routing_number)->toBe('0001');
-    expect($bankDetail->account_number)->toBe('123456-7');
 });

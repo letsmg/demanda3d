@@ -2,6 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { Toaster } from '@/components/ui/sonner';
+import ConsentBanner from '@/components/ConsentBanner.vue';
 import UnloggedFooter from '@/components/UnloggedFooter.vue';
 import UnloggedHeader from '@/components/UnloggedHeader.vue';
 import ClientHeader from '@/components/ClientHeader.vue';
@@ -18,6 +19,7 @@ const authClient = computed(() => (page.props as any).auth_client?.user);
             <slot />
         </main>
         <UnloggedFooter />
+        <ConsentBanner />
         <Toaster />
     </div>
 </template>

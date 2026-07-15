@@ -36,7 +36,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $activeUser ? $activeUser->toArray() : null,
+                'user' => $activeUser ? array_merge($activeUser->toArray(), [
+                    'name'   => $activeUser->display_name ?? $activeUser->getDisplayName(),
+                    'avatar' => $activeUser->avatar ?? null,
+                ]) : null,
                 'role' => $staffUser ? 'staff' : ($carrierUser ? 'carrier' : null),
             ],
             'auth_client' => [

@@ -60,6 +60,12 @@ Route::post('/legal/accept', [LegalConsentController::class, 'accept'])->name('l
 Route::post('/legal/decline', [LegalConsentController::class, 'decline'])->name('legal.decline');
 Route::post('/legal/accept-both', [LegalConsentController::class, 'acceptBoth'])->name('legal.acceptBoth');
 
+// Consent management (authenticated users)
+Route::middleware(['auth', 'auth:clients'])->group(function () {
+    Route::post('/consent/accept', [\App\Http\Controllers\ConsentController::class, 'accept'])->name('consent.accept');
+    Route::post('/consent/dismiss', [\App\Http\Controllers\ConsentController::class, 'dismiss'])->name('consent.dismiss');
+});
+
 // ─────────────────────────────────────────────────
 // Client auth (customers)
 // ─────────────────────────────────────────────────

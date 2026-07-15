@@ -45,6 +45,7 @@ use Illuminate\Notifications\Notifiable;
     'contact1_hash',
     'contact2_encrypted',
     'contact2_hash',
+    'is_profile_complete',
 ])]
 class Client extends Authenticatable
 {

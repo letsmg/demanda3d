@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminOnly;
 use App\Http\Middleware\CheckAccessLevel;
 use App\Http\Middleware\CheckAgeRequirement;
+use App\Http\Middleware\CheckLegalConsent;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\StaffOnly;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            CheckLegalConsent::class,
         ]);
 
         $middleware->alias([

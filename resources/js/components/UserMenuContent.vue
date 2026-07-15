@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Banknote, KeyRound, LogOut, Palette, User as UserIcon } from '@lucide/vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -15,6 +15,10 @@ import type { User } from '@/types';
 type Props = {
     user: User;
 };
+
+const page = usePage<{ auth: { user?: { access_level?: number; isCarrier?: boolean } } }>();
+const accessLevel = page.props.auth?.user?.access_level ?? 0;
+const isCarrier = accessLevel === 5 || accessLevel === 6;
 
 const handleLogout = () => {
     router.flushAll();
@@ -31,12 +35,49 @@ defineProps<Props>();
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
-        <DropdownMenuItem :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
-                <Settings class="mr-2 h-4 w-4" />
-                Settings
-            </Link>
-        </DropdownMenuItem>
+        <!-- Carrier menu -->
+        <template v-if="isCarrier">
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" href="/carrier/profile" prefetch>
+                    <UserIcon class="mr-2 h-4 w-4" />
+                    Perfil
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" href="/carrier/bank" prefetch>
+                    <Banknote class="mr-2 h-4 w-4" />
+                    Dados Bancários
+                </Link>
+            </DropdownMenuItem>
+        </template>
+
+        <!-- Staff menu -->
+        <template v-else>
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
+                    <UserIcon class="mr-2 h-4 w-4" />
+                    Perfil
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" href="/settings/security" prefetch>
+                    <KeyRound class="mr-2 h-4 w-4" />
+                    Senha
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" href="/settings/bank" prefetch>
+                    <Banknote class="mr-2 h-4 w-4" />
+                    Dados Bancários
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link class="block w-full cursor-pointer" href="/settings/appearance" prefetch>
+                    <Palette class="mr-2 h-4 w-4" />
+                    Aparência
+                </Link>
+            </DropdownMenuItem>
+        </template>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
     <DropdownMenuItem :as-child="true">
@@ -48,7 +89,7 @@ defineProps<Props>();
             data-test="logout-button"
         >
             <LogOut class="mr-2 h-4 w-4" />
-            Log out
+            Sair
         </Link>
     </DropdownMenuItem>
 </template>

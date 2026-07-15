@@ -13,7 +13,7 @@ class ClientSeeder extends Seeder
     public function run(): void
     {
         $makeEncr = fn ($value) => EncryptionService::encryptWithHash($value);
-        $password = Hash::make('password');
+        $password = Hash::make('Mudar@123');
 
         $tenants = Tenant::all();
 
@@ -22,110 +22,116 @@ class ClientSeeder extends Seeder
             return;
         }
 
-        // Distribuir clientes fixos entre o primeiro tenant
         $firstTenant = $tenants->first();
 
-        // Client 1 - CNPJ
-        Client::factory()->create([
-            'tenant_id' => $firstTenant->id,
-            'email' => 'tech3d@demanda3d.com',
-            'password' => $password,
-            'display_name' => 'Tech3D Soluções Ltda',
-            'doc_type' => 'CNPJ',
-            'first_name_encrypted' => $makeEncr('Tech3D')['encrypted'],
-            'first_name_hash' => $makeEncr('Tech3D')['hash'],
-            'last_name_encrypted' => $makeEncr('Soluções Ltda')['encrypted'],
-            'last_name_hash' => $makeEncr('Soluções Ltda')['hash'],
-            'doc_encrypted' => $makeEncr('12.345.678/0001-90')['encrypted'],
-            'doc_hash' => $makeEncr('12.345.678/0001-90')['hash'],
-            'address_encrypted' => $makeEncr('Av. Paulista')['encrypted'],
-            'address_hash' => $makeEncr('Av. Paulista')['hash'],
-            'number_encrypted' => $makeEncr('1000')['encrypted'],
-            'number_hash' => $makeEncr('1000')['hash'],
-            'state_encrypted' => $makeEncr('SP')['encrypted'],
-            'state_hash' => $makeEncr('SP')['hash'],
-            'zipcode_encrypted' => $makeEncr('01310-100')['encrypted'],
-            'zipcode_hash' => $makeEncr('01310-100')['hash'],
-            'city_encrypted' => $makeEncr('São Paulo')['encrypted'],
-            'city_hash' => $makeEncr('São Paulo')['hash'],
-            'phone1_encrypted' => $makeEncr('(11) 99999-0001')['encrypted'],
-            'phone1_hash' => $makeEncr('(11) 99999-0001')['hash'],
-            'phone2_encrypted' => $makeEncr('(11) 3333-0001')['encrypted'],
-            'phone2_hash' => $makeEncr('(11) 3333-0001')['hash'],
-            'contact1_encrypted' => $makeEncr('Carlos Silva')['encrypted'],
-            'contact1_hash' => $makeEncr('Carlos Silva')['hash'],
-        ]);
+        // Clientes 1 a 5 — dados padronizados
+        $clientsData = [
+            [
+                'email' => 'cliente1@teste.com',
+                'display_name' => 'Cliente 1 Silva',
+                'first_name' => 'João',
+                'last_name' => 'Silva',
+                'doc' => '12345678901',
+                'phone1' => '(11) 99999-0001',
+                'address' => 'Rua das Flores',
+                'number' => '10',
+                'city' => 'São Paulo',
+                'state' => 'SP',
+                'zipcode' => '01000-001',
+            ],
+            [
+                'email' => 'cliente2@teste.com',
+                'display_name' => 'Cliente 2 Santos',
+                'first_name' => 'Maria',
+                'last_name' => 'Santos',
+                'doc' => '23456789012',
+                'phone1' => '(11) 99999-0002',
+                'address' => 'Av. Paulista',
+                'number' => '100',
+                'city' => 'São Paulo',
+                'state' => 'SP',
+                'zipcode' => '01310-000',
+            ],
+            [
+                'email' => 'cliente3@teste.com',
+                'display_name' => 'Cliente 3 Oliveira',
+                'first_name' => 'Pedro',
+                'last_name' => 'Oliveira',
+                'doc' => '34567890123',
+                'phone1' => '(21) 99999-0003',
+                'address' => 'Rua do Ouvidor',
+                'number' => '50',
+                'city' => 'Rio de Janeiro',
+                'state' => 'RJ',
+                'zipcode' => '20040-000',
+            ],
+            [
+                'email' => 'cliente4@teste.com',
+                'display_name' => 'Cliente 4 Costa',
+                'first_name' => 'Ana',
+                'last_name' => 'Costa',
+                'doc' => '45678901234',
+                'phone1' => '(31) 99999-0004',
+                'address' => 'Av. Afonso Pena',
+                'number' => '800',
+                'city' => 'Belo Horizonte',
+                'state' => 'MG',
+                'zipcode' => '30130-000',
+            ],
+            [
+                'email' => 'cliente5@teste.com',
+                'display_name' => 'Cliente 5 Lima',
+                'first_name' => 'Carlos',
+                'last_name' => 'Lima',
+                'doc' => '56789012345',
+                'phone1' => '(48) 99999-0005',
+                'address' => 'Rua Felipe Schmidt',
+                'number' => '200',
+                'city' => 'Florianópolis',
+                'state' => 'SC',
+                'zipcode' => '88010-000',
+            ],
+        ];
 
-        // Client 2 - CNPJ
-        Client::factory()->create([
-            'tenant_id' => $firstTenant->id,
-            'email' => 'prototipagem@demanda3d.com',
-            'password' => $password,
-            'display_name' => 'Prototipagem Rápida S.A.',
-            'doc_type' => 'CNPJ',
-            'first_name_encrypted' => $makeEncr('Prototipagem')['encrypted'],
-            'first_name_hash' => $makeEncr('Prototipagem')['hash'],
-            'last_name_encrypted' => $makeEncr('Rápida S.A.')['encrypted'],
-            'last_name_hash' => $makeEncr('Rápida S.A.')['hash'],
-            'doc_encrypted' => $makeEncr('98.765.432/0001-10')['encrypted'],
-            'doc_hash' => $makeEncr('98.765.432/0001-10')['hash'],
-            'address_encrypted' => $makeEncr('Rua da Assembleia')['encrypted'],
-            'address_hash' => $makeEncr('Rua da Assembleia')['hash'],
-            'number_encrypted' => $makeEncr('500')['encrypted'],
-            'number_hash' => $makeEncr('500')['hash'],
-            'state_encrypted' => $makeEncr('RJ')['encrypted'],
-            'state_hash' => $makeEncr('RJ')['hash'],
-            'zipcode_encrypted' => $makeEncr('20011-000')['encrypted'],
-            'zipcode_hash' => $makeEncr('20011-000')['hash'],
-            'city_encrypted' => $makeEncr('Rio de Janeiro')['encrypted'],
-            'city_hash' => $makeEncr('Rio de Janeiro')['hash'],
-            'phone1_encrypted' => $makeEncr('(21) 98888-0002')['encrypted'],
-            'phone1_hash' => $makeEncr('(21) 98888-0002')['hash'],
-            'phone2_encrypted' => $makeEncr('(21) 3444-0002')['encrypted'],
-            'phone2_hash' => $makeEncr('(21) 3444-0002')['hash'],
-            'contact1_encrypted' => $makeEncr('Ana Oliveira')['encrypted'],
-            'contact1_hash' => $makeEncr('Ana Oliveira')['hash'],
-            'contact2_encrypted' => $makeEncr('Pedro Santos')['encrypted'],
-            'contact2_hash' => $makeEncr('Pedro Santos')['hash'],
-        ]);
+        foreach ($clientsData as $data) {
+            $firstNameData = EncryptionService::encryptWithHash($data['first_name']);
+            $lastNameData = EncryptionService::encryptWithHash($data['last_name']);
+            $docData = EncryptionService::encryptWithHash($data['doc']);
+            $addressData = EncryptionService::encryptWithHash($data['address']);
+            $numberData = EncryptionService::encryptWithHash($data['number']);
+            $stateData = EncryptionService::encryptWithHash($data['state']);
+            $zipcodeData = EncryptionService::encryptWithHash($data['zipcode']);
+            $cityData = EncryptionService::encryptWithHash($data['city']);
+            $phone1Data = EncryptionService::encryptWithHash($data['phone1']);
 
-        // Client 3 - CNPJ
-        Client::factory()->create([
-            'tenant_id' => $firstTenant->id,
-            'email' => 'industria@demanda3d.com',
-            'password' => $password,
-            'display_name' => 'Indústria Criativa Maker',
-            'doc_type' => 'CNPJ',
-            'first_name_encrypted' => $makeEncr('Indústria')['encrypted'],
-            'first_name_hash' => $makeEncr('Indústria')['hash'],
-            'last_name_encrypted' => $makeEncr('Criativa Maker')['encrypted'],
-            'last_name_hash' => $makeEncr('Criativa Maker')['hash'],
-            'doc_encrypted' => $makeEncr('45.678.901/0001-23')['encrypted'],
-            'doc_hash' => $makeEncr('45.678.901/0001-23')['hash'],
-            'address_encrypted' => $makeEncr('Rua XV de Novembro')['encrypted'],
-            'address_hash' => $makeEncr('Rua XV de Novembro')['hash'],
-            'number_encrypted' => $makeEncr('250')['encrypted'],
-            'number_hash' => $makeEncr('250')['hash'],
-            'state_encrypted' => $makeEncr('SC')['encrypted'],
-            'state_hash' => $makeEncr('SC')['hash'],
-            'zipcode_encrypted' => $makeEncr('88010-000')['encrypted'],
-            'zipcode_hash' => $makeEncr('88010-000')['hash'],
-            'city_encrypted' => $makeEncr('Florianópolis')['encrypted'],
-            'city_hash' => $makeEncr('Florianópolis')['hash'],
-            'phone1_encrypted' => $makeEncr('(48) 97777-0003')['encrypted'],
-            'phone1_hash' => $makeEncr('(48) 97777-0003')['hash'],
-            'contact1_encrypted' => $makeEncr('Mariana Costa')['encrypted'],
-            'contact1_hash' => $makeEncr('Mariana Costa')['hash'],
-        ]);
-
-        // Distribuir 2 clientes aleatórios para cada tenant (incluindo o primeiro já usado)
-        foreach ($tenants as $tenant) {
-            Client::factory()->count(2)->create([
-                'tenant_id' => $tenant->id,
+            Client::create([
+                'tenant_id' => $firstTenant->id,
+                'email' => $data['email'],
+                'password' => $password,
+                'display_name' => $data['display_name'],
+                'doc_type' => 'CPF',
+                'first_name_encrypted' => $firstNameData['encrypted'],
+                'first_name_hash' => $firstNameData['hash'],
+                'last_name_encrypted' => $lastNameData['encrypted'],
+                'last_name_hash' => $lastNameData['hash'],
+                'doc_encrypted' => $docData['encrypted'],
+                'doc_hash' => $docData['hash'],
+                'address_encrypted' => $addressData['encrypted'],
+                'address_hash' => $addressData['hash'],
+                'number_encrypted' => $numberData['encrypted'],
+                'number_hash' => $numberData['hash'],
+                'state_encrypted' => $stateData['encrypted'],
+                'state_hash' => $stateData['hash'],
+                'zipcode_encrypted' => $zipcodeData['encrypted'],
+                'zipcode_hash' => $zipcodeData['hash'],
+                'city_encrypted' => $cityData['encrypted'],
+                'city_hash' => $cityData['hash'],
+                'phone1_encrypted' => $phone1Data['encrypted'],
+                'phone1_hash' => $phone1Data['hash'],
+                'is_profile_complete' => true,
             ]);
         }
 
-        $total = Client::count();
-        $this->command->info("✓ {$total} clientes criados com sucesso (distribuídos entre todos os tenants).");
+        $this->command->info('✓ 5 clientes criados (cliente1..5@teste.com / Mudar@123)');
     }
 }

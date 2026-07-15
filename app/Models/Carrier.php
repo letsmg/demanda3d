@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
     'phone_encrypted',
     'logo_path', 'website_url',
     'rating_average', 'rating_count',
-    'is_active',
+    'is_active', 'is_profile_complete',
 ])]
 class Carrier extends Model
 {
@@ -34,9 +34,10 @@ class Carrier extends Model
     protected function casts(): array
     {
         return [
-            'is_active'       => 'boolean',
-            'rating_average'  => 'decimal:2',
-            'rating_count'    => 'integer',
+            'is_active'           => 'boolean',
+            'is_profile_complete' => 'boolean',
+            'rating_average'      => 'decimal:2',
+            'rating_count'        => 'integer',
         ];
     }
 

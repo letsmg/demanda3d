@@ -15,9 +15,8 @@ const form = useForm({ email: '', password: '', remember: false });
 
 interface TestCarrierAccount { label: string; email: string; }
 const testAccounts: TestCarrierAccount[] = [
-    { label: 'Transportadora Rapidez Ltda', email: 'transportadora@demanda3d.com' },
-    { label: 'Entregas Cariocas Express', email: 'cariocas@express.com.br' },
-    { label: 'Logística Mineira S.A.', email: 'logistica@mineira.com.br' },
+    { label: 'Transportadora Rápida (Carrier 1)', email: 'transp1@teste.com' },
+    { label: 'Transportadora Veloz (Carrier 2)', email: 'transp2@teste.com' },
 ];
 function fillTestCredentials(acc: TestCarrierAccount) { form.email = acc.email; form.password = 'Mudar@123'; }
 

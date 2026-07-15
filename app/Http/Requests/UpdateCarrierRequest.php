@@ -41,12 +41,13 @@ class UpdateCarrierRequest extends FormRequest
     {
         $validator->after(function (Validator $validator) {
             $document = $this->input('document');
-            if (empty($document)) return;
-            $tenant = auth()->user()->tenant;
-            if (!$tenant) return;
+            if (empty($document)) {
+                return;
+            }
+
             $digits = preg_replace('/[.\-\/()\s]/', '', $document);
             $hash = hash('sha256', $digits);
-            $query = Carrier::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('document_hash', $hash);
+            $query = Carrier::where('document_hash', $hash);
             if ($this->route('carrier')) {
                 $query->where('id', '!=', $this->route('carrier')->id);
             }

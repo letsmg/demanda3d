@@ -20,10 +20,9 @@ interface TestAccount { label: string; email: string; }
 const email = ref('');
 const password = ref('');
 const testAccounts: TestAccount[] = [
-    { label: 'Admin Master', email: 'admin@demanda3d.com' },
-    { label: 'Tech3D Soluções', email: 'tech3d@demanda3d.com.br' },
-    { label: 'Maker Lab 3D', email: 'maker@demanda3d.com.br' },
-    { label: 'Prototype Fast', email: 'prototype@demanda3d.com.br' },
+    { label: 'Admin Master', email: 'admin@teste.com' },
+    { label: 'Loja 1 (Seller 1)', email: 'loja1@teste.com' },
+    { label: 'Loja 2 (Seller 1)', email: 'loja2@teste.com' },
 ];
 function fillTestCredentials(acc: TestAccount) { email.value = acc.email; password.value = 'Mudar@123'; }
 </script>

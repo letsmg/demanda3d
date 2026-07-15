@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    Banknote,
     BarChart3,
     BookOpen,
     FolderGit2,
@@ -65,6 +66,11 @@ const mainNavItems: NavItem[] = isCarrier
               href: '/carrier/profile',
               icon: Users,
           },
+          {
+              title: 'Dados Bancários',
+              href: '/carrier/bank',
+              icon: Banknote,
+          },
       ]
     : [
           {
@@ -107,7 +113,6 @@ const mainNavItems: NavItem[] = isCarrier
               href: productsIndex(),
               icon: ShoppingBag,
           },
-          // Visível apenas para Admin
           ...(isAdmin
               ? [{
                     title: 'Ferramentas',
@@ -120,7 +125,13 @@ const mainNavItems: NavItem[] = isCarrier
               href: reportsIndex(),
               icon: BarChart3,
           },
-          // Visível apenas para Admin
+          ...(isAdmin || accessLevel === 1
+              ? [{
+                    title: 'Dados Bancários',
+                    href: '/settings/bank',
+                    icon: Banknote,
+                }]
+              : []),
           ...(isAdmin
               ? [{
                     title: 'Vendedores',
@@ -130,18 +141,7 @@ const mainNavItems: NavItem[] = isCarrier
               : []),
       ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repositório',
-        href: 'https://github.com/letsmg/demanda3d',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentação',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>

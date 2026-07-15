@@ -68,3 +68,10 @@ public/fonts*
 # Exclui TODOS os diretórios de tenants (numéricos: {tenant_id}/products/, {tenant_id}/profile/)
 # Apenas home/ e originals/ são versionadas (carrossel da página inicial)
 /storage/app/public/imgs/[0-9]*/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

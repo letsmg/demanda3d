@@ -33,6 +33,7 @@ class Tenant extends Model
         'banner_path',
         'legal_responsible_name',
         'active',
+        'is_profile_complete',
         'rating_average',
         'rating_count',
     ];
@@ -46,9 +47,10 @@ class Tenant extends Model
     protected function casts(): array
     {
         return [
-            'active'         => 'boolean',
-            'rating_average' => 'decimal:2',
-            'rating_count'   => 'integer',
+            'active'              => 'boolean',
+            'is_profile_complete' => 'boolean',
+            'rating_average'      => 'decimal:2',
+            'rating_count'        => 'integer',
         ];
     }
 

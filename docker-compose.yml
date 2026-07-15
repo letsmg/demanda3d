@@ -164,12 +164,8 @@ services:
     volumes:
       - demanda-loki-dev:/loki
       - ./docker/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-check-certificate -q --spider http://localhost:3100/ready 2>/dev/null || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+    # healthcheck removido — imagens Loki/Promtail não possuem wget/nc
+    # O Promtail depende apenas de service_started, não de healthy
     networks:
       - demanda-net-dev
 
