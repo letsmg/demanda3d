@@ -37,7 +37,7 @@ function submit() { form.post('/login_cli', { preserveState: true }); }
             </CardHeader>
             <CardContent class="space-y-6">
                 <div class="rounded-lg border border-dashed border-amber-900/50 bg-amber-100/50 p-3">
-                    <p class="mb-2 text-center text-xs font-medium text-amber-700">🧪 Contas de teste (senha: <strong>password</strong>)</p>
+                    <p class="mb-2 text-center text-xs font-medium text-amber-700">🧪 Contas de teste (senha: <strong>Mudar@123</strong>)</p>
                     <div class="flex flex-col gap-1.5">
                         <button v-for="acc in testAccounts" :key="acc.email" type="button"
                             class="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-amber-800 transition-colors hover:bg-amber-200/50"

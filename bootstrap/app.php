@@ -40,10 +40,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.only'                => AdminOnly::class,
             'staff.only'                => StaffOnly::class,
             'partner.only'              => StaffOnly::class,
-            'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'ensure.staff'              => \App\Http\Middleware\EnsureStaff::class,
-            'check.age'                 => CheckAgeRequirement::class,
-            'verify.user.exists'        => VerifyUserExists::class,
+            'redirect_if_authenticated'       => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'ensure.staff'                    => \App\Http\Middleware\EnsureStaff::class,
+            'check.age'                       => CheckAgeRequirement::class,
+            'verify.user.exists'              => VerifyUserExists::class,
+            'auth_or_clients_or_carriers'     => \App\Http\Middleware\AuthenticateAnyGuard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
