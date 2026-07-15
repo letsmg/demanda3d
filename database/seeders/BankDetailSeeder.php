@@ -38,30 +38,27 @@ class BankDetailSeeder extends Seeder
         ];
 
         foreach ($sellerTenants as $index => $tenant) {
-            $exists = BankDetail::where('tenant_id', $tenant->id)->exists();
-            if ($exists) {
-                continue;
-            }
-
             $bank = $banks[$index % count($banks)];
 
             $routingData = $encryptionService->encryptWithHash($bank['routing']);
             $accountData = $encryptionService->encryptWithHash($bank['account']);
             $docData     = $encryptionService->encryptWithHash($tenant->document);
 
-            BankDetail::create([
-                'tenant_id'                  => $tenant->id,
-                'bank_name'                  => $bank['name'],
-                'routing_number_encrypted'   => $routingData['encrypted'],
-                'account_number_encrypted'   => $accountData['encrypted'],
-                'account_holder_name'        => $tenant->fantasy_name ?? $tenant->company_name ?? 'Vendedor',
-                'account_holder_doc_encrypted' => $docData['encrypted'],
-                'account_holder_doc_hash'      => $docData['hash'],
-                'consented'                  => true,
-                'consented_at'               => now(),
-                'consent_ip'                 => '127.0.0.1',
-                'consent_term_version'       => '1.0',
-            ]);
+            BankDetail::firstOrCreate(
+                ['tenant_id' => $tenant->id],
+                [
+                    'bank_name'                  => $bank['name'],
+                    'routing_number_encrypted'   => $routingData['encrypted'],
+                    'account_number_encrypted'   => $accountData['encrypted'],
+                    'account_holder_name'        => $tenant->fantasy_name ?? $tenant->company_name ?? 'Vendedor',
+                    'account_holder_doc_encrypted' => $docData['encrypted'],
+                    'account_holder_doc_hash'      => $docData['hash'],
+                    'consented'                  => true,
+                    'consented_at'               => now(),
+                    'consent_ip'                 => '127.0.0.1',
+                    'consent_term_version'       => '1.0',
+                ]
+            );
 
             $this->command?->line("  ✓ Dados bancários: {$tenant->fantasy_name} → {$bank['name']}");
         }

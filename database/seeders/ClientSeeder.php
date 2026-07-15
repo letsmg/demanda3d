@@ -104,34 +104,36 @@ class ClientSeeder extends Seeder
             $cityData = EncryptionService::encryptWithHash($data['city']);
             $phone1Data = EncryptionService::encryptWithHash($data['phone1']);
 
-            Client::create([
-                'tenant_id' => $firstTenant->id,
-                'email' => $data['email'],
-                'password' => $password,
-                'display_name' => $data['display_name'],
-                'doc_type' => 'CPF',
-                'first_name_encrypted' => $firstNameData['encrypted'],
-                'first_name_hash' => $firstNameData['hash'],
-                'last_name_encrypted' => $lastNameData['encrypted'],
-                'last_name_hash' => $lastNameData['hash'],
-                'doc_encrypted' => $docData['encrypted'],
-                'doc_hash' => $docData['hash'],
-                'address_encrypted' => $addressData['encrypted'],
-                'address_hash' => $addressData['hash'],
-                'number_encrypted' => $numberData['encrypted'],
-                'number_hash' => $numberData['hash'],
-                'state_encrypted' => $stateData['encrypted'],
-                'state_hash' => $stateData['hash'],
-                'zipcode_encrypted' => $zipcodeData['encrypted'],
-                'zipcode_hash' => $zipcodeData['hash'],
-                'city_encrypted' => $cityData['encrypted'],
-                'city_hash' => $cityData['hash'],
-                'phone1_encrypted' => $phone1Data['encrypted'],
-                'phone1_hash' => $phone1Data['hash'],
-                'is_profile_complete' => true,
-            ]);
+            Client::updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'tenant_id' => $firstTenant->id,
+                    'password' => $password,
+                    'display_name' => $data['display_name'],
+                    'doc_type' => 'CPF',
+                    'first_name_encrypted' => $firstNameData['encrypted'],
+                    'first_name_hash' => $firstNameData['hash'],
+                    'last_name_encrypted' => $lastNameData['encrypted'],
+                    'last_name_hash' => $lastNameData['hash'],
+                    'doc_encrypted' => $docData['encrypted'],
+                    'doc_hash' => $docData['hash'],
+                    'address_encrypted' => $addressData['encrypted'],
+                    'address_hash' => $addressData['hash'],
+                    'number_encrypted' => $numberData['encrypted'],
+                    'number_hash' => $numberData['hash'],
+                    'state_encrypted' => $stateData['encrypted'],
+                    'state_hash' => $stateData['hash'],
+                    'zipcode_encrypted' => $zipcodeData['encrypted'],
+                    'zipcode_hash' => $zipcodeData['hash'],
+                    'city_encrypted' => $cityData['encrypted'],
+                    'city_hash' => $cityData['hash'],
+                    'phone1_encrypted' => $phone1Data['encrypted'],
+                    'phone1_hash' => $phone1Data['hash'],
+                    'is_profile_complete' => true,
+                ]
+            );
         }
 
-        $this->command->info('✓ 5 clientes criados (cliente1..5@teste.com / Mudar@123)');
+        $this->command->info('✓ 5 clientes atualizados/criados (cliente1..5@teste.com / Mudar@123)');
     }
 }

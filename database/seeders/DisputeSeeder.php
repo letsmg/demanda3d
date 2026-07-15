@@ -81,15 +81,19 @@ class DisputeSeeder extends Seeder
                     ? $adminUsers->random()->id
                     : null;
 
-                Dispute::create([
-                    'tenant_id' => $tenantId,
-                    'reporter_id' => $client->id,
-                    'order_id' => $orderId,
-                    'reason' => $reason,
-                    'description_encrypted' => $encrypt($descriptionText),
-                    'status' => $adminId ? fake()->randomElement(['investigating', 'resolved']) : 'pending',
-                    'admin_id' => $adminId,
-                ]);
+                Dispute::firstOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'reporter_id' => $client->id,
+                        'order_id' => $orderId,
+                        'reason' => $reason,
+                    ],
+                    [
+                        'description_encrypted' => $encrypt($descriptionText),
+                        'status' => $adminId ? fake()->randomElement(['investigating', 'resolved']) : 'pending',
+                        'admin_id' => $adminId,
+                    ]
+                );
 
                 $total++;
             }

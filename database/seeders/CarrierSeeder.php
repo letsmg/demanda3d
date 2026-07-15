@@ -55,42 +55,52 @@ class CarrierSeeder extends Seeder
             $phoneData = EncryptionService::encryptWithHash($data['phone']);
             $addressData = EncryptionService::encryptWithHash($data['address']);
 
-            $carrier = Carrier::create([
-                'user_id'               => $user->id,
-                'fantasy_name'          => $data['fantasy_name'],
-                'slug'                  => Carrier::generateUniqueSlug($data['fantasy_name']),
-                'company_name_encrypted'=> $companyData['encrypted'],
-                'company_name_hash'     => $companyData['hash'],
-                'document_type'         => $data['document_type'],
-                'document_encrypted'    => $docData['encrypted'],
-                'document_hash'         => $docData['hash'],
-                'address_encrypted'     => $addressData['encrypted'],
-                'phone_encrypted'       => $phoneData['encrypted'],
-                'website_url'           => $data['website_url'] ?? null,
-                'is_active'             => true,
-                'is_profile_complete'   => true,
-            ]);
+            $carrier = Carrier::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'fantasy_name'          => $data['fantasy_name'],
+                    'slug'                  => Carrier::generateUniqueSlug($data['fantasy_name']),
+                    'company_name_encrypted'=> $companyData['encrypted'],
+                    'company_name_hash'     => $companyData['hash'],
+                    'document_type'         => $data['document_type'],
+                    'document_encrypted'    => $docData['encrypted'],
+                    'document_hash'         => $docData['hash'],
+                    'address_encrypted'     => $addressData['encrypted'],
+                    'phone_encrypted'       => $phoneData['encrypted'],
+                    'website_url'           => $data['website_url'] ?? null,
+                    'is_active'             => true,
+                    'is_profile_complete'   => true,
+                ]
+            );
 
             foreach ($data['coverage'] as $range) {
-                CarrierCoverageRange::create([
-                    'carrier_id' => $carrier->id,
-                    'title'      => $range['title'],
-                    'cep_start'  => $range['cep_start'],
-                    'cep_end'    => $range['cep_end'],
-                ]);
+                CarrierCoverageRange::updateOrCreate(
+                    [
+                        'carrier_id' => $carrier->id,
+                        'cep_start'  => $range['cep_start'],
+                        'cep_end'    => $range['cep_end'],
+                    ],
+                    [
+                        'title'      => $range['title'],
+                    ]
+                );
             }
 
             foreach ($tenants as $tenant) {
-                CarrierTenantAgreement::create([
-                    'tenant_id'  => $tenant->id,
-                    'carrier_id' => $carrier->id,
-                    'status'     => CarrierTenantAgreement::STATUS_ACTIVE,
-                ]);
+                CarrierTenantAgreement::firstOrCreate(
+                    [
+                        'tenant_id'  => $tenant->id,
+                        'carrier_id' => $carrier->id,
+                    ],
+                    [
+                        'status' => CarrierTenantAgreement::STATUS_ACTIVE,
+                    ]
+                );
             }
 
             $this->command->info("  ✓ Carrier: {$data['fantasy_name']} ({$data['email']})");
         }
 
-        $this->command->info('✓ 5 transportadoras criadas (transp1..5adm@teste.com)');
+        $this->command->info('✓ 5 transportadoras atualizadas/criadas (transp1..5adm@teste.com)');
     }
 }

@@ -54,6 +54,6 @@ class StateSeeder extends Seeder
             'updated_at' => $now,
         ]), $states);
 
-        DB::table('states')->insert($rows);
+        DB::table('states')->upsert($rows, ['uf', 'cep_start', 'cep_end'], ['name', 'updated_at']);
     }
 }

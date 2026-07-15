@@ -10,43 +10,49 @@ class CouponSeeder extends Seeder
 {
     public function run(): void
     {
-        Coupon::create([
-            'tenant_id'       => null,
-            'code'            => 'BEMVINDO10',
-            'type'            => 'percentage',
-            'value'           => 10.00,
-            'min_order_value' => 50.00,
-            'max_uses'        => 100,
-            'used_count'      => 0,
-            'starts_at'       => now(),
-            'expires_at'      => now()->addMonths(6),
-            'is_active'       => true,
-        ]);
+        Coupon::updateOrCreate(
+            ['code' => 'BEMVINDO10'],
+            [
+                'tenant_id'       => null,
+                'type'            => 'percentage',
+                'value'           => 10.00,
+                'min_order_value' => 50.00,
+                'max_uses'        => 100,
+                'used_count'      => 0,
+                'starts_at'       => now(),
+                'expires_at'      => now()->addMonths(6),
+                'is_active'       => true,
+            ]
+        );
 
-        Coupon::create([
-            'tenant_id'       => null,
-            'code'            => 'FRETE50',
-            'type'            => 'fixed',
-            'value'           => 50.00,
-            'min_order_value' => 200.00,
-            'max_uses'        => 50,
-            'used_count'      => 0,
-            'starts_at'       => now(),
-            'expires_at'      => now()->addMonths(3),
-            'is_active'       => true,
-        ]);
+        Coupon::updateOrCreate(
+            ['code' => 'FRETE50'],
+            [
+                'tenant_id'       => null,
+                'type'            => 'fixed',
+                'value'           => 50.00,
+                'min_order_value' => 200.00,
+                'max_uses'        => 50,
+                'used_count'      => 0,
+                'starts_at'       => now(),
+                'expires_at'      => now()->addMonths(3),
+                'is_active'       => true,
+            ]
+        );
 
-        Coupon::create([
-            'tenant_id'       => null,
-            'code'            => 'CATEGORIA20',
-            'type'            => 'percentage',
-            'value'           => 20.00,
-            'min_order_value' => 30.00,
-            'max_uses'        => 30,
-            'used_count'      => 0,
-            'starts_at'       => now(),
-            'expires_at'      => now()->addMonths(3),
-            'is_active'       => true,
-        ]);
+        Coupon::updateOrCreate(
+            ['code' => 'CATEGORIA20'],
+            [
+                'tenant_id'       => null,
+                'type'            => 'percentage',
+                'value'           => 20.00,
+                'min_order_value' => 30.00,
+                'max_uses'        => 30,
+                'used_count'      => 0,
+                'starts_at'       => now(),
+                'expires_at'      => now()->addMonths(3),
+                'is_active'       => true,
+            ]
+        );
     }
 }

@@ -68,12 +68,14 @@ class MessageSeeder extends Seeder
                     ? fake()->randomElement($staffMessages)
                     : fake()->randomElement($clientMessages);
 
-                Message::create([
-                    'thread_id' => $thread->id,
-                    'sender_type' => $senderType,
-                    'sender_id' => $senderId,
-                    'content_encrypted' => $encrypt($messageContent),
-                ]);
+                Message::firstOrCreate(
+                    [
+                        'thread_id' => $thread->id,
+                        'sender_type' => $senderType,
+                        'sender_id' => $senderId,
+                        'content_encrypted' => $encrypt($messageContent),
+                    ]
+                );
 
                 $total++;
             }
