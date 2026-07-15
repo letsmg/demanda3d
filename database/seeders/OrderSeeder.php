@@ -48,22 +48,30 @@ class OrderSeeder extends Seeder
                 for ($i = 0; $i < $numOrders; $i++) {
                     $product = $products->random();
 
-                    $order = Order::create([
-                        'tenant_id'     => $tenantId,
-                        'client_id'     => $client->id,
-                        'order_date'    => now()->subDays(random_int(5, 180)),
-                        'delivery_date' => now()->addDays(random_int(7, 60)),
-                        'status'        => collect(['pending', 'in_progress', 'delivered'])->random(),
-                    ]);
+                    $order = Order::firstOrCreate(
+                        [
+                            'tenant_id' => $tenantId,
+                            'client_id' => $client->id,
+                            'order_date' => now()->subDays(random_int(5, 180)),
+                        ],
+                        [
+                            'delivery_date' => now()->addDays(random_int(7, 60)),
+                            'status' => collect(['pending', 'in_progress', 'delivered'])->random(),
+                        ]
+                    );
 
                     // Cria o OrderItem com snapshot imutável do produto
-                    OrderItem::create([
-                        'order_id'               => $order->id,
-                        'product_id'             => $product->id,
-                        'snapshot_product_name'  => $product->name,
-                        'snapshot_product_price' => (float) $product->sale_price,
-                        'quantity'               => random_int(1, 5),
-                    ]);
+                    OrderItem::firstOrCreate(
+                        [
+                            'order_id' => $order->id,
+                            'product_id' => $product->id,
+                        ],
+                        [
+                            'snapshot_product_name'  => $product->name,
+                            'snapshot_product_price' => (float) $product->sale_price,
+                            'quantity'               => random_int(1, 5),
+                        ]
+                    );
 
                     $totalOrders++;
                 }

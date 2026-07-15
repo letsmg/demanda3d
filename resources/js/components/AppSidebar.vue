@@ -125,13 +125,19 @@ const mainNavItems: NavItem[] = isCarrier
               href: reportsIndex(),
               icon: BarChart3,
           },
-          ...(isAdmin || accessLevel === 1
+          ...(isAdmin
               ? [{
                     title: 'Dados Bancários',
-                    href: '/settings/bank',
+                    href: '/admin/bank',
                     icon: Banknote,
                 }]
-              : []),
+              : accessLevel === 1
+                ? [{
+                      title: 'Dados Bancários',
+                      href: '/settings/bank',
+                      icon: Banknote,
+                  }]
+                : []),
           ...(isAdmin
               ? [{
                     title: 'Vendedores',

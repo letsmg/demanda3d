@@ -82,14 +82,15 @@ class ProductSeeder extends Seeder
             $this->command?->info("  ── Tenant: {$tenant->display_name} ──");
 
             foreach ($products as $pd) {
-                $product = Product::withoutGlobalScopes()
-                    ->where('tenant_id', $tenantId)->where('name', $pd['name'])->first();
+                $slug = Product::generateUniqueSlug($pd['name'], $tenantId);
 
-                if (! $product) {
-                    $product = Product::withoutGlobalScopes()->create([
+                $product = Product::withoutGlobalScopes()->updateOrCreate(
+                    [
                         'tenant_id' => $tenantId,
                         'name' => $pd['name'],
-                        'slug' => Product::generateUniqueSlug($pd['name'], $tenantId),
+                    ],
+                    [
+                        'slug' => $slug,
                         'description' => $pd['description'],
                         'height' => $pd['height'],
                         'width' => $pd['width'],
@@ -107,16 +108,16 @@ class ProductSeeder extends Seeder
                         'sale_price' => $pd['sale_price'],
                         'is_active' => true,
                         'moderation_status' => 'approved',
-                    ]);
+                    ]
+                );
 
-                    $slugs = $pd['categories'] ?? [];
-                    if ($slugs) {
-                        $ids = Category::whereIn('slug', $slugs)->pluck('id')->toArray();
-                        if ($ids) { $product->categories()->sync($ids); }
-                    }
-
-                    $this->command?->line("    ✓ Produto criado: {$product->name}");
+                $slugs = $pd['categories'] ?? [];
+                if ($slugs) {
+                    $ids = Category::whereIn('slug', $slugs)->pluck('id')->toArray();
+                    if ($ids) { $product->categories()->sync($ids); }
                 }
+
+                $this->command?->line("    ✓ Produto atualizado/criado: {$product->name}");
 
                 // Remove imagens antigas para garantir exatamente MAX_IMAGES_PER_PRODUCT
                 $oldImages = ProductImage::where('product_id', $product->id)->get();

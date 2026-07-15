@@ -39,19 +39,15 @@ class CarrierTenantAgreementSeeder extends Seeder
             $randomCarriers = $carriers->random(min(rand(1, 2), $carriers->count()));
 
             foreach ($randomCarriers as $carrier) {
-                $exists = CarrierTenantAgreement::where('tenant_id', $tenant->id)
-                    ->where('carrier_id', $carrier->id)
-                    ->exists();
-
-                if ($exists) {
-                    continue;
-                }
-
-                CarrierTenantAgreement::create([
-                    'tenant_id'  => $tenant->id,
-                    'carrier_id' => $carrier->id,
-                    'status'     => CarrierTenantAgreement::STATUS_ACTIVE,
-                ]);
+                CarrierTenantAgreement::firstOrCreate(
+                    [
+                        'tenant_id'  => $tenant->id,
+                        'carrier_id' => $carrier->id,
+                    ],
+                    [
+                        'status' => CarrierTenantAgreement::STATUS_ACTIVE,
+                    ]
+                );
 
                 $this->command?->line("  ✓ Contrato: {$tenant->fantasy_name} ↔ {$carrier->fantasy_name}");
             }

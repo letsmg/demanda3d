@@ -45,12 +45,16 @@ class ThreadSeeder extends Seeder
                         ? $orders->random()->id
                         : null;
 
-                    Thread::create([
-                        'tenant_id' => $tenantId,
-                        'client_id' => $client->id,
-                        'order_id' => $orderId,
-                        'status' => fake()->randomElement($statuses),
-                    ]);
+                    Thread::firstOrCreate(
+                        [
+                            'tenant_id' => $tenantId,
+                            'client_id' => $client->id,
+                            'order_id' => $orderId,
+                        ],
+                        [
+                            'status' => fake()->randomElement($statuses),
+                        ]
+                    );
                 }
             }
 

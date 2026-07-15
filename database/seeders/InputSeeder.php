@@ -73,15 +73,19 @@ class InputSeeder extends Seeder
             foreach ($inputsData as $inputData) {
                 $supplier = $suppliers->random();
 
-                Input::create([
-                    'tenant_id' => $tenantId,
-                    'supplier_id' => $supplier->id,
-                    'description' => $inputData['description'],
-                    'brand' => $inputData['brand'],
-                    'quantity' => $inputData['quantity'],
-                    'shipping_cost' => $inputData['shipping_cost'],
-                    'cost_value' => $inputData['cost_value'],
-                ]);
+                Input::firstOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'supplier_id' => $supplier->id,
+                        'description' => $inputData['description'],
+                        'brand' => $inputData['brand'],
+                    ],
+                    [
+                        'quantity' => $inputData['quantity'],
+                        'shipping_cost' => $inputData['shipping_cost'],
+                        'cost_value' => $inputData['cost_value'],
+                    ]
+                );
             }
 
             $this->command->info("  ✓ Tenant #{$tenantId}: ".count($inputsData).' inputs criados.');

@@ -23,34 +23,42 @@ class SecurityLogSeeder extends Seeder
         }
 
         // Log de teste — violação adulta
-        SecurityLog::create([
-            'tenant_id' => $management?->tenant_id,
-            'user_id' => $management?->id ?? $admin->id,
-            'attempted_at' => now()->subDays(2),
-            'violation_type' => 'ADULT',
-            'raw_response' => [
-                'adult' => 'LIKELY',
-                'violence' => 'VERY_UNLIKELY',
-                'racy' => 'POSSIBLE',
-                'medical' => 'VERY_UNLIKELY',
-                'spoof' => 'VERY_UNLIKELY',
+        SecurityLog::firstOrCreate(
+            [
+                'tenant_id'     => $management?->tenant_id,
+                'user_id'       => $management?->id ?? $admin->id,
+                'violation_type' => 'ADULT',
             ],
-        ]);
+            [
+                'attempted_at'  => now()->subDays(2),
+                'raw_response'  => [
+                    'adult' => 'LIKELY',
+                    'violence' => 'VERY_UNLIKELY',
+                    'racy' => 'POSSIBLE',
+                    'medical' => 'VERY_UNLIKELY',
+                    'spoof' => 'VERY_UNLIKELY',
+                ],
+            ]
+        );
 
         // Log de teste — violação violência
-        SecurityLog::create([
-            'tenant_id' => $management?->tenant_id,
-            'user_id' => $management?->id ?? $admin->id,
-            'attempted_at' => now()->subDay(),
-            'violation_type' => 'VIOLENCE',
-            'raw_response' => [
-                'adult' => 'UNLIKELY',
-                'violence' => 'LIKELY',
-                'racy' => 'UNLIKELY',
-                'medical' => 'VERY_UNLIKELY',
-                'spoof' => 'VERY_UNLIKELY',
+        SecurityLog::firstOrCreate(
+            [
+                'tenant_id'     => $management?->tenant_id,
+                'user_id'       => $management?->id ?? $admin->id,
+                'violation_type' => 'VIOLENCE',
             ],
-        ]);
+            [
+                'attempted_at'  => now()->subDay(),
+                'raw_response'  => [
+                    'adult' => 'UNLIKELY',
+                    'violence' => 'LIKELY',
+                    'racy' => 'UNLIKELY',
+                    'medical' => 'VERY_UNLIKELY',
+                    'spoof' => 'VERY_UNLIKELY',
+                ],
+            ]
+        );
 
         $this->command?->line('    ✓ 2 logs de segurança criados');
     }

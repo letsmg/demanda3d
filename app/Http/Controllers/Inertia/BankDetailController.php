@@ -25,7 +25,116 @@ class BankDetailController extends Controller
     ) {}
 
     /**
-     * Exibe o formulário de dados bancários do vendedor/transportadora.
+     * ADMIN: Listagem de todos os tenants ativos com seus dados bancários.
+     * Descriptografa os campos sensíveis apenas se consented === true.
+     */
+    public function adminIndex(): Response
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (! $user || $user->access_level->value !== 10) {
+            abort(403);
+        }
+
+        $encryptionService = app(EncryptionService::class);
+        $tenants = Tenant::with(['bankDetail', 'user'])
+            ->where('active', true)
+            ->get()
+            ->map(function (Tenant $tenant) use ($encryptionService) {
+                $bankDetail = $tenant->bankDetail;
+
+                // Descriptografa dados bancários se houver consentimento
+                $decrypted = null;
+                if ($bankDetail && $bankDetail->consented) {
+                    try {
+                        $decrypted = [
+                            'bank_name'          => $bankDetail->bank_name,
+                            'routing_number'     => $bankDetail->routing_number_encrypted
+                                ? $encryptionService->decryptString($bankDetail->routing_number_encrypted)
+                                : null,
+                            'account_number'     => $bankDetail->account_number_encrypted
+                                ? $encryptionService->decryptString($bankDetail->account_number_encrypted)
+                                : null,
+                            'bank_pix_key'       => $bankDetail->bank_pix_key_encrypted
+                                ? $encryptionService->decryptString($bankDetail->bank_pix_key_encrypted)
+                                : null,
+                            'account_holder_name' => $bankDetail->account_holder_name,
+                            'account_holder_doc' => $bankDetail->account_holder_doc_encrypted
+                                ? $encryptionService->decryptString($bankDetail->account_holder_doc_encrypted)
+                                : null,
+                            'consented'          => true,
+                            'consented_at'       => $bankDetail->consented_at,
+                        ];
+                    } catch (\Exception $e) {
+                        Log::error('Falha ao descriptografar dados bancários para admin.', [
+                            'tenant_id' => $tenant->id,
+                            'error'     => $e->getMessage(),
+                        ]);
+                        $decrypted = null;
+                    }
+                }
+
+                // Descriptografa company_name
+                $companyName = null;
+                if ($tenant->company_name_encrypted) {
+                    try {
+                        $companyName = $encryptionService->decryptString($tenant->company_name_encrypted);
+                    } catch (\Exception) {
+                        $companyName = null;
+                    }
+                }
+
+                return [
+                    'id'                   => $tenant->id,
+                    'fantasy_name'         => $tenant->fantasy_name,
+                    'fantasy_slug'         => $tenant->fantasy_slug,
+                    'company_name'         => $companyName,
+                    'legal_responsible_name' => $tenant->legal_responsible_name,
+                    'document'             => $tenant->document,
+                    'active'               => $tenant->active,
+                    'owner_email'          => $tenant->user?->email,
+                    'bank_detail'          => $decrypted,
+                    'has_bank'             => $bankDetail !== null,
+                ];
+            });
+
+        return Inertia::render('Admin/BankDetails', [
+            'tenants' => $tenants,
+        ]);
+    }
+
+    /**
+     * ADMIN: Visualiza os dados bancários de um tenant específico.
+     * Apenas leitura — ADMIN não edita dados bancários de vendedores.
+     */
+    public function adminEdit(Tenant $tenant): Response
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (! $user || $user->access_level->value !== 10) {
+            abort(403);
+        }
+
+        if (! $tenant->active) {
+            abort(404, 'Tenant inativo ou não encontrado.');
+        }
+
+        $bankDetail = BankDetail::where('tenant_id', $tenant->id)->first();
+
+        return Inertia::render('Settings/BankDetail', [
+            'tenant'      => $tenant,
+            'bankDetail'  => $bankDetail,
+            'document'    => $tenant->document,
+            'legal_responsible_name' => $tenant->legal_responsible_name,
+            'type'        => 'admin_readonly', // readonly para admin
+        ]);
+    }
+
+    /**
+     * Exibe o formulário de dados bancários do vendedor (SELLER_1).
+     * Trava de segurança: o tenant deve pertencer ao usuário logado.
      */
     public function edit(): Response
     {
@@ -35,6 +144,11 @@ class BankDetailController extends Controller
 
         if (! $tenant) {
             abort(404, 'Você não possui uma loja cadastrada.');
+        }
+
+        // Trava de segurança: vendedor só vê o próprio tenant
+        if ($user->access_level->value !== 10 && $tenant->user_id !== $user->id) {
+            abort(403, 'Acesso não autorizado a este tenant.');
         }
 
         $bankDetail = BankDetail::where('tenant_id', $tenant->id)->first();
