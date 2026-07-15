@@ -110,4 +110,47 @@ class UserSeeder extends Seeder
             ]
         );
     }
+
+    private function createUser(string $firstName, string $lastName, string $displayName, string $email, UserAccessLevel $level): \App\Models\User
+    {
+        $firstNameData = EncryptionService::encryptWithHash($firstName);
+        $lastNameData = EncryptionService::encryptWithHash($lastName);
+
+        return \App\Models\User::create([
+            'first_name_encrypted' => $firstNameData['encrypted'],
+            'first_name_hash' => $firstNameData['hash'],
+            'last_name_encrypted' => $lastNameData['encrypted'],
+            'last_name_hash' => $lastNameData['hash'],
+            'display_name' => $displayName,
+            'email' => $email,
+            'password' => 'Mudar@123',
+            'access_level' => $level,
+            'birth_date' => '1990-01-01',
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    private function createTenant(\App\Models\User $user, string $companyName): Tenant
+    {
+        $legalData = EncryptionService::encryptWithHash($companyName);
+
+        return Tenant::create([
+            'user_id' => $user->id,
+            'company_name_encrypted' => $legalData['encrypted'],
+            'company_name_hash' => $legalData['hash'],
+            'fantasy_name' => $companyName,
+            'fantasy_slug' => Tenant::generateUniqueFantasySlug($companyName),
+            'document_type' => 'cnpj',
+            'document' => '00.000.000/0001-00',
+            'phone' => '(11) 99999-0000',
+            'address' => 'Av. Principal, 100, Centro',
+            'number' => '100',
+            'district' => 'Centro',
+            'city' => 'São Paulo',
+            'state' => 'SP',
+            'zipcode' => '01000-000',
+            'active' => true,
+            'is_profile_complete' => true,
+        ]);
+    }
 }
