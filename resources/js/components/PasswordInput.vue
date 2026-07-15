@@ -1,36 +1,51 @@
 <script setup lang="ts">
 import { Eye, EyeOff } from '@lucide/vue';
-import { ref, useTemplateRef } from 'vue';
+import { computed, ref } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     class?: HTMLAttributes['class'];
+    show?: boolean;
+}>(), {
+    show: undefined,
+});
+
+const emit = defineEmits<{
+    'update:show': [value: boolean];
 }>();
 
-const showPassword = ref(false);
-const inputRef = useTemplateRef('inputRef');
+const internalShow = ref(false);
 
-defineExpose({
-    $el: inputRef,
-    focus: () => inputRef.value?.$el?.focus(),
+const showPassword = computed({
+    get: () => (props.show !== undefined ? props.show : internalShow.value),
+    set: (val: boolean) => {
+        if (props.show !== undefined) {
+            emit('update:show', val);
+        } else {
+            internalShow.value = val;
+        }
+    },
 });
+
+function toggle() {
+    showPassword.value = !showPassword.value;
+}
 </script>
 
 <template>
     <div class="relative">
         <Input
-            ref="inputRef"
             :type="showPassword ? 'text' : 'password'"
             :class="cn('pr-10', props.class)"
             v-bind="$attrs"
         />
         <button
             type="button"
-            @click="showPassword = !showPassword"
+            @click="toggle"
             :class="
                 cn(
                     'absolute inset-y-0 right-0 flex items-center rounded-r-md px-3 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none',

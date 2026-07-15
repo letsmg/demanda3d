@@ -17,11 +17,13 @@ const form = useForm({ email: '', password: '', remember: false });
 
 interface TestClientAccount { label: string; email: string; }
 const testAccounts: TestClientAccount[] = [
-    { label: 'Tech3D Soluções Ltda', email: 'tech3d@demanda3d.com' },
-    { label: 'Prototipagem Rápida S.A.', email: 'prototipagem@demanda3d.com' },
-    { label: 'Indústria Criativa Maker', email: 'industria@demanda3d.com' },
+    { label: 'Cliente 1 - João Silva', email: 'cliente1@teste.com' },
+    { label: 'Cliente 2 - Maria Santos', email: 'cliente2@teste.com' },
+    { label: 'Cliente 3 - Pedro Oliveira', email: 'cliente3@teste.com' },
+    { label: 'Cliente 4 - Ana Costa', email: 'cliente4@teste.com' },
+    { label: 'Cliente 5 - Carlos Lima', email: 'cliente5@teste.com' },
 ];
-function fillTestCredentials(acc: TestClientAccount) { form.email = acc.email; form.password = 'password'; }
+function fillTestCredentials(acc: TestClientAccount) { form.email = acc.email; form.password = 'Mudar@123'; }
 function submit() { form.post('/login_cli', { preserveState: true }); }
 </script>
 

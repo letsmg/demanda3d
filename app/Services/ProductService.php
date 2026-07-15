@@ -179,6 +179,10 @@ class ProductService
         // --- Build query ---
         $query = Product::withoutGlobalScopes()
             ->availableForSale()
+            ->whereHas('tenant', function ($q) {
+                $q->where('active', true)
+                  ->where('is_profile_complete', true);
+            })
             ->with(['images', 'tenant.user', 'categories']);
 
         // Filtro de conteúdo adulto
@@ -235,6 +239,10 @@ class ProductService
     {
         $query = Product::withoutGlobalScopes()
             ->availableForSale()
+            ->whereHas('tenant', function ($q) {
+                $q->where('active', true)
+                  ->where('is_profile_complete', true);
+            })
             ->with(['images', 'tenant.user', 'categories']);
 
         if (! $canViewAdult) {
@@ -309,6 +317,10 @@ class ProductService
 
         $query = Product::withoutGlobalScopes()
             ->availableForSale()
+            ->whereHas('tenant', function ($q) {
+                $q->where('active', true)
+                  ->where('is_profile_complete', true);
+            })
             ->with(['images', 'categories']);
 
         // Filtro de conteúdo adulto
