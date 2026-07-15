@@ -61,10 +61,11 @@ class DatabaseSeeder extends Seeder
         $this->command->info('║  Senha padrão: Mudar@123                  ║');
         $this->command->info('║                                          ║');
         $this->command->info('║  Admin:     admin@teste.com               ║');
-        $this->command->info('║  Loja 1:    loja1@teste.com (seller1)     ║');
-        $this->command->info('║  Loja 2:    loja2@teste.com (seller2)     ║');
-        $this->command->info('║  Transp 1:  transp1@teste.com (carrier1)  ║');
-        $this->command->info('║  Transp 2:  transp2@teste.com (carrier2)  ║');
+        $this->command->info('║  Admin 2:   admin2@teste.com              ║');
+        $this->command->info('║  Lojas:     loja1adm..5adm@teste.com      ║');
+        $this->command->info('║             loja1padrao..5padrao          ║');
+        $this->command->info('║  Transp:    transp1adm..5adm@teste.com    ║');
+        $this->command->info('║             transp1padrao..5padrao        ║');
         $this->command->info('║  Clientes:  cliente1..5@teste.com         ║');
         $this->command->info('╚══════════════════════════════════════════╝');
     }

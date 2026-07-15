@@ -6,7 +6,7 @@ namespace App\Enums;
  * Grupos de acesso usados por Middlewares e redirecionamentos de portais.
  *
  * Mapeamento:
- *   PLATFORM_ADMIN → ADMIN
+ *   PLATFORM_ADMIN → ADMIN, ADMIN_2
  *   SELLERS        → SELLER_1, SELLER_2
  *   CARRIERS       → CARRIER_1, CARRIER_2
  *   CUSTOMER       → CUSTOMER
@@ -34,7 +34,8 @@ enum UserAccessGroup: string
     public static function fromAccessLevel(UserAccessLevel $level): self
     {
         return match ($level) {
-            UserAccessLevel::ADMIN => self::PLATFORM_ADMIN,
+            UserAccessLevel::ADMIN,
+            UserAccessLevel::ADMIN_2 => self::PLATFORM_ADMIN,
             UserAccessLevel::SELLER_1,
             UserAccessLevel::SELLER_2 => self::SELLERS,
             UserAccessLevel::CARRIER_1,

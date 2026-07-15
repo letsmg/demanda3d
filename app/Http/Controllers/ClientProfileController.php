@@ -107,8 +107,8 @@ class ClientProfileController extends Controller
             return back()->with('error', 'Já existe uma solicitação de devolução para este pedido.');
         }
 
-        // Verifica prazo de 7 dias após entrega
-        if (! $order->delivery_date || now()->diffInDays($order->delivery_date) > 7) {
+        // Verifica prazo de 7 dias após entrega (CDC) via Model
+        if (! $order->canBeCancelled()) {
             return back()->with('error', 'O prazo de 7 dias para solicitar devolução expirou.');
         }
 

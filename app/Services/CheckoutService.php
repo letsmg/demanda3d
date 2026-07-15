@@ -39,15 +39,32 @@ class CheckoutService
             // ── 1. Cria a Order ──────────────────────────────
             $firstTenantId = $cartItems->first()->product->tenant_id ?? 1;
 
+            // Snapshot do endereço de entrega (imutável)
+            $addressSnapshot = json_encode([
+                'address' => $client->address ?? '',
+                'number'  => $client->number ?? '',
+                'city'    => $client->city ?? '',
+                'state'   => $client->state ?? '',
+                'zipcode' => $client->zipcode ?? '',
+            ], JSON_UNESCAPED_UNICODE);
+
+            // Snapshot do primeiro produto (nome + preço)
+            $firstProduct = $cartItems->first()->product;
+            $productName = $firstProduct->name ?? 'Produto';
+            $productPrice = (float) ($firstProduct->sale_price ?? 0);
+
             $order = Order::create([
-                'tenant_id'        => $firstTenantId,
-                'client_id'        => $client->id,
-                'order_date'       => now()->toDateString(),
-                'delivery_date'    => now()->addDays(15)->toDateString(),
-                'stripe_session_id' => $options['stripe_session_id'] ?? null,
-                'amount_total'      => null,
-                'currency'          => $options['currency'] ?? 'brl',
-                'status'            => 'pending',
+                'tenant_id'            => $firstTenantId,
+                'client_id'            => $client->id,
+                'order_date'           => now()->toDateString(),
+                'delivery_date'        => now()->addDays(15)->toDateString(),
+                'stripe_session_id'    => $options['stripe_session_id'] ?? null,
+                'amount_total'         => null,
+                'currency'             => $options['currency'] ?? 'brl',
+                'status'               => 'pending',
+                'snapshot_address'     => $addressSnapshot,
+                'snapshot_product_name'=> $productName,
+                'snapshot_product_price'=> $productPrice,
             ]);
 
             // ── 2. Cria OrderItems com snapshot imutável ─────

@@ -25,9 +25,9 @@ class CheckLegalConsent
             return $next($request);
         }
 
-        // Admin (access_level >= 10) nunca é bloqueado
+        // Admin (access_level >= 10) nunca é bloqueado — apenas para guard web
         if ($userId) {
-            $user = auth()->user();
+            $user = \App\Models\User::find($userId);
             if ($user && $user->access_level->isAdmin()) {
                 return $next($request);
             }

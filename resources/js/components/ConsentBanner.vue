@@ -10,8 +10,8 @@ const legal = computed(() => page.props.legalConsent as any);
 
 const title = computed(() => {
     const doc = legal.value;
-    if (!doc) return 'Termos de Uso atualizados';
-    return doc.document_title || 'Termos de Uso atualizados';
+    if (!doc) return 'Documentos Legais atualizados';
+    return doc.document_title || 'Documentos Legais atualizados';
 });
 
 const graceDays = computed(() => legal.value?.grace_days ?? 7);
@@ -52,17 +52,17 @@ function handleDismiss() {
                             {{ title }}
                         </p>
                         <p class="mt-1 text-xs text-amber-700">
-                            Nossos Termos de Uso foram atualizados. Voc&ecirc; tem
-                            <strong>{{ graceDays }} dias</strong> para aceit&aacute;-los.
+                            Nossos Termos de Uso e Pol&iacute;tica de Privacidade foram atualizados.
+                            Voc&ecirc; tem <strong>{{ graceDays }} dias</strong> para aceit&aacute;-los.
                             Caso n&atilde;o aceite, seus produtos ser&atilde;o ocultados da loja.
                         </p>
-                        <div class="mt-3 flex items-center gap-2">
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
                             <Button
                                 size="sm"
                                 class="bg-amber-600 text-white hover:bg-amber-700"
                                 @click="handleAccept"
                             >
-                                Aceitar Termos
+                                Aceitar Termos e Privacidade
                             </Button>
                             <Button
                                 size="sm"
@@ -77,7 +77,14 @@ function handleDismiss() {
                                 target="_blank"
                                 class="text-xs text-amber-600 underline hover:text-amber-800"
                             >
-                                Ler termos
+                                Ler Termos de Uso
+                            </a>
+                            <a
+                                href="/legal/privacy"
+                                target="_blank"
+                                class="text-xs text-amber-600 underline hover:text-amber-800"
+                            >
+                                Ler Pol&iacute;tica de Privacidade
                             </a>
                         </div>
                     </div>
@@ -85,7 +92,7 @@ function handleDismiss() {
                         class="shrink-0 text-amber-400 hover:text-amber-600"
                         @click="handleDismiss"
                     >
-                        ✕
+                        &times;
                     </button>
                 </div>
             </div>

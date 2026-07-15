@@ -15,8 +15,16 @@ const form = useForm({ email: '', password: '', remember: false });
 
 interface TestCarrierAccount { label: string; email: string; }
 const testAccounts: TestCarrierAccount[] = [
-    { label: 'Transportadora Rápida (Carrier 1)', email: 'transp1@teste.com' },
-    { label: 'Transportadora Veloz (Carrier 2)', email: 'transp2@teste.com' },
+    { label: 'Transp 1 Admin (Carrier 1)', email: 'transp1adm@teste.com' },
+    { label: 'Transp 1 Colab (Carrier 2)', email: 'transp1padrao@teste.com' },
+    { label: 'Transp 2 Admin (Carrier 1)', email: 'transp2adm@teste.com' },
+    { label: 'Transp 2 Colab (Carrier 2)', email: 'transp2padrao@teste.com' },
+    { label: 'Transp 3 Admin (Carrier 1)', email: 'transp3adm@teste.com' },
+    { label: 'Transp 3 Colab (Carrier 2)', email: 'transp3padrao@teste.com' },
+    { label: 'Transp 4 Admin (Carrier 1)', email: 'transp4adm@teste.com' },
+    { label: 'Transp 4 Colab (Carrier 2)', email: 'transp4padrao@teste.com' },
+    { label: 'Transp 5 Admin (Carrier 1)', email: 'transp5adm@teste.com' },
+    { label: 'Transp 5 Colab (Carrier 2)', email: 'transp5padrao@teste.com' },
 ];
 function fillTestCredentials(acc: TestCarrierAccount) { form.email = acc.email; form.password = 'Mudar@123'; }
 

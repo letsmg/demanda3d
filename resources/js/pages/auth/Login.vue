@@ -20,9 +20,18 @@ interface TestAccount { label: string; email: string; }
 const email = ref('');
 const password = ref('');
 const testAccounts: TestAccount[] = [
-    { label: 'Admin Master', email: 'admin@teste.com' },
-    { label: 'Loja 1 (Seller 1)', email: 'loja1@teste.com' },
-    { label: 'Loja 2 (Seller 1)', email: 'loja2@teste.com' },
+    { label: 'Admin Geral (Admin 1)', email: 'admin@teste.com' },
+    { label: 'Admin Suporte (Admin 2)', email: 'admin2@teste.com' },
+    { label: 'Loja 1 Admin (Seller 1)', email: 'loja1adm@teste.com' },
+    { label: 'Loja 1 Padrão (Seller 2)', email: 'loja1padrao@teste.com' },
+    { label: 'Loja 2 Admin (Seller 1)', email: 'loja2adm@teste.com' },
+    { label: 'Loja 2 Padrão (Seller 2)', email: 'loja2padrao@teste.com' },
+    { label: 'Loja 3 Admin (Seller 1)', email: 'loja3adm@teste.com' },
+    { label: 'Loja 3 Padrão (Seller 2)', email: 'loja3padrao@teste.com' },
+    { label: 'Loja 4 Admin (Seller 1)', email: 'loja4adm@teste.com' },
+    { label: 'Loja 4 Padrão (Seller 2)', email: 'loja4padrao@teste.com' },
+    { label: 'Loja 5 Admin (Seller 1)', email: 'loja5adm@teste.com' },
+    { label: 'Loja 5 Padrão (Seller 2)', email: 'loja5padrao@teste.com' },
 ];
 function fillTestCredentials(acc: TestAccount) { email.value = acc.email; password.value = 'Mudar@123'; }
 </script>

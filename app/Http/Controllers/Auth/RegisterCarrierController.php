@@ -51,7 +51,7 @@ class RegisterCarrierController extends Controller
         $addrPlaceholder = Crypt::encryptString('A preencher');
         $docPlaceholder = EncryptionService::encryptWithHash('00000000000000');
 
-        DB::transaction(function () use ($validated, $email, $fantasyName, $firstNameData, $lastNameData, $addrPlaceholder, $docPlaceholder) {
+        DB::transaction(function () use ($validated, $email, $fantasyName, $firstNameData, $lastNameData, $addrPlaceholder, $docPlaceholder, $legalData) {
             $user = User::create([
                 'email' => $email,
                 'display_name' => $fantasyName,

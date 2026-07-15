@@ -17,17 +17,18 @@ class CarrierSeeder extends Seeder
     {
         $tenants = Tenant::all();
 
-        $carriersData = [
-            [
-                'fantasy_name'   => 'Transportadora Rápida',
-                'company_name'   => 'Transportadora Rápida Ltda',
-                'email'          => 'transp1@teste.com',
-                'password'       => 'Mudar@123',
+        $carriersData = [];
+
+        for ($i = 1; $i <= 5; $i++) {
+            $carriersData[] = [
+                'fantasy_name'   => "Transportadora Rápida {$i}",
+                'company_name'   => "Transportadora Rápida {$i} Ltda",
+                'email'          => "transp{$i}adm@teste.com",
                 'document_type'  => 'cnpj',
-                'document'       => '11222333000144',
-                'phone'          => '1131234567',
+                'document'       => '11222333000' . str_pad((string) (100 + $i), 4, '0', STR_PAD_LEFT),
+                'phone'          => '113123456' . $i,
                 'address'        => 'Avenida Paulista, 1000 — Bela Vista, São Paulo, SP — 01310-000',
-                'website_url'    => 'https://transp1.com.br',
+                'website_url'    => "https://transp{$i}.com.br",
                 'access_level'   => UserAccessLevel::CARRIER_1,
                 'coverage'       => [
                     ['title' => 'Grande São Paulo', 'cep_start' => '01000000', 'cep_end' => '09999999'],
@@ -35,28 +36,11 @@ class CarrierSeeder extends Seeder
                     ['title' => 'Rio de Janeiro',   'cep_start' => '20000000', 'cep_end' => '28999999'],
                     ['title' => 'Minas Gerais',     'cep_start' => '30000000', 'cep_end' => '39999999'],
                 ],
-            ],
-            [
-                'fantasy_name'   => 'Transportadora Veloz',
-                'company_name'   => 'Transportadora Veloz Ltda',
-                'email'          => 'transp2@teste.com',
-                'password'       => 'Mudar@123',
-                'document_type'  => 'cnpj',
-                'document'       => '22333444000155',
-                'phone'          => '2131234567',
-                'address'        => 'Avenida Rio Branco, 200 — Centro, Rio de Janeiro, RJ — 20040-000',
-                'website_url'    => 'https://transp2.express',
-                'access_level'   => UserAccessLevel::CARRIER_2,
-                'coverage'       => [
-                    ['title' => 'Capital RJ',     'cep_start' => '20000000', 'cep_end' => '23799999'],
-                    ['title' => 'Interior RJ',    'cep_start' => '23800000', 'cep_end' => '28999999'],
-                    ['title' => 'Grande São Paulo','cep_start' => '01000000', 'cep_end' => '09999999'],
-                ],
-            ],
-        ];
+            ];
+        }
 
-        // Busca os users já criados pelo UserSeeder
-        $users = \App\Models\User::whereIn('access_level', UserAccessLevel::carrierValues())->get()->keyBy('email');
+        // Busca users carrier_1 criados pelo UserSeeder
+        $users = \App\Models\User::where('access_level', UserAccessLevel::CARRIER_1)->get()->keyBy('email');
 
         foreach ($carriersData as $data) {
             $user = $users[$data['email']] ?? null;
@@ -87,7 +71,6 @@ class CarrierSeeder extends Seeder
                 'is_profile_complete'   => true,
             ]);
 
-            // Cobertura
             foreach ($data['coverage'] as $range) {
                 CarrierCoverageRange::create([
                     'carrier_id' => $carrier->id,
@@ -97,7 +80,6 @@ class CarrierSeeder extends Seeder
                 ]);
             }
 
-            // Acordos ativos com todos os tenants
             foreach ($tenants as $tenant) {
                 CarrierTenantAgreement::create([
                     'tenant_id'  => $tenant->id,
@@ -109,6 +91,6 @@ class CarrierSeeder extends Seeder
             $this->command->info("  ✓ Carrier: {$data['fantasy_name']} ({$data['email']})");
         }
 
-        $this->command->info('✓ 2 transportadoras criadas (transp1..2@teste.com / Mudar@123)');
+        $this->command->info('✓ 5 transportadoras criadas (transp1..5adm@teste.com)');
     }
 }
