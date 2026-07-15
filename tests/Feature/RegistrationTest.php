@@ -35,6 +35,7 @@ test('register seller creates user and tenant with valid credentials', function 
     ]);
 
     $response->assertRedirect('/dashboard');
+    $response->assertSessionHasNoErrors();
 
     $user = User::where('email', $email)->first();
     expect($user)->not->toBeNull();
@@ -66,6 +67,7 @@ test('register seller fails without accepting terms', function () {
 test('register seller fails with duplicate email', function () {
     $email = 'duplicado_' . uniqid() . '@teste.com';
 
+    // Primeiro registro — sucesso
     post('/register', [
         'name' => 'Loja 1',
         'email' => $email,
@@ -75,6 +77,10 @@ test('register seller fails with duplicate email', function () {
         'accept_privacy' => '1',
     ]);
 
+    // Logout para poder tentar novamente
+    \Illuminate\Support\Facades\Auth::logout();
+
+    // Segundo registro — deve falhar com email duplicado
     $response = post('/register', [
         'name' => 'Loja 2',
         'email' => $email,
@@ -106,7 +112,7 @@ test('register client creates client record', function () {
     $client = \App\Models\Client::where('email', $email)->first();
     expect($client)->not->toBeNull();
     expect($client->is_profile_complete)->toBeFalse();
-    expect($client->tenand_id)->not->toBeNull();
+    expect($client->tenant_id)->not->toBeNull();
 });
 
 test('register client fails without accepting terms', function () {
