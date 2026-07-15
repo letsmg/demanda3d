@@ -27,7 +27,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 
-    // Bank details (dados bancários) — apenas Admin e SELLER_1 (acesso financeiro)
+    // Bank details (dados bancários) — Admin vê todos, SELLER_1 vê apenas o próprio
+    // Admin: listagem de todos os vendedores
+    Route::get('admin/bank', [BankDetailController::class, 'adminIndex'])
+        ->middleware(\App\Http\Middleware\CheckAccessLevel::class . ':10')
+        ->name('admin.bank.index');
+    Route::get('admin/bank/{tenant}/edit', [BankDetailController::class, 'adminEdit'])
+        ->middleware(\App\Http\Middleware\CheckAccessLevel::class . ':10')
+        ->name('admin.bank.edit');
+
+    // Seller 1: apenas o próprio tenant
     Route::get('settings/bank', [BankDetailController::class, 'edit'])
         ->middleware(\App\Http\Middleware\CheckAccessLevel::class . ':10,1')
         ->name('bank.edit');

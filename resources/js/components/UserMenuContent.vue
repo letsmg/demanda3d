@@ -19,6 +19,9 @@ type Props = {
 const page = usePage<{ auth: { user?: { access_level?: number; isCarrier?: boolean } } }>();
 const accessLevel = page.props.auth?.user?.access_level ?? 0;
 const isCarrier = accessLevel === 5 || accessLevel === 6;
+const isAdmin = accessLevel >= 10;
+const isSeller1 = accessLevel === 1;
+const bankHref = isAdmin ? '/admin/bank' : '/settings/bank';
 
 const handleLogout = () => {
     router.flushAll();
@@ -65,8 +68,8 @@ defineProps<Props>();
                     Senha
                 </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem :as-child="true">
-                <Link class="block w-full cursor-pointer" href="/settings/bank" prefetch>
+            <DropdownMenuItem v-if="isAdmin || isSeller1" :as-child="true">
+                <Link class="block w-full cursor-pointer" :href="bankHref" prefetch>
                     <Banknote class="mr-2 h-4 w-4" />
                     Dados Bancários
                 </Link>
