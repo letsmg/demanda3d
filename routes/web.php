@@ -248,6 +248,11 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::post('{user}/reset-password', [InertiaAdminUserController::class, 'resetPassword'])->name('reset-password');
     });
 
+    // Audit Logs — visível para staff (sellers veem apenas seu tenant, admins veem tudo)
+    Route::prefix('audit-logs')->name('audit-logs.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Inertia\AuditLogController::class, 'index'])->name('index');
+    });
+
     // Reports (management + admin com canAccessFinancials)
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');

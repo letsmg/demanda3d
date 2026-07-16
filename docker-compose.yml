@@ -58,6 +58,31 @@ services:
       - demanda-net-dev
 
   # =============================================
+  # RabbitMQ - DEV (message broker assíncrono)
+  #
+  # RabbitMQ com plugin de management (interface web na porta 15672).
+  # Porta AMQP: 5672 | Interface admin: 15672
+  # Credenciais padrão: guest / guest (apenas localhost)
+  # =============================================
+  demanda-rabbitmq-dev:
+    image: rabbitmq:3-management-alpine
+    container_name: demanda-rabbitmq-dev
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - demanda-rabbitmq-dev:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - demanda-net-dev
+
+  # =============================================
   # Redis - DEV (cache + filas + sessões)
   #
   # Redis cumpre dupla função em desenvolvimento:
@@ -229,6 +254,8 @@ services:
       - demanda-net-dev
 
 volumes:
+  demanda-rabbitmq-dev:
+    name: demanda-rabbitmq-dev
   demanda-psql-dev:
     name: demanda-psql-dev
   demanda-psql-rep-dev:

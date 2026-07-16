@@ -264,6 +264,60 @@ O arquivo **[docs/tables.md](docs/tables.md)** contém um dicionário completo d
 
 ---
 
+## 🐇 RabbitMQ — Message Broker Assíncrono
+
+O projeto utiliza **RabbitMQ** como message broker para processamento assíncrono de jobs pesados, permitindo que o Laravel delegue tarefas de longa duração (notificações em lote, processamento de imagens, geração de relatórios) para filas robustas e independentes do Redis.
+
+### Motivação
+- **Resiliência**: Mensagens persistem em disco e sobrevivem a reinicializações do container.
+- **Roteamento avançado**: Suporte a exchanges (direct, topic, fanout) para roteamento inteligente de mensagens.
+- **Interface de gestão**: Painel web de administração na porta `15672` para monitorar filas, conexões e throughput.
+- **Separação de responsabilidades**: O Redis permanece dedicado a cache e sessões; o RabbitMQ gerencia filas de longa duração.
+
+### Configuração
+
+| Variável | Valor Local | Descrição |
+| :--- | :--- | :--- |
+| `QUEUE_CONNECTION` | `rabbitmq` (ou `redis`) | Driver de fila padrão |
+| `RABBITMQ_HOST` | `127.0.0.1` | Host do broker |
+| `RABBITMQ_PORT` | `5672` | Porta AMQP |
+| `RABBITMQ_USER` | `guest` | Usuário (padrão) |
+| `RABBITMQ_PASSWORD` | `guest` | Senha (padrão) |
+| `RABBITMQ_VHOST` | `/` | Virtual host |
+| `RABBITMQ_QUEUE` | `default` | Nome da fila padrão |
+
+### Container Docker
+
+```bash
+# O container sobe automaticamente com docker compose up
+docker compose up -d demanda-rabbitmq-dev
+
+# Acessar painel de gestão
+# http://localhost:15672  (guest / guest)
+
+# Verificar saúde
+docker inspect --format='{{json .State.Health}}' demanda-rabbitmq-dev
+```
+
+### Worker (Consumer)
+
+```bash
+# Iniciar o worker para processar jobs da fila RabbitMQ
+php artisan queue:work rabbitmq --queue=default --tries=3 --timeout=60
+
+# Para desenvolvimento, usar:
+php artisan queue:listen rabbitmq --tries=1 --timeout=0
+```
+
+### Job de Exemplo
+
+```php
+// Teste rápido via Tinker:
+ProcessNotificationJob::dispatch('42', 'Teste RabbitMQ', 'Mensagem processada com sucesso!');
+```
+
+---
+
 ## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
 
 O sistema utiliza uma arquitetura **híbrida Laravel + Go** para processamento assíncrono de notificações:
@@ -345,9 +399,58 @@ A restrição é aplicada via `OrderPolicy` (métodos `viewClientDetails` e `vie
 
 ---
 
+## 📝 Logs de Auditoria (Activity Logs)
+
+O sistema conta com um módulo completo de **logs de auditoria polimórfico** que registra todas as ações críticas realizadas na plataforma, permitindo rastreabilidade total para administradores e vendedores.
+
+### Arquitetura
+
+| Componente | Tecnologia | Propósito |
+| :--- | :--- | :--- |
+| `activity_logs` (tabela) | PostgreSQL + JSONB | Armazena logs imutáveis com payload de mudanças (`old` e `attributes`) |
+| `ActivityLog` (Model) | Laravel Eloquent | Model polimórfico com relacionamentos `causer` (quem) e `subject` (recurso afetado) |
+| `AuditLogController` | Laravel + Inertia | Controller com filtros, paginação (10/página) e isolamento multi-tenant |
+| `AuditLogs/Index.vue` | Vue 3 + TypeScript | Interface dinâmica com cores por tipo de ação, filtros e "Load More" |
+
+### Regras de Visibilidade (Multi-Tenant)
+
+| Nível de Acesso | Visibilidade |
+| :--- | :--- |
+| **ADMIN (10, 11)** | Visualiza **todos** os logs de todos os tenants, transportadoras e ações globais do sistema. |
+| **SELLER (1, 2)** | Visualiza **apenas** os logs do seu próprio tenant (`tenant_id`). Isolamento estrito no backend via Query Scope. |
+| **CARRIER (5, 6)** | Visualiza logs relacionados à sua transportadora. |
+| **CUSTOMER (15)** | **Sem acesso** à página de auditoria (rota protegida por `ensure.staff` middleware). |
+
+### Funcionalidades da Interface
+
+- **Cores por tipo de ação**: Verde (criação), Laranja (edição), Vermelho (exclusão/bloqueio), Azul (outros).
+- **Ícones contextuais**: `+` para criação, lápis para edição, lixeira para exclusão, bloqueio para bans.
+- **Filtros combináveis**: Por tipo de evento, recurso afetado, ID do usuário e range de data.
+- **"Mostrar Mais" (Load More)**: Carrega incrementalmente os próximos 10 registros sem reload da página.
+
+### Campos do Registro de Auditoria
+
+| Campo | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `event` | VARCHAR(200) | Tipo legível da ação (ex: "Criou Produto", "Bloqueou Usuário") |
+| `description` | TEXT | Descrição detalhada (ex: "João atualizou o preço de R$ 300 para R$ 250") |
+| `properties` | JSONB | Payload com `old` (estado anterior) e `attributes` (novo estado) |
+| `causer` | MorphTo | Quem executou a ação (User ou Client) |
+| `subject` | MorphTo | Recurso afetado (Product, Order, User, etc.) |
+| `tenant_id` | FK nullable | Tenant da ação (nulo para ações globais de admin) |
+
+### Rota
+
+```
+/audit-logs → AuditLogController@index  (acessível apenas para staff autenticado)
+```
+
+---
+
 ## 📝 Roadmap
 - [ ] Advanced Rate Limiting for API endpoints.
-- [ ] Audit Logs for critical actions.
+- [x] RabbitMQ — Message Broker para processamento assíncrono.
+- [x] Audit Logs — Sistema de logs de auditoria polimórfico e multi-tenant.
 - [ ] 2FA support for administrative accounts.
 
 ---

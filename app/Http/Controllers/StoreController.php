@@ -25,7 +25,7 @@ class StoreController extends Controller
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'category'   => 'nullable|string|exists:categories,slug',
+            'categories'  => 'nullable|string|max:500', // comma-separated category slugs
         ]);
 
         // Verifica se o usuário pode ver conteúdo adulto (18+)
@@ -64,7 +64,7 @@ class StoreController extends Controller
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
-            'category'    => 'nullable|string|exists:categories,slug',
+            'categories'  => 'nullable|string|max:500', // comma-separated category slugs
             'page'        => 'required|integer|min:1',
         ]);
 

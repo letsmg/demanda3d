@@ -48,6 +48,8 @@ class CartController extends Controller
             if ($json) {
                 abort(response()->json(['error' => 'Unauthenticated'], 401));
             }
+            // Salva a URL atual como intended antes de redirecionar ao login
+            session(['url.intended' => request()->url()]);
             abort(redirect('/login_cli'));
         }
         return $client;
