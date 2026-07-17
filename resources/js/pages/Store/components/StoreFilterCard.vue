@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Search, SlidersHorizontal, RotateCw, X } from '@lucide/vue';
+import { computed } from 'vue';
+import { Search, RotateCw, X } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Select,
     SelectContent,
@@ -13,6 +13,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import VueSlider from 'vue-slider-component';
+import 'vue-slider-component/dist-css/vue-slider-component.css';
 
 interface Category {
     slug: string;
@@ -24,24 +26,24 @@ interface SortOption {
     label: string;
 }
 
-defineProps<{
-    // Search
+const props = withDefaults(defineProps<{
     searchTerm: string;
     suggestions: string[];
     showSuggestions: boolean;
     highlightedIndex: number;
-    // Price
-    priceMin: string;
-    priceMax: string;
-    // Categories
+    priceMin: number;
+    priceMax: number;
     categories: Category[];
     selectedCategories: string[];
-    // Sort
     sortOptions: SortOption[];
     currentSort: string;
-    // Flags
     hasFilters: boolean;
-}>();
+}>(), {
+    selectedCategories: () => [],
+    categories: () => [],
+    suggestions: () => [],
+    sortOptions: () => [],
+});
 
 const emit = defineEmits<{
     'update:search-term': [value: string];
@@ -49,15 +51,10 @@ const emit = defineEmits<{
     'keydown-search': [e: KeyboardEvent];
     'select-suggestion': [text: string];
     'clear-search': [];
-    'update:price-min': [value: string];
-    'update:price-max': [value: string];
-    'blur-price': [];
-    'keyup-price': [e: KeyboardEvent];
+    'update:price-range': [values: [number, number]];
     'toggle-category': [slug: string];
     'select-all-categories': [];
     'update:sort': [value: string | null];
-    'apply-filters': [];
-    'clear-filters': [];
 }>();
 
 function onSearchInput(e: Event): void {
@@ -65,12 +62,15 @@ function onSearchInput(e: Event): void {
     emit('input-search');
 }
 
-function onPriceMinInput(e: Event): void {
-    emit('update:price-min', (e.target as HTMLInputElement).value);
+// Valor vinculado do slider como array [min, max]
+const sliderValue = computed<[number, number]>(() => [props.priceMin, props.priceMax]);
+
+function onSliderChange(values: [number, number]): void {
+    emit('update:price-range', values);
 }
 
-function onPriceMaxInput(e: Event): void {
-    emit('update:price-max', (e.target as HTMLInputElement).value);
+function sliderTooltipFormatter(val: number): string {
+    return `R$ ${val}`;
 }
 </script>
 
@@ -78,9 +78,7 @@ function onPriceMaxInput(e: Event): void {
     <!-- ═══════ HEADER: Busca + Ordenação lado a lado ═══════ -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row" data-search-area>
         <div class="relative flex-1">
-            <Search
-                class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-700"
-            />
+            <Search class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-700" />
             <input
                 :value="searchTerm"
                 type="text"
@@ -139,76 +137,61 @@ function onPriceMaxInput(e: Event): void {
 
     <!-- ═══════ CARD DE FILTROS (Dark Amber) ═══════ -->
     <Card class="mb-8 border-amber-700 bg-amber-600 text-white shadow-md">
-        <CardContent class="space-y-4 pt-5">
-            <div class="flex flex-wrap items-center gap-4">
-                <!-- Preço -->
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-amber-50">Preço:</label>
-                    <input
-                        :value="priceMin"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="Mín"
-                        class="store-amber-input w-24 rounded-md border border-brand-amberInputBorder px-2 py-2 text-brand-amberDark placeholder:text-brand-amberPrimary/60 focus:outline-none"
-                        @input="onPriceMinInput"
-                        @blur="emit('blur-price')"
-                        @keyup="emit('keyup-price', $event)"
-                    />
-                    <span class="text-brand-amberPrimary">-</span>
-                    <input
-                        :value="priceMax"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="Máx"
-                        class="store-amber-input w-24 rounded-md border border-brand-amberInputBorder px-2 py-2 text-brand-amberDark placeholder:text-brand-amberPrimary/60 focus:outline-none"
-                        @input="onPriceMaxInput"
-                        @blur="emit('blur-price')"
-                        @keyup="emit('keyup-price', $event)"
-                    />
+        <CardContent class="">
+            <!-- Range Slider de Preço + Limpar Filtros lado a lado -->
+            <div>
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium text-amber-50">Faixa de Preço:</label>
+                    <span class="text-xs font-medium text-amber-200">
+                        R$ {{ sliderValue[0] }} — R$ {{ sliderValue[1] }}
+                    </span>
                 </div>
-
-                <!-- Ações -->
-                <Button
-                    type="button"
-                    size="sm"
-                    class="flex items-center gap-1.5 bg-amber-800 text-white hover:bg-amber-900"
-                    @click="emit('apply-filters')"
-                >
-                    <SlidersHorizontal class="h-4 w-4" />
-                    Aplicar Filtros
-                </Button>
-
-                <Button
-                    v-if="hasFilters"
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    class="border-amber-200 text-amber-50 hover:bg-amber-700 hover:text-white"
-                    @click="emit('clear-filters')"
-                >
-                    <RotateCw class="mr-1 h-4 w-4" />Limpar Filtros
-                </Button>
+                <div class="flex items-center gap-4">
+                    <!-- Slider — metade da largura -->
+                    <div :class="hasFilters ? 'w-1/2' : 'w-full'">
+                        <VueSlider
+                            :model-value="sliderValue"
+                            :min="0"
+                            :max="1500"
+                            :interval="10"
+                            :tooltip-formatter="sliderTooltipFormatter"
+                            :dot-size="22"
+                            :height="8"
+                            :rail-style="{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '4px' }"
+                            :process-style="{ backgroundColor: '#f59e0b', borderRadius: '4px' }"
+                            :tooltip-style="{ backgroundColor: '#1c1917', borderColor: '#1c1917', color: '#fef3c7', fontSize: '12px', fontWeight: '600' }"
+                            :dot-style="{ backgroundColor: '#ffffff', borderColor: '#451a03', borderWidth: '3px', boxShadow: '0 2px 6px rgba(0,0,0,0.4), 0 0 0 2px rgba(245,158,11,0.4)' }"
+                            @change="onSliderChange"
+                        />
+                    </div>
+                    <!-- Limpar Filtros ao lado direito do slider -->
+                    <Button
+                        v-if="hasFilters"
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="shrink-0 border-amber-200 text-amber-50 hover:bg-amber-700 hover:text-white"
+                        @click="emit('select-all-categories'); emit('update:price-range', [0, 1500])"
+                    >
+                        <RotateCw class="mr-1 h-4 w-4" />Limpar Filtros
+                    </Button>
+                </div>
             </div>
 
             <!-- Categorias multi-seleção -->
             <div class="space-y-2">
                 <label class="text-sm font-medium text-amber-50">Categorias:</label>
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- Botão Todas -->
                     <button
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs font-medium transition select-none"
                         :class="selectedCategories.length === 0
                             ? 'border-amber-50 bg-amber-800 text-white shadow-sm'
                             : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'"
-                        @click="$emit('select-all-categories')"
+                        @click="emit('select-all-categories')"
                     >
                         Todas
                     </button>
-
-                    <!-- Cápsulas das Categorias -->
                     <div
                         v-for="cat in categories"
                         :key="cat.slug"
@@ -216,12 +199,8 @@ function onPriceMaxInput(e: Event): void {
                         :class="selectedCategories.includes(cat.slug)
                             ? 'border-amber-50 bg-amber-800 text-white'
                             : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'"
-                        @click="$emit('toggle-category', cat.slug)"
+                        @click="emit('toggle-category', cat.slug)"
                     >
-                        <!-- 
-                        Input nativo: o Tailwind Forms adiciona o 'v' branco automaticamente 
-                        usando a cor definida em 'text-amber-600' para o fundo do quadrado.
-                        -->
                         <input
                             type="checkbox"
                             :checked="selectedCategories.includes(cat.slug)"
