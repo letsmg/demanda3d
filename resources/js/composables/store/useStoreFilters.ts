@@ -5,40 +5,37 @@ type FilterParams = Record<string, string>;
 
 interface StoreFilters {
     search?: string;
-    min_price?: number;
-    max_price?: number;
+    min_price?: number | string;
+    max_price?: number | string;
     sort?: string;
     sort_dir?: string;
     categories?: string;
 }
 
 function parseCategories(raw: string | undefined): string[] {
-    if (!raw) {
-        return [];
-    }
-
+    if (!raw) return [];
     return raw.split(',').filter(Boolean);
 }
 
+// Variável global ao módulo para gerenciar o delay do slider
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 export function useStoreFilters(props: { filters: StoreFilters }) {
     const searchTerm = ref(props.filters.search || '');
-    const priceMin = ref(props.filters.min_price?.toString() || '');
-    const priceMax = ref(props.filters.max_price?.toString() || '');
+    const priceMin = ref(Number(props.filters.min_price) || 0);
+    const priceMax = ref(Number(props.filters.max_price) || 1500);
     const selectedCategories = ref<string[]>(parseCategories(props.filters.categories));
     const sortBy = ref(props.filters.sort || 'name');
     const sortOrder = ref(props.filters.sort_dir || 'asc');
 
-    // ⚡ Sincroniza refs com props quando Inertia atualiza os filtros
+    // ⚡ Sincroniza refs com props quando Inertia atualiza
     watch(
         () => props.filters,
         (newFilters) => {
-            if (!newFilters) {
-                return;
-            }
-
+            if (!newFilters) return;
             searchTerm.value = newFilters.search || '';
-            priceMin.value = newFilters.min_price?.toString() || '';
-            priceMax.value = newFilters.max_price?.toString() || '';
+            priceMin.value = Number(newFilters.min_price) || 0;
+            priceMax.value = Number(newFilters.max_price) || 1500;
             selectedCategories.value = parseCategories(newFilters.categories);
             sortBy.value = newFilters.sort || 'name';
             sortOrder.value = newFilters.sort_dir || 'asc';
@@ -53,30 +50,23 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     let abortController: AbortController | null = null;
 
     async function fetchSuggestions(): Promise<void> {
-        if (abortController) {
-            abortController.abort();
-        }
-
+        if (abortController) abortController.abort();
         const val = searchTerm.value.trim();
 
         if (val.length < 1) {
             suggestions.value = [];
             showSuggestions.value = false;
-
             return;
         }
 
         abortController = new AbortController();
-
         try {
             const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val)}`, {
                 signal: abortController.signal,
                 headers: { Accept: 'application/json' },
             });
-
             if (res.ok) {
                 const json = await res.json();
-
                 suggestions.value = json.suggestions || [];
                 showSuggestions.value = suggestions.value.length > 0;
                 highlightedIndex.value = -1;
@@ -102,10 +92,7 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
 
     function onSearchKeydown(e: KeyboardEvent): void {
         if (!showSuggestions.value || suggestions.value.length === 0) {
-            if (e.key === 'Enter') {
-                applyStoreFilters();
-            }
-
+            if (e.key === 'Enter') applyStoreFilters();
             return;
         }
 
@@ -117,7 +104,6 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
             highlightedIndex.value = Math.max(highlightedIndex.value - 1, -1);
         } else if (e.key === 'Enter') {
             e.preventDefault();
-
             if (highlightedIndex.value >= 0 && highlightedIndex.value < suggestions.value.length) {
                 selectSuggestion(suggestions.value[highlightedIndex.value]);
             } else {
@@ -131,19 +117,11 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
 
     function onWindowClick(e: MouseEvent): void {
         const target = e.target as HTMLElement;
-
-        if (!target.closest('[data-search-area]')) {
-            showSuggestions.value = false;
-        }
+        if (!target.closest('[data-search-area]')) showSuggestions.value = false;
     }
 
-    onMounted(() => {
-        window.addEventListener('click', onWindowClick);
-    });
-
-    onUnmounted(() => {
-        window.removeEventListener('click', onWindowClick);
-    });
+    onMounted(() => window.addEventListener('click', onWindowClick));
+    onUnmounted(() => window.removeEventListener('click', onWindowClick));
 
     // ── Search ─────────────────────────────────────────────
     function clearSearch(): void {
@@ -152,43 +130,26 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         showSuggestions.value = false;
         highlightedIndex.value = -1;
         applyStoreFilters();
-
-        const input = document.querySelector<HTMLInputElement>('input[placeholder*="Buscar"]');
-
-        input?.focus();
+        document.querySelector<HTMLInputElement>('input[placeholder*="Buscar"]')?.focus();
     }
 
-    // ── Price ──────────────────────────────────────────────
-    function onPriceBlur(): void {
-        const min = parseFloat(priceMin.value);
-        const max = parseFloat(priceMax.value);
+    // ── Price Slider (Substitui onPriceBlur/onPriceEnter) ──
+    function updatePriceRange(values: [number, number]): void {
+        priceMin.value = values[0];
+        priceMax.value = values[1];
 
-        if (!isNaN(min) && !isNaN(max) && min > max) {
-            const tmp = priceMin.value;
-
-            priceMin.value = priceMax.value;
-            priceMax.value = tmp;
-        }
-
-        applyStoreFilters();
-    }
-
-    function onPriceEnter(e: KeyboardEvent): void {
-        if (e.key === 'Enter') {
-            (e.target as HTMLInputElement).blur();
-        }
+        // Debounce de 500ms para evitar spam de requisições enquanto desliza
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            applyStoreFilters();
+        }, 500);
     }
 
     // ── Categories ─────────────────────────────────────────
     function toggleCategory(catSlug: string): void {
         const idx = selectedCategories.value.indexOf(catSlug);
-
-        if (idx >= 0) {
-            selectedCategories.value.splice(idx, 1);
-        } else {
-            selectedCategories.value.push(catSlug);
-        }
-
+        if (idx >= 0) selectedCategories.value.splice(idx, 1);
+        else selectedCategories.value.push(catSlug);
         applyStoreFilters();
     }
 
@@ -203,14 +164,10 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     ];
 
     function handleSortChange(value: string | null): void {
-        if (!value) {
-            return;
-        }
-
+        if (!value) return;
         const parts = value.split('_');
         const dir = parts.pop()!;
         const field = parts.join('_');
-
         sortBy.value = field;
         sortOrder.value = dir;
         applyStoreFilters();
@@ -225,22 +182,14 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         const params: FilterParams = {};
         const trimmedSearch = searchTerm.value.trim();
 
-        if (trimmedSearch.length >= 3) {
-            params.search = trimmedSearch;
-        }
+        if (trimmedSearch.length >= 3) params.search = trimmedSearch;
+        
+        // Só aplica se estiver fora do range padrão
+        if (priceMin.value > 0) params.min_price = priceMin.value.toString();
+        if (priceMax.value < 1500) params.max_price = priceMax.value.toString();
 
-        if (priceMin.value) {
-            params.min_price = priceMin.value;
-        }
-
-        if (priceMax.value) {
-            params.max_price = priceMax.value;
-        }
-
-        if (selectedCategories.value.length > 0) {
-            params.categories = selectedCategories.value.join(',');
-        }
-
+        if (selectedCategories.value.length > 0) params.categories = selectedCategories.value.join(',');
+        
         params.sort = sortBy.value;
         params.sort_dir = sortOrder.value;
 
@@ -252,12 +201,11 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     }
 
     function clearFiltersOnly(): void {
-        priceMin.value = '';
-        priceMax.value = '';
+        priceMin.value = 0;
+        priceMax.value = 1500;
         selectedCategories.value = [];
         sortBy.value = 'name';
         sortOrder.value = 'asc';
-
         applyStoreFilters();
     }
 
@@ -265,8 +213,8 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         searchTerm.value = '';
         suggestions.value = [];
         showSuggestions.value = false;
-        priceMin.value = '';
-        priceMax.value = '';
+        priceMin.value = 0;
+        priceMax.value = 1500;
         selectedCategories.value = [];
         sortBy.value = 'name';
         sortOrder.value = 'asc';
@@ -282,8 +230,8 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     const hasFilters = computed(() => {
         return (
             searchTerm.value.trim().length >= 3 ||
-            priceMin.value ||
-            priceMax.value ||
+            priceMin.value > 0 ||
+            priceMax.value < 1500 ||
             selectedCategories.value.length > 0 ||
             sortBy.value !== 'name' ||
             sortOrder.value !== 'asc'
@@ -291,14 +239,12 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     });
 
     return {
-        // State
         searchTerm,
         priceMin,
         priceMax,
         selectedCategories,
         sortBy,
         sortOrder,
-        // Autocomplete
         suggestions,
         showSuggestions,
         highlightedIndex,
@@ -306,22 +252,15 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         selectSuggestion,
         onSearchInput,
         onSearchKeydown,
-        // Search
         clearSearch,
-        // Price
-        onPriceBlur,
-        onPriceEnter,
-        // Categories
+        updatePriceRange, // A nova função principal do slider
         toggleCategory,
-        // Sorting
         sortOptions,
         handleSortChange,
         getCurrentSort,
-        // Core
         applyStoreFilters,
         clearFiltersOnly,
         clearAllFilters,
-        // Computed
         hasFilters,
     };
 }

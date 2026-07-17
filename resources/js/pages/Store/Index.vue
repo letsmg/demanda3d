@@ -30,10 +30,9 @@ const props = defineProps<{
     };
 }>();
 
-// ═══ Hydration guard — evita mismatch entre SSR e cliente ═══
 const isMounted = ref(false);
 
-// ═══ Composables ═══════════════════════════════════════════
+// Composables
 const cart = useCart();
 const storeFilters = useStoreFilters(props);
 const products = useStoreProducts(props, {
@@ -49,13 +48,11 @@ const share = useShareDialog();
 
 onMounted(() => {
     isMounted.value = true;
-
     if (cart.isAuthenticated()) {
         cart.fetchCartData();
     }
 });
 
-// ═══ Utility functions (passed down to sub-components) ═════
 function formatPrice(value: string | number): string {
     return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -67,7 +64,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
     if (product.images && product.images.length > 0 && product.images[index]) {
         return product.images[index].url;
     }
-
     return undefined;
 }
 </script>
@@ -106,15 +102,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 @keydown-search="storeFilters.onSearchKeydown($event)"
                 @select-suggestion="storeFilters.selectSuggestion($event)"
                 @clear-search="storeFilters.clearSearch()"
-                @update:price-min="storeFilters.priceMin = $event"
-                @update:price-max="storeFilters.priceMax = $event"
-                @blur-price="storeFilters.onPriceBlur()"
-                @keyup-price="storeFilters.onPriceEnter($event)"
+                @update:price-range="storeFilters.updatePriceRange($event)"
                 @toggle-category="storeFilters.toggleCategory($event)"
                 @select-all-categories="storeFilters.selectedCategories = []; storeFilters.applyStoreFilters()"
                 @update:sort="storeFilters.handleSortChange($event)"
-                @apply-filters="storeFilters.applyStoreFilters()"
-                @clear-filters="storeFilters.clearFiltersOnly()"
             />
 
             <!-- Grid de Produtos -->
@@ -136,7 +127,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             />
         </main>
 
-        <!-- Diálogo de Compartilhamento -->
+        <!-- Componentes de Suporte (Diálogo, Galeria, Carrinho) permanecem inalterados -->
         <StoreShareDialog
             :open="share.shareDialogOpen.value"
             :title="share.shareTitle.value"
@@ -150,7 +141,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             @share-telegram="share.shareTelegram()"
         />
 
-        <!-- Galeria de Imagens -->
         <StoreImageGallery
             :product="gallery.selectedProduct.value"
             :current-image-index="gallery.currentImageIndex.value"
@@ -164,7 +154,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             @close="gallery.closeGallery()"
         />
 
-        <!-- Barra Flutuante do Carrinho -->
         <StoreCartBar
             :is-mounted="isMounted"
             :is-authenticated="cart.isAuthenticated()"
