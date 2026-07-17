@@ -1,35 +1,21 @@
-# =============================================
-# Go Notification Service — Multi-stage build
-# =============================================
-
-# ---- Stage 1: Build ----
-FROM golang:1.25-alpine AS builder
-
-RUN apk add --no-cache git ca-certificates
-
-WORKDIR /app
-
-# Copia go.mod e go.sum primeiro (cache de dependências)
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copia o código fonte e compila
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags="-s -w" \
-    -trimpath \
-    -o /app/notification-service .
-
-# ---- Stage 2: Runtime mínimo ----
+# =========================================================================
+# Go Notification Service — Ambiente de Runtime Ultra-leve (Binário Pré-compilado)
+# =========================================================================
 FROM scratch
 
-# Copia certificados CA para TLS (se necessário para APIs externas)
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copia os certificados CA (Caso você precise bater em APIs externas HTTPS)
+# Nota: Como o build ocorre no GitHub, você pode copiar os certificados da imagem do Alpine no passo do Actions se precisar, 
+# mas se o binário for estático puro, o scratch executa direto. 
+# Para garantir os certs sem precisar compilar no host, usamos a própria base do alpine apenas para extrair os certs em segundos:
+COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Copia binário compilado
-COPY --from=builder /app/notification-service /notification-service
+WORKDIR /
 
-# Usuário não-root (segurança)
+# O GitHub Actions vai colocar o binário pronto dentro da pasta go-service
+# O Docker apenas copia ele para dentro da imagem estática
+COPY notification-service /notification-service
+
+# Mantém o seu padrão excelente de usuário não-root (segurança)
 USER 65534:65534
 
 ENTRYPOINT ["/notification-service"]
