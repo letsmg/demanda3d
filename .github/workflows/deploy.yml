@@ -405,6 +405,8 @@ jobs:
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
               sudo systemctl reload php8.5-fpm
+              echo "🔄 Reiniciando serviço Go para carregar novo binário..."
+              sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" restart go-notification-service
 
               # 6. Ativação Atômica
               echo "🔄 Atualizando link atual..."
