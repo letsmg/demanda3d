@@ -98,10 +98,10 @@ services:
     # 👇 Comando para rodar o binário montado
     command: /app/notification-service
     depends_on:
-      demanda-redis-hom:
+      demanda-redis-prod:
         condition: service_healthy
     networks:
-      - demanda-net-hom
+      - demanda-net-prod
 
 networks:
   demanda-net-prod:
