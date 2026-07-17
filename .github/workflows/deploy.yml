@@ -258,6 +258,10 @@ jobs:
             # 2. Subir Containers
             #######################################################################
             echo "🔄 Garantindo que containers estão de pé..."
+            
+            # 👇 A LINHA MÁGICA: Linka a pasta de código do Go da nova release para a shared
+            ln -sfn "$NEW_RELEASE/go-service" "$SHARED/go-service"
+
             cd "$SHARED"
 
             if [ ! -f "docker-compose.yml" ]; then
