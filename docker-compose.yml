@@ -119,7 +119,7 @@ services:
     build:
       context: ./go-service
       dockerfile: Dockerfile
-    container_name: go-notification-service
+    container_name: go-notification-service-dev
     restart: unless-stopped
     environment:
       REDIS_HOST: demanda-redis-dev
