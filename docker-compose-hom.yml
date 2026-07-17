@@ -52,15 +52,19 @@ services:
   # Container ultra-leve (~8MB binário compilado).
   # =============================================
   go-notification-service:
-    build:
-      context: ./go-service
-      dockerfile: Dockerfile
+    # Em vez de 'build', use uma imagem leve (alpine)
+    image: alpine:latest
     container_name: go-notification-service
     restart: unless-stopped
     environment:
       REDIS_HOST: demanda-redis-hom
       REDIS_PORT: "6379"
       NOTIFICATIONS_QUEUE: notifications_queue
+    # 👇 ADICIONE ISSO: Monta o binário que o seu script de deploy colocou no shared
+    volumes:
+      - /var/www/dev-demanda3d/shared/go-service:/app
+    # 👇 Comando para rodar o binário montado
+    command: /app/notification-service
     depends_on:
       demanda-redis-hom:
         condition: service_healthy
