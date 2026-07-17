@@ -86,7 +86,7 @@ services:
   go-notification-service:
     # Em vez de 'build', use uma imagem leve (alpine)
     image: alpine:latest
-    container_name: go-notification-service
+    container_name: go-notification-service-prod
     restart: unless-stopped
     environment:
       REDIS_HOST: demanda-redis-prod
