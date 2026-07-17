@@ -140,7 +140,7 @@ function formatPrice(value: string | number): string {
 </script>
 
 <template>
-    <Head title="Cart - Demanda3D">
+    <Head title="Carrinho - Demanda3D">
         <meta name="robots" content="noindex, nofollow" />
     </Head>
 
@@ -151,10 +151,10 @@ function formatPrice(value: string | number): string {
                     <h1
                         class="text-2xl font-bold tracking-tight text-amber-900"
                     >
-                        Cart
+                        Carrinho
                     </h1>
                     <p class="mt-1 text-sm text-amber-600">
-                        {{ count }} {{ count === 1 ? 'item' : 'items' }}
+                        {{ count }} {{ count === 1 ? 'item' : 'itens' }}
                     </p>
                 </div>
                 <Link
@@ -162,15 +162,15 @@ function formatPrice(value: string | number): string {
                     class="inline-flex items-center gap-1 text-sm font-medium text-amber-600 transition hover:text-amber-700"
                 >
                     <ArrowLeft class="h-4 w-4" />
-                    Continue Shopping
+                    Continuar Comprando
                 </Link>
             </div>
 
-            <!-- Empty State -->
+            <!-- Estado Vazio -->
             <div v-if="items.length === 0" class="py-16 text-center">
                 <ShoppingBag class="mx-auto h-16 w-16 text-amber-200" />
                 <h2 class="mt-4 text-lg font-semibold text-amber-700">
-                    Your cart is empty
+                    Seu carrinho está vazio
                 </h2>
                 <p class="mt-1 text-sm text-amber-500">
                     Adicione produtos da loja para continuar.
@@ -209,7 +209,7 @@ function formatPrice(value: string | number): string {
                                     {{ item.product.name }}
                                 </h3>
                                 <p
-                                    class="mt-1 text-lg font-bold text-emerald-600"
+                                    class="mt-1 text-lg font-bold text-emerald-700"
                                 >
                                     {{ formatPrice(item.product.sale_price) }}
                                 </p>
@@ -260,8 +260,8 @@ function formatPrice(value: string | number): string {
                                 class="text-rose-500 hover:bg-rose-50 hover:text-rose-600"
                                 @click="removeItem(item.id)"
                             >
-                                <Trash2 class="mr-1 h-4 w-4" />
-                                Remove
+                                 <Trash2 class="mr-1 h-4 w-4" />
+                                Remover
                             </Button>
                         </div>
                     </CardContent>
@@ -271,22 +271,22 @@ function formatPrice(value: string | number): string {
                 <Card>
                     <CardHeader>
                         <CardTitle class="text-lg text-amber-900"
-                            >Order Summary</CardTitle
+                            >Resumo do Pedido</CardTitle
                         >
                     </CardHeader>
                     <CardContent class="space-y-2">
                         <div
                             class="flex justify-between text-sm text-amber-600"
                         >
-                            <span>Subtotal ({{ count }} items)</span>
+                            <span>Subtotal ({{ count }} itens)</span>
                             <span>{{ formatPrice(total) }}</span>
                         </div>
                         <div
                             class="flex justify-between text-sm text-amber-600"
                         >
-                            <span>Shipping</span>
+                            <span>Frete</span>
                             <span class="font-medium text-amber-500"
-                                >To be calculated</span
+                                >A calcular</span
                             >
                         </div>
                         <div
@@ -305,10 +305,10 @@ function formatPrice(value: string | number): string {
                             @click="clearCart"
                         >
                             <Trash2 class="mr-2 h-4 w-4" />
-                            Clear Cart
+                            Limpar Carrinho
                         </Button>
                         <Button
-                            class="w-full bg-amber-500 text-white hover:bg-amber-600 sm:w-auto"
+                            class="w-full bg-amber-600 text-white hover:bg-amber-700 sm:w-auto"
                             size="lg"
                             @click="goToCheckout"
                         >

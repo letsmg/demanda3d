@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log" // Mantido apenas para log.Fatalf no erro fatal de inicialização
+	"log/slog"
 	"os"
 	"os/signal"
 	"sync"
@@ -19,7 +20,7 @@ type Notification struct {
 	UserID    string `json:"user_id"`
 	Title     string `json:"title"`
 	Message   string `json:"message"`
-	Channel   string `json:"channel"`   // push, email, sms
+	Channel   string `json:"channel"` // push, email, sms
 	TenantID  string `json:"tenant_id"`
 	Timestamp string `json:"timestamp"`
 }
@@ -53,15 +54,21 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
+	// 1. Configura o Slog para gerar JSON estruturado na saída padrão
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
+
 	cfg := loadConfig()
 
-	log.Println("========================================")
-	log.Println("  Go Notification Service - Demanda3D")
-	log.Println("========================================")
-	log.Printf("Redis: %s:%s", cfg.RedisHost, cfg.RedisPort)
-	log.Printf("Queue: %s", cfg.QueueName)
-	log.Printf("Workers: %d goroutines", cfg.Concurrency)
-	log.Println("========================================")
+	slog.Info("Iniciando Go Notification Service",
+		slog.String("service", "demanda3d-notifications"),
+		slog.String("redis_host", cfg.RedisHost),
+		slog.String("redis_port", cfg.RedisPort),
+		slog.String("queue", cfg.QueueName),
+		slog.Int("workers", cfg.Concurrency),
+	)
 
 	// Conexão com Redis
 	rdb := redis.NewClient(&redis.Options{
@@ -75,9 +82,9 @@ func main() {
 
 	// Healthcheck inicial
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		log.Fatalf("❌ Falha ao conectar ao Redis: %v", err)
+		log.Fatalf("❌ Falha fatal ao conectar ao Redis: %v", err)
 	}
-	log.Println("✅ Conectado ao Redis com sucesso")
+	slog.Info("Conectado ao Redis com sucesso!")
 
 	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -106,7 +113,7 @@ func main() {
 					if err == redis.Nil {
 						continue
 					}
-					log.Printf("⚠️ Erro ao ler da fila: %v", err)
+					slog.Error("Erro ao ler da fila", slog.Any("error", err))
 					time.Sleep(1 * time.Second)
 					continue
 				}
@@ -118,7 +125,10 @@ func main() {
 
 				var notif Notification
 				if err := json.Unmarshal([]byte(result[1]), &notif); err != nil {
-					log.Printf("⚠️ Payload inválido: %v (raw: %s)", err, result[1])
+					slog.Warn("Payload inválido recebido do Laravel",
+						slog.Any("error", err),
+						slog.String("raw_payload", result[1]),
+					)
 					continue
 				}
 
@@ -129,49 +139,58 @@ func main() {
 
 	// Aguarda sinal de shutdown
 	<-sigCh
-	log.Println("🛑 Sinal de shutdown recebido. Finalizando workers...")
+	slog.Info("Sinal de shutdown recebido. Finalizando workers...")
 	cancel()
 	close(tasks)
 	wg.Wait()
-	log.Println("✅ Go Notification Service finalizado com sucesso")
+	slog.Info("Go Notification Service finalizado com sucesso!")
 }
 
 // worker processa notificações recebidas do canal.
 func worker(id int, tasks <-chan *Notification, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Printf("🚀 Worker #%d iniciado", id)
+	slog.Info("Worker iniciado", slog.Int("worker_id", id))
 
 	for notif := range tasks {
 		processNotification(id, notif)
 	}
 
-	log.Printf("🛑 Worker #%d finalizado", id)
+	slog.Info("Worker finalizado", slog.Int("worker_id", id))
 }
 
-// processNotification simula o disparo de notificação.
-// Em produção, aqui entrariam chamadas reais para FCM (Firebase),
-// APNs (Apple), SendGrid, Twilio, etc.
+// processNotification processa e simula o envio estruturado para o Loki
 func processNotification(workerID int, n *Notification) {
 	start := time.Now()
 
-	log.Printf("📨 [Worker #%d] Processando: user=%s channel=%s title=%q",
-		workerID, n.UserID, n.Channel, n.Title)
+	slog.Info("Processando envio de notificação",
+		slog.Int("worker_id", workerID),
+		slog.String("user_id", n.UserID),
+		slog.String("tenant_id", n.TenantID),
+		slog.String("channel", n.Channel),
+		slog.String("title", n.Title),
+	)
 
 	// Simula latência de envio (50-200ms)
 	time.Sleep(50 * time.Millisecond)
 
-	// Mock de disparo por canal
+	// Simulação real de canal
 	switch n.Channel {
 	case "push":
-		log.Printf("  📲 [FCM Mock] Push enviado para user=%s: %s", n.UserID, n.Title)
+		slog.Info("Push disparado (Mock FCM)", slog.String("user_id", n.UserID), slog.String("title", n.Title))
 	case "email":
-		log.Printf("  📧 [SMTP Mock] E-mail enviado para user=%s: %s", n.UserID, n.Title)
+		slog.Info("E-mail disparado (Mock SMTP)", slog.String("user_id", n.UserID), slog.String("title", n.Title))
 	case "sms":
-		log.Printf("  💬 [SMS Mock] SMS enviado para user=%s: %s", n.UserID, n.Title)
+		slog.Info("SMS disparado (Mock Provider)", slog.String("user_id", n.UserID), slog.String("title", n.Title))
 	default:
-		log.Printf("  📢 [Default] Notificação genérica para user=%s: %s", n.UserID, n.Title)
+		slog.Warn("Tentativa de envio em canal desconhecido", slog.String("channel", n.Channel))
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("  ✅ [Worker #%d] Concluído em %v", workerID, elapsed)
+	
+	// Registra a conclusão com métrica de duração para facilitar a criação de gráficos de performance no Grafana
+	slog.Info("Notificação concluída",
+		slog.Int("worker_id", workerID),
+		slog.String("user_id", n.UserID),
+		slog.Duration("duration", elapsed),
+	)
 }

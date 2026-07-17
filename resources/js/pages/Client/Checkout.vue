@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import {
     CreditCard,
     MapPin,
@@ -10,6 +10,10 @@ import {
     ArrowRight,
     Check,
     Loader2,
+    AlertTriangle,
+    ChevronDown,
+    ChevronUp,
+    Copy,
 } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +64,56 @@ const newAddressForm = useForm({
     city: '',
 });
 
+// ── DEV-only flags ──
+const page = usePage();
+const isDev = computed(() => {
+    return (page.props as any).isDev === true || import.meta.env.DEV;
+});
+
+// ── Card inputs (DEV mode: manual card entry) ──
+const cardNumber = ref('');
+const cardExpiry = ref('');
+const cardCvc = ref('');
+const cardFieldReadonly = computed(() => isDev.value);
+
+// ── Stripe test cards data ──
+interface TestCard {
+    category: string;
+    brand: string;
+    number: string;
+    cvc: string;
+    behavior: string;
+}
+const stripeTestCards: TestCard[] = [
+    { category: 'Sucesso', brand: 'Visa', number: '4242424242424242', cvc: '123', behavior: 'Aprova com sucesso imediato' },
+    { category: 'Sucesso', brand: 'Mastercard', number: '5555555555554444', cvc: '123', behavior: 'Aprova com sucesso imediato' },
+    { category: 'Autenticação', brand: 'Visa (3D Secure)', number: '4000000000003020', cvc: '123', behavior: 'Dispara simulação de autenticação 3D' },
+    { category: 'Recusa', brand: 'Visa (Geral)', number: '4000000000000002', cvc: '123', behavior: 'Simula Cartão Recusado pelo banco' },
+    { category: 'Recusa', brand: 'Visa (Sem Saldo)', number: '4000000000000051', cvc: '123', behavior: 'Simula Saldo Insuficiente' },
+    { category: 'Recusa', brand: 'Visa (Expirado)', number: '4000000000000003', cvc: '123', behavior: 'Simula Cartão Vencido' },
+    { category: 'Recusa', brand: 'Visa (Fraude)', number: '4000000000000004', cvc: '123', behavior: 'Simula Bloqueio por Suspeita de Fraude' },
+];
+
+// ── Test cards helper panel toggle ──
+const showTestCards = ref(false);
+
+// ── Strict Stripe test card validation set ──
+const STRIPE_TEST_CARD_NUMBERS = new Set(stripeTestCards.map((c) => c.number));
+
+function fillTestCard(card: TestCard) {
+    cardNumber.value = card.number;
+    cardCvc.value = card.cvc;
+    // Data de expiração futura: dezembro de 2028
+    cardExpiry.value = '12/28';
+    showTestCards.value = false;
+}
+
+function copyCardNumber(number: string) {
+    navigator.clipboard.writeText(number).then(() => {
+        // Feedback visual breve
+    }).catch(() => { /* ignore */ });
+}
+
 const canAdvanceStep2 = computed(() => {
     return selectedCarrierId.value !== null && props.carriers.length > 0;
 });
@@ -67,9 +121,11 @@ const canAdvanceStep2 = computed(() => {
 async function validateCoupon() {
     couponMessage.value = '';
     couponData.value = null;
+
     if (!couponCode.value.trim()) return;
 
     couponLoading.value = true;
+
     try {
         const res = await fetch('/api/coupons/validate', {
             method: 'POST',
@@ -85,6 +141,7 @@ async function validateCoupon() {
         });
         const data = await res.json();
         couponData.value = data;
+
         if (data.error) {
             couponMessage.value = data.error;
         } else {
@@ -93,6 +150,7 @@ async function validateCoupon() {
     } catch {
         couponMessage.value = 'Erro ao validar cupom.';
     }
+
     couponLoading.value = false;
 }
 
@@ -101,9 +159,20 @@ function submitCheckout() {
         alert('Selecione ou cadastre um endereço de entrega.');
         return;
     }
+
     if (!selectedCarrierId.value) {
         alert('Selecione uma transportadora.');
         return;
+    }
+
+    // ── DEV mode: validar cartão de teste Stripe ──
+    if (isDev.value && selectedPaymentMethod.value === 'card') {
+        const rawCard = cardNumber.value.replace(/\s+/g, '');
+
+        if (!STRIPE_TEST_CARD_NUMBERS.has(rawCard)) {
+            alert('⚠️ Cartão não autorizado para o ambiente de desenvolvimento! Utilize apenas cartões de teste da Stripe no painel "Stripe Test Cards Helper".');
+            return;
+        }
     }
 
     router.post(
@@ -117,6 +186,7 @@ function submitCheckout() {
         {
             onSuccess: (response: any) => {
                 const url = response?.props?.stripe_url;
+
                 if (url) {
                     window.location.href = url;
                 }
@@ -124,6 +194,39 @@ function submitCheckout() {
         },
     );
 }
+
+// ── Clean formatting mask for card number (groups of 4) ──
+function formatCardNumber(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    value = value.substring(0, 16);
+    const parts = value.match(/.{1,4}/g);
+
+    input.value = parts ? parts.join(' ') : value;
+    cardNumber.value = input.value;
+}
+
+function formatCardExpiry(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    value = value.substring(0, 4);
+
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+
+    input.value = value;
+    cardExpiry.value = value;
+}
+
+onMounted(() => {
+    // Garantir que o input de cartão esteja como readonly no DEV
+    if (isDev.value && cardFieldReadonly.value) {
+        cardNumber.value = '';
+        cardExpiry.value = '';
+        cardCvc.value = '';
+    }
+});
 </script>
 
 <template>
@@ -133,6 +236,115 @@ function submitCheckout() {
         <h1 class="mb-2 text-2xl font-bold tracking-tight text-amber-900">
             Finalizar Compra
         </h1>
+
+        <!-- ════════════════════════════════════════════════ -->
+        <!-- BANNER DE ALERTA — Ambiente de Testes (DEV)      -->
+        <!-- ════════════════════════════════════════════════ -->
+        <div
+            v-if="isDev"
+            class="mb-6 flex items-start gap-3 rounded-lg border-2 border-red-600 bg-red-700 px-5 py-4 text-white shadow-lg"
+        >
+            <AlertTriangle class="mt-0.5 h-6 w-6 flex-shrink-0 text-yellow-300" />
+            <div>
+                <p class="text-lg font-extrabold text-yellow-300">
+                    ⚠️ ATENÇÃO: AMBIENTE DE TESTES
+                </p>
+                <p class="mt-1 text-sm text-red-100">
+                    Este site está operando atualmente em fase de homologação e testes.
+                    Nenhuma transação financeira real está sendo processada e nenhuma
+                    cobrança será efetuada em seu cartão.
+                </p>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════ -->
+        <!-- STRIPE TEST CARDS HELPER (apenas DEV)           -->
+        <!-- ════════════════════════════════════════════════ -->
+        <div
+            v-if="isDev && selectedPaymentMethod === 'card'"
+            class="mb-6 rounded-lg border-2 border-dashed border-amber-400 bg-amber-50 p-4"
+        >
+            <button
+                type="button"
+                class="flex w-full items-center justify-between text-left"
+                @click="showTestCards = !showTestCards"
+            >
+                <span class="flex items-center gap-2 text-sm font-bold text-amber-800">
+                    <CreditCard class="h-4 w-4" />
+                    Stripe Test Cards Helper
+                </span>
+                <ChevronDown v-if="!showTestCards" class="h-4 w-4 text-amber-600" />
+                <ChevronUp v-else class="h-4 w-4 text-amber-600" />
+            </button>
+
+            <div v-if="showTestCards" class="mt-3 space-y-2">
+                <p class="text-xs text-amber-600">
+                    Clique em um cartão para preencher automaticamente os campos
+                    de pagamento abaixo. Todos os cartões listados são cartões de teste
+                    oficiais da Stripe.
+                </p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-amber-200 text-left text-amber-700">
+                                <th class="pb-1 pr-2 font-semibold">Categoria</th>
+                                <th class="pb-1 pr-2 font-semibold">Bandeira</th>
+                                <th class="pb-1 pr-2 font-semibold">Número</th>
+                                <th class="pb-1 pr-2 font-semibold">CVC</th>
+                                <th class="pb-1 font-semibold">Comportamento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="card in stripeTestCards"
+                                :key="card.number"
+                                class="cursor-pointer border-b border-amber-100 transition-colors hover:bg-amber-100"
+                                @click="fillTestCard(card)"
+                            >
+                                <td class="py-1.5 pr-2">
+                                    <span
+                                        :class="[
+                                            'inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold',
+                                            card.category === 'Sucesso'
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : card.category === 'Autenticação'
+                                                  ? 'bg-blue-100 text-blue-700'
+                                                  : 'bg-red-100 text-red-700',
+                                        ]"
+                                    >
+                                        {{ card.category }}
+                                    </span>
+                                </td>
+                                <td class="py-1.5 pr-2 font-medium text-amber-900">
+                                    {{ card.brand }}
+                                </td>
+                                <td class="py-1.5 pr-2">
+                                    <span class="flex items-center gap-1">
+                                        <code class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900">
+                                            {{ card.number }}
+                                        </code>
+                                        <button
+                                            type="button"
+                                            class="text-amber-400 hover:text-amber-600"
+                                            title="Copiar número"
+                                            @click.stop="copyCardNumber(card.number)"
+                                        >
+                                            <Copy class="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                </td>
+                                <td class="py-1.5 pr-2 text-center">
+                                    <code class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900">
+                                        {{ card.cvc }}
+                                    </code>
+                                </td>
+                                <td class="py-1.5 text-amber-600">{{ card.behavior }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <!-- Steps indicator (clicável para voltar) -->
         <div class="mb-8 flex items-center gap-2">
@@ -169,11 +381,12 @@ function submitCheckout() {
 
         <!-- STEP 1 -->
         <Card v-if="step === 1">
-            <CardHeader
-                ><CardTitle class="flex items-center gap-2"
-                    ><MapPin class="h-5 w-5" /> Endereço de Entrega</CardTitle
-                ></CardHeader
-            >
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <MapPin class="h-5 w-5" />
+                    Endereço de Entrega
+                </CardTitle>
+            </CardHeader>
             <CardContent class="space-y-4">
                 <div v-if="addresses.length > 0" class="space-y-3">
                     <p class="text-sm text-muted-foreground">
@@ -223,9 +436,9 @@ function submitCheckout() {
                             v-model="newAddress"
                             class="h-4 w-4 rounded border-amber-900"
                         />
-                        <span class="text-sm text-amber-700"
-                            >Cadastrar novo endereço</span
-                        >
+                        <span class="text-sm text-amber-700">
+                            Cadastrar novo endereço
+                        </span>
                     </div>
                 </div>
 
@@ -236,8 +449,8 @@ function submitCheckout() {
                     <p class="text-sm font-medium">Novo Endereço</p>
                     <div class="grid gap-3 sm:grid-cols-3">
                         <div>
-                            <Label for="new_zipcode">CEP *</Label
-                            ><Input
+                            <Label for="new_zipcode">CEP *</Label>
+                            <Input
                                 id="new_zipcode"
                                 v-model="newAddressForm.zipcode"
                                 placeholder="00000-000"
@@ -245,8 +458,8 @@ function submitCheckout() {
                             />
                         </div>
                         <div>
-                            <Label for="new_state">UF *</Label
-                            ><Input
+                            <Label for="new_state">UF *</Label>
+                            <Input
                                 id="new_state"
                                 v-model="newAddressForm.state"
                                 placeholder="SP"
@@ -254,8 +467,8 @@ function submitCheckout() {
                             />
                         </div>
                         <div>
-                            <Label for="new_city">Cidade *</Label
-                            ><Input
+                            <Label for="new_city">Cidade *</Label>
+                            <Input
                                 id="new_city"
                                 v-model="newAddressForm.city"
                                 placeholder="São Paulo"
@@ -264,16 +477,16 @@ function submitCheckout() {
                     </div>
                     <div class="grid gap-3 sm:grid-cols-3">
                         <div class="sm:col-span-2">
-                            <Label for="new_address">Endereço *</Label
-                            ><Input
+                            <Label for="new_address">Endereço *</Label>
+                            <Input
                                 id="new_address"
                                 v-model="newAddressForm.address"
                                 placeholder="Rua, Avenida..."
                             />
                         </div>
                         <div>
-                            <Label for="new_number">Número *</Label
-                            ><Input
+                            <Label for="new_number">Número *</Label>
+                            <Input
                                 id="new_number"
                                 v-model="newAddressForm.number"
                                 placeholder="123"
@@ -287,20 +500,21 @@ function submitCheckout() {
                         @click="step = 2"
                         :disabled="!selectedAddressId && !newAddress"
                         class="bg-amber-600 hover:bg-amber-700"
-                        >Próximo <ArrowRight class="ml-2 h-4 w-4"
-                    /></Button>
+                    >
+                        Próximo <ArrowRight class="ml-2 h-4 w-4" />
+                    </Button>
                 </div>
             </CardContent>
         </Card>
 
         <!-- STEP 2 -->
         <Card v-if="step === 2">
-            <CardHeader
-                ><CardTitle class="flex items-center gap-2"
-                    ><Ticket class="h-5 w-5" /> Cupom e
-                    Transportadora</CardTitle
-                ></CardHeader
-            >
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <Ticket class="h-5 w-5" />
+                    Cupom e Transportadora
+                </CardTitle>
+            </CardHeader>
             <CardContent class="space-y-6">
                 <!-- Cupom -->
                 <div>
@@ -375,21 +589,19 @@ function submitCheckout() {
                                     />
                                 </div>
                                 <Truck class="h-5 w-5 text-amber-600" />
-                                <span class="font-medium text-amber-900">{{
-                                    carrier.name
-                                }}</span>
+                                <span class="font-medium text-amber-900">
+                                    {{ carrier.name }}
+                                </span>
                             </div>
                             <span
                                 v-if="carrier.freight_cost"
                                 class="text-sm font-bold text-amber-700"
-                                >R$
-                                {{
-                                    Number(carrier.freight_cost).toFixed(2)
-                                }}</span
                             >
-                            <span v-else class="text-sm text-muted-foreground"
-                                >Frete grátis</span
-                            >
+                                R$ {{ Number(carrier.freight_cost).toFixed(2) }}
+                            </span>
+                            <span v-else class="text-sm text-muted-foreground">
+                                Frete grátis
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -398,53 +610,34 @@ function submitCheckout() {
                 <div class="rounded-lg bg-amber-50 p-4">
                     <div class="flex justify-between text-sm">
                         <span>Subtotal ({{ count }} itens)</span>
-                        <span
-                            >R$
-                            {{
-                                Number(total).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span>
+                            R$ {{ Number(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                     <div
                         v-if="couponData?.discount_amount"
                         class="mt-1 flex justify-between text-sm text-emerald-600"
                     >
                         <span>Desconto ({{ couponCode }})</span>
-                        <span
-                            >- R$
-                            {{
-                                Number(
-                                    couponData.discount_amount,
-                                ).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span>
+                            - R$ {{ Number(couponData.discount_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                     <div
                         v-if="couponData?.discounted_total"
                         class="mt-2 flex justify-between border-t border-amber-200 pt-2 text-lg font-bold text-emerald-700"
                     >
                         <span>Total com Desconto</span>
-                        <span
-                            >R$
-                            {{
-                                Number(
-                                    couponData.discounted_total,
-                                ).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span>
+                            R$ {{ Number(couponData.discounted_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                 </div>
 
                 <div class="flex justify-between pt-4">
-                    <Button variant="outline" @click="step = 1"
-                        ><ArrowLeft class="mr-2 h-4 w-4" /> Voltar</Button
-                    >
+                    <Button variant="outline" @click="step = 1">
+                        <ArrowLeft class="mr-2 h-4 w-4" /> Voltar
+                    </Button>
                     <Button
                         @click="step = 3"
                         :disabled="!canAdvanceStep2"
@@ -458,27 +651,18 @@ function submitCheckout() {
 
         <!-- STEP 3 -->
         <Card v-if="step === 3">
-            <CardHeader
-                ><CardTitle class="flex items-center gap-2"
-                    ><CreditCard class="h-5 w-5" /> Forma de
-                    Pagamento</CardTitle
-                ></CardHeader
-            >
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <CreditCard class="h-5 w-5" /> Forma de Pagamento
+                </CardTitle>
+            </CardHeader>
             <CardContent class="space-y-6">
+                <!-- Payment method selection -->
                 <div class="space-y-3">
                     <div
                         v-for="method in [
-                            {
-                                id: 'card',
-                                label: 'Cartão de Crédito (Visa/Master)',
-                                icon: '💳',
-                                note: 'Dados do cartão processados via Stripe — nunca armazenados.',
-                            },
-                            {
-                                id: 'boleto',
-                                label: 'Boleto Bancário',
-                                icon: '📄',
-                            },
+                            { id: 'card', label: 'Cartão de Crédito (Visa/Master)', icon: '💳', note: 'Dados do cartão processados via Stripe — nunca armazenados.' },
+                            { id: 'boleto', label: 'Boleto Bancário', icon: '📄' },
                             { id: 'pix', label: 'Pix', icon: '⚡' },
                         ]"
                         :key="method.id"
@@ -496,7 +680,7 @@ function submitCheckout() {
                                     {{ method.label }}
                                 </p>
                                 <p
-                                    v-if="method.note"
+                                    v-if="'note' in method && method.note"
                                     class="text-xs text-muted-foreground"
                                 >
                                     {{ method.note }}
@@ -516,62 +700,95 @@ function submitCheckout() {
                                 />
                             </div>
                         </div>
+
+                        <!-- Card input fields (only when 'card' selected + DEV mode) -->
+                        <div
+                            v-if="isDev && method.id === 'card' && selectedPaymentMethod === 'card'"
+                            class="mt-4 space-y-3 border-t border-amber-200 pt-4"
+                        >
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <Label for="card-number">Número do Cartão</Label>
+                                    <Input
+                                        id="card-number"
+                                        v-model="cardNumber"
+                                        placeholder="4242 4242 4242 4242"
+                                        maxlength="19"
+                                        :readonly="cardFieldReadonly"
+                                        class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                        @input="formatCardNumber"
+                                    />
+                                    <p
+                                        v-if="cardFieldReadonly"
+                                        class="mt-1 text-xs text-amber-500"
+                                    >
+                                        ⚠️ Bloqueado no DEV — use o Stripe Test Cards Helper acima
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label for="card-expiry">Validade</Label>
+                                        <Input
+                                            id="card-expiry"
+                                            v-model="cardExpiry"
+                                            placeholder="MM/AA"
+                                            maxlength="5"
+                                            :readonly="cardFieldReadonly"
+                                            class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                            @input="formatCardExpiry"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label for="card-cvc">CVC</Label>
+                                        <Input
+                                            id="card-cvc"
+                                            v-model="cardCvc"
+                                            placeholder="123"
+                                            maxlength="4"
+                                            :readonly="cardFieldReadonly"
+                                            class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Order summary -->
                 <div class="rounded-lg border p-4">
                     <div class="flex justify-between text-sm">
                         <span>Subtotal ({{ count }} itens)</span>
-                        <span
-                            >R$
-                            {{
-                                Number(total).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span>
+                            R$ {{ Number(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                     <div
                         v-if="couponData?.discount_amount"
                         class="mt-1 flex justify-between text-sm text-emerald-600"
                     >
                         <span>Desconto</span>
-                        <span
-                            >- R$
-                            {{
-                                Number(
-                                    couponData.discount_amount,
-                                ).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span>
+                            - R$ {{ Number(couponData.discount_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                     <div
                         class="mt-2 flex justify-between border-t pt-2 text-lg font-bold"
                     >
                         <span>Total</span>
-                        <span class="text-amber-900"
-                            >R$
-                            {{
-                                (
-                                    couponData?.discounted_total || total
-                                ).toLocaleString('pt-BR', {
-                                    minimumFractionDigits: 2,
-                                })
-                            }}</span
-                        >
+                        <span class="text-amber-900">
+                            R$ {{ (couponData?.discounted_total || total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                        </span>
                     </div>
                     <p class="mt-2 text-xs text-muted-foreground">
-                        Limite por produto: R$ 500,00 | Limite total: R$
-                        1.500,00
+                        Limite por produto: R$ 500,00 | Limite total: R$ 1.500,00
                     </p>
                 </div>
 
                 <div class="flex justify-between pt-4">
-                    <Button variant="outline" @click="step = 2"
-                        ><ArrowLeft class="mr-2 h-4 w-4" /> Voltar</Button
-                    >
+                    <Button variant="outline" @click="step = 2">
+                        <ArrowLeft class="mr-2 h-4 w-4" /> Voltar
+                    </Button>
                     <Button
                         @click="submitCheckout"
                         class="bg-emerald-600 font-bold text-white hover:bg-emerald-700"

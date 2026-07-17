@@ -54,6 +54,9 @@ class StateSeeder extends Seeder
             'updated_at' => $now,
         ]), $states);
 
-        DB::table('states')->upsert($rows, ['uf', 'cep_start', 'cep_end'], ['name', 'updated_at']);
+        // Insere apenas se ainda não existir (evita duplicatas entre execuções)
+        foreach ($rows as $row) {
+            DB::table('states')->insertOrIgnore($row);
+        }
     }
 }

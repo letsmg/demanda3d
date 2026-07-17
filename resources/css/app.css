@@ -8,6 +8,22 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    /*
+    * Paleta semântica — Marketplace Público (Store)
+    * Usada em classes Tailwind: bg-brand-amberLight, text-brand-amberDark, border-brand-amberPrimary, etc.
+    */
+    --color-brand-amberLight: #fffbeb;
+    --color-brand-amberPrimary: #d97706;
+    --color-brand-amberDark: #78350f;
+    --color-brand-amberSurface: #fef3c7;
+    --color-brand-amberBg: #f5f0e0;
+    --color-brand-amberInputBorder: #f59e0b;
+
+    /*
+    * Paleta semântica — Dashboard autenticado (mesmas cores base mantidas)
+    * Já definidas via --color-primary, --color-secondary, etc. abaixo.
+    */
+
     --font-sans:
         Instrument Sans, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
@@ -189,15 +205,8 @@
         opacity: 1;
     }
 
-    /* Fundo dos inputs sempre branco (sobrescreve qualquer bg-muted herdado) */
-    input[type='text'],
-    input[type='email'],
-    input[type='password'],
-    input[type='number'],
-    input[type='date'],
-    input[type='file'],
-    textarea,
-    select {
-        background-color: #ffffff;
+    /* Marketplace Store: inputs com fundo amber claro */
+    input.store-amber-input {
+        background-color: #fffbeb !important;
     }
 }

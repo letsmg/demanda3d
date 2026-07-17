@@ -11,8 +11,14 @@ use Inertia\Inertia;
 
 class LoginClientController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
+        // Salva a URL de redirecionamento pretendida (se enviada via query param)
+        if ($request->has('redirect_to')) {
+            $redirectTo = trim(strip_tags($request->query('redirect_to')));
+            session(['url.intended' => $redirectTo]);
+        }
+
         return Inertia::render('auth/LoginClient');
     }
 

@@ -696,6 +696,26 @@
 
 ---
 
+## `activity_logs`
+**Model:** `ActivityLog` | **Propósito:** Logs de auditoria polimórficos e imutáveis. Registra todas as ações críticas (criação, edição, exclusão, bloqueios) com payload JSONB do estado anterior e novo. Multi-tenant: sellers veem apenas logs do seu tenant; admins veem todos.
+
+| Coluna | Tipo | Constraints | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | BIGINT PK | auto | Identificador único |
+| `tenant_id` | BIGINT FK | `tenants.id` NULL, INDEX | Tenant (nulo para ações globais de admin) |
+| `causer_type` | VARCHAR | NULLABLE | Tipo do causador (User ou Client) |
+| `causer_id` | BIGINT | NULLABLE | ID do causador |
+| `event` | VARCHAR(200) | NOT NULL, INDEX | Tipo da ação (ex: "Criou Produto") |
+| `subject_type` | VARCHAR | NULLABLE | Tipo do recurso afetado |
+| `subject_id` | BIGINT | NULLABLE | ID do recurso afetado |
+| `description` | TEXT | NULLABLE | Descrição legível da ação |
+| `properties` | JSONB | NULLABLE | Payload com `old` e `attributes` |
+| `created_at` | TIMESTAMP | INDEX | Data da ação (imutável) |
+
+> **Índices compostos:** `(tenant_id, created_at)`, `(causer_type, causer_id, created_at)`, `(subject_type, subject_id)`.
+
+---
+
 ## Tabelas de Infraestrutura (Laravel)
 
 | Tabela | Propósito |

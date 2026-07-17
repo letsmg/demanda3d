@@ -153,69 +153,41 @@ class ProductService
      * Get all active products for the public store.
      * Uses withoutGlobalScopes so all tenants' products are visible.
      */
+    /**
+     * Get all active products for the public store.
+     * Uses withoutGlobalScopes so all tenants' products are visible.
+     *
+     * Cache strategy (Redis → Postgres):
+     * A. Generate a deterministic cache key from all filters
+     * B. Try Redis first (TTL: 10 minutes)
+     * C. On cache miss, query PostgreSQL with optimized indexes
+     * D. Store result back in Redis for future identical queries
+     */
     public function listActiveForStore(array $filters = [], bool $canViewAdult = false)
     {
-        $searchTerm = $filters['search'] ?? '';
-        $minPrice = $filters['min_price'] ?? null;
-        $maxPrice = $filters['max_price'] ?? null;
-        $sortField = $filters['sort'] ?? 'name';
-        $sortDir = $filters['sort_dir'] ?? 'asc';
+        // ── A. Generate deterministic cache key ─────────────
+        $cacheKey = $this->buildStoreCacheKey($filters, $canViewAdult);
 
-        // Cache apenas quando NÃO há filtro de categoria, preço ou sort customizado
-        $useCache = !empty($searchTerm) && strlen($searchTerm) >= 3
-                    && empty($minPrice) && empty($maxPrice)
-                    && empty($filters['category'])
-                    && $sortField === 'name' && $sortDir === 'asc';
-
-        if ($useCache) {
-            $cacheKey = 'store:search:' . hash('sha256', strtolower(trim($searchTerm)));
+        if ($cacheKey !== null) {
             $cached = Cache::get($cacheKey);
 
             if ($cached !== null) {
-                return $cached;
+                // Se o cache retornou um array (formato correto), converte para Collection
+                if (is_array($cached)) {
+                    return collect($cached);
+                }
+
+                // Se for uma Collection válida (pré-serialização), retorna diretamente
+                if ($cached instanceof \Illuminate\Database\Eloquent\Collection) {
+                    return $cached;
+                }
+
+                // Incomplete object ou formato inválido — ignora cache, recria
             }
         }
 
-        // --- Build query ---
-        $query = Product::withoutGlobalScopes()
-            ->availableForSale()
-            ->whereHas('tenant', function ($q) {
-                $q->where('active', true)
-                  ->where('is_profile_complete', true);
-            })
-            ->with(['images', 'tenant.user', 'categories']);
-
-        // Filtro de conteúdo adulto
-        if (! $canViewAdult) {
-            $query->withoutAdultCategories();
-        }
-
-        if (!empty($searchTerm)) {
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'ilike', "%{$searchTerm}%")
-                  ->orWhere('description', 'ilike', "%{$searchTerm}%");
-            });
-        }
-
-        if (!empty($minPrice)) {
-            $query->where('sale_price', '>=', (float) $minPrice);
-        }
-
-        if (!empty($maxPrice)) {
-            $query->where('sale_price', '<=', (float) $maxPrice);
-        }
-
-        // Filtro por categoria
-        if (!empty($filters['category'])) {
-            $query->whereHas('categories', function ($q) use ($filters) {
-                $q->where('slug', $filters['category']);
-            });
-        }
-
-        $allowedSorts = ['name', 'sale_price', 'created_at'];
-        if (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDir === 'desc' ? 'desc' : 'asc');
-        }
+        // ── C. Cache miss — query PostgreSQL ─────────────────
+        $query = $this->buildActiveStoreQuery($filters, $canViewAdult);
 
         $results = $query->take(8)->get();
 
@@ -224,12 +196,52 @@ class ProductService
             $this->logEmptyStoreDiagnostics();
         }
 
-        // --- Store in cache for future searches ---
-        if ($useCache && isset($cacheKey)) {
-            Cache::put($cacheKey, $results, now()->addMinutes(10));
+        // ── D. Store as array in Redis for safe serialization ────
+        if ($cacheKey !== null) {
+            Cache::put($cacheKey, $results->toArray(), now()->addMinutes(10));
         }
 
         return $results;
+    }
+
+    /**
+     * Build a deterministic cache key from all active filters.
+     * Returns null if the filter set is too simple (default sorting, no filters)
+     * to avoid polluting Redis with trivially simple queries.
+     */
+    private function buildStoreCacheKey(array $filters, bool $canViewAdult): ?string
+    {
+        $searchTerm = trim($filters['search'] ?? '');
+        $minPrice = $filters['min_price'] ?? null;
+        $maxPrice = $filters['max_price'] ?? null;
+        $categories = $filters['categories'] ?? '';
+        $sortField = $filters['sort'] ?? 'name';
+        $sortDir = $filters['sort_dir'] ?? 'asc';
+
+        // Skip cache for default (no filter) queries — they're fast enough
+        $hasAnyFilter = !empty($searchTerm)
+            || !empty($minPrice)
+            || !empty($maxPrice)
+            || !empty($categories)
+            || $sortField !== 'name'
+            || $sortDir !== 'asc';
+
+        if (! $hasAnyFilter) {
+            return null;
+        }
+
+        $payload = implode('|', [
+            'store:v2',
+            strtolower($searchTerm),
+            $minPrice ?? '0',
+            $maxPrice ?? '0',
+            $categories,
+            $sortField,
+            $sortDir,
+            $canViewAdult ? '1' : '0',
+        ]);
+
+        return 'store:cache:' . hash('sha256', $payload);
     }
 
     /**
@@ -249,8 +261,8 @@ class ProductService
             $query->withoutAdultCategories();
         }
 
-        $searchTerm = $filters['search'] ?? '';
-        if (!empty($searchTerm)) {
+        $searchTerm = trim($filters['search'] ?? '');
+        if (!empty($searchTerm) && strlen($searchTerm) >= 3) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'ilike', "%{$searchTerm}%")
                   ->orWhere('description', 'ilike', "%{$searchTerm}%");
@@ -265,10 +277,19 @@ class ProductService
             $query->where('sale_price', '<=', (float) $filters['max_price']);
         }
 
-        if (!empty($filters['category'])) {
-            $query->whereHas('categories', function ($q) use ($filters) {
-                $q->where('slug', $filters['category']);
-            });
+        // Filtro multi-categorias (comma-separated slugs)
+        $categoriesRaw = $filters['categories'] ?? '';
+        if (!empty($categoriesRaw)) {
+            $categorySlugs = array_filter(
+                array_map('trim', explode(',', $categoriesRaw)),
+                fn ($s) => !empty($s),
+            );
+
+            if (!empty($categorySlugs)) {
+                $query->whereHas('categories', function ($q) use ($categorySlugs) {
+                    $q->whereIn('slug', $categorySlugs);
+                });
+            }
         }
 
         $sortField = $filters['sort'] ?? 'name';

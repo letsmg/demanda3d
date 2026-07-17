@@ -114,6 +114,21 @@ jobs:
 
           npm run build
 
+          # 👇 ADICIONE ESTES DOIS PASSOS BEM AQUI:
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: go-service/go.mod
+
+      - name: 📦 Compilar Microserviço em Go
+        run: |
+          set -Eeuo pipefail
+          cd go-service
+          go mod tidy
+          # Compila gerando o binário direto na pasta do serviço que será zipada
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o notification-service .
+
       # ==========================================================================
       # PACOTE
       # ==========================================================================
@@ -123,6 +138,7 @@ jobs:
 
           set -Eeuo pipefail
 
+          # O zip vai empacotar o 'go-service/notification-service' gerado no passo anterior
           zip -rq deploy.zip . \
             -x ".git/*" \
             ".github/*" \
@@ -258,6 +274,10 @@ jobs:
             # 2. Subir Containers
             #######################################################################
             echo "🔄 Garantindo que containers estão de pé..."
+            
+            # 👇 A LINHA MÁGICA: Linka a pasta de código do Go da nova release para a shared
+            ln -sfn "$NEW_RELEASE/go-service" "$SHARED/go-service"
+
             cd "$SHARED"
 
             if [ ! -f "docker-compose.yml" ]; then
@@ -266,7 +286,7 @@ jobs:
             fi
 
             sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
-
+            
             cd "$NEW_RELEASE"
 
             #######################################################################
@@ -274,17 +294,19 @@ jobs:
             #######################################################################
             echo "🔗 Configurando links de ambiente, storage e bootstrap/cache..."
 
+            # Garante a existência das estruturas necessárias no SHARED
             sudo mkdir -p "$SHARED/storage/framework/cache/data"
             sudo mkdir -p "$SHARED/storage/framework/views"
             sudo mkdir -p "$SHARED/storage/framework/sessions"
             sudo mkdir -p "$SHARED/bootstrap/cache"
 
+            # LIMPEZA CRÍTICA: Remove caches antigos do SHARED.
+            # Isso impede que o Laravel carregue classes da release anterior (causando o erro de Dispatcher).
+            sudo rm -rf "$SHARED/bootstrap/cache/"*
+
             # Sincroniza TODO o conteúdo de storage/ do release para o storage
-            # compartilhado, sobrescrevendo o que já existir (arquivos/pastas
-            # versionadas no Git são atualizadas normalmente a cada deploy) —
-            # EXCETO storage/app/public/imgs/products, que contém uploads reais
-            # de produtos feitos em produção e NUNCA pode ser sobrescrita/apagada
-            # por um deploy.
+            # compartilhado, sobrescrevendo o que já existir.
+            # (Exceto storage/app/public/imgs/products)
             if [ -d "$NEW_RELEASE/storage" ]; then
                 echo "🔄 Sincronizando storage/ para o shared (preservando imgs/products)..."
                 rsync -a \
@@ -292,16 +314,19 @@ jobs:
                     "$NEW_RELEASE/storage/" "$SHARED/storage/"
             fi
 
+            # Remove diretórios locais da nova release para recriar os links simbólicos
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/storage" "$NEW_RELEASE/bootstrap/cache"
 
+            # Cria os symlinks
             ln -sfn "$SHARED/.env" "$NEW_RELEASE/.env"
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/bootstrap/cache" "$NEW_RELEASE/bootstrap/cache"
 
+            # Aplica permissões de escrita/dono
             sudo chown -R ubuntu:www-data "$SHARED/storage" "$SHARED/bootstrap/cache"
             sudo chmod -R 775 "$SHARED/storage" "$SHARED/bootstrap/cache"
 
-            echo "✅ Permissões aplicadas."
+            echo "✅ Permissões aplicadas e cache compartilhado limpo."
 
             #######################################################################
             # 4, 5, 6 e 7. Execução protegida (Banco, Migrations, Link e Limpeza)
@@ -380,6 +405,8 @@ jobs:
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
               sudo systemctl reload php8.5-fpm
+              echo "🔄 Reiniciando serviço Go para carregar novo binário..."
+              sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" restart go-notification-service
 
               # 6. Ativação Atômica
               echo "🔄 Atualizando link atual..."

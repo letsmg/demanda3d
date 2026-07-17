@@ -24,6 +24,7 @@ class CheckoutController extends Controller
     {
         $client = Auth::guard('clients')->user();
         if (! $client) {
+            session(['url.intended' => request()->url()]);
             return redirect('/login_cli');
         }
 

@@ -1,25 +1,36 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
 import {
-    ShoppingBag,
-    Star,
     ChevronLeft,
     ChevronRight,
-    Package,
+    Copy,
     ImageIcon,
+    Link2,
+    MessageCircle,
+    Package,
+    Share2,
+    ShoppingBag,
+    Star,
 } from '@lucide/vue';
+import { computed, onMounted, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
+    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
-    CardDescription,
 } from '@/components/ui/card';
-import { setCartCount } from '@/stores/cartStore';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
+import { setCartCount } from '@/stores/cartStore';
 
 defineOptions({
     layout: WelcomeLayout,
@@ -32,6 +43,58 @@ const props = defineProps<{
 
 const page = usePage();
 const authClient = computed(() => (page.props as any).auth_client?.user);
+
+// ── Compartilhamento ──────────────────────────────────────
+const shareDialogOpen = ref(false);
+const shareUrl = ref('');
+const shareTitle = ref('');
+const shareCopied = ref(false);
+
+function openShare() {
+    shareUrl.value = window.location.href;
+    shareTitle.value = props.product.name;
+    shareDialogOpen.value = true;
+    shareCopied.value = false;
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(shareUrl.value).then(() => {
+        shareCopied.value = true;
+        setTimeout(() => {
+            shareCopied.value = false;
+        }, 2000);
+    });
+}
+
+function shareWhatsApp() {
+    const text = encodeURIComponent(`${shareTitle.value} — ${shareUrl.value}`);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const url = isMobile
+        ? `whatsapp://send?text=${text}`
+        : `https://wa.me/?text=${text}`;
+
+    window.open(url, '_blank');
+}
+
+function shareFacebook() {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl.value)}`;
+
+    window.open(url, '_blank');
+}
+
+function shareTwitter() {
+    const text = encodeURIComponent(shareTitle.value);
+    const url = `https://x.com/intent/post?text=${text}&url=${encodeURIComponent(shareUrl.value)}`;
+
+    window.open(url, '_blank');
+}
+
+function shareTelegram() {
+    const text = encodeURIComponent(`${shareTitle.value} — ${shareUrl.value}`);
+    const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl.value)}&text=${text}`;
+
+    window.open(url, '_blank');
+}
 
 // Image gallery
 const currentImageIndex = ref(0);
@@ -99,7 +162,8 @@ function csrfToken(): string {
 
 async function addToCart(productId: number): Promise<void> {
     if (!authClient.value) {
-        window.location.href = '/login_cli';
+        const redirectTo = encodeURIComponent(window.location.href);
+        window.location.href = `/login_cli?redirect_to=${redirectTo}`;
 
         return;
     }
@@ -144,7 +208,6 @@ onMounted(() => {
 function injectSeoScripts(): void {
     const head = document.head;
 
-    // Remove scripts de SEO injetados anteriormente (evita duplicação no SPA)
     head.querySelectorAll('[data-seo="schema-markup"]').forEach((el) =>
         el.remove(),
     );
@@ -152,22 +215,23 @@ function injectSeoScripts(): void {
         el.remove(),
     );
 
-    // Inject schema_markup (JSON-LD structured data)
     if (seo.value.schema_markup) {
         const script = document.createElement('script');
+
         script.type = 'application/ld+json';
         script.textContent = seo.value.schema_markup;
         script.setAttribute('data-seo', 'schema-markup');
         head.appendChild(script);
     }
 
-    // Inject google_tag_manager (GTM scripts)
     if (seo.value.google_tag_manager) {
         const container = document.createElement('div');
+
         container.setAttribute('data-seo', 'google-tag-manager');
         container.style.display = 'none';
-        // Usamos um DocumentFragment para parsear o HTML/JS sem sanitização
+
         const template = document.createElement('template');
+
         template.innerHTML = seo.value.google_tag_manager;
         head.appendChild(template.content);
     }
@@ -311,24 +375,37 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
 
                 <!-- Right: Product Details -->
                 <div class="space-y-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-amber-900">
-                            {{ seo.h1_text || product.name }}
-                        </h1>
-                        <p
-                            v-if="product.tenant?.display_name"
-                            class="mt-1 text-sm text-amber-500"
-                        >
-                            por
-                            <Link
-                                v-if="product.tenant.fantasy_slug"
-                                :href="`/tenant/${product.tenant.fantasy_slug}`"
-                                class="hover:text-amber-700 hover:underline"
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-amber-900">
+                                {{ seo.h1_text || product.name }}
+                            </h1>
+                            <p
+                                v-if="product.tenant?.display_name"
+                                class="mt-1 text-sm text-amber-500"
                             >
-                                {{ product.tenant.display_name }}
-                            </Link>
-                            <span v-else>{{ product.tenant.display_name }}</span>
-                        </p>
+                                por
+                                <Link
+                                    v-if="product.tenant.fantasy_slug"
+                                    :href="`/tenant/${product.tenant.fantasy_slug}`"
+                                    class="hover:text-amber-700 hover:underline"
+                                >
+                                    {{ product.tenant.display_name }}
+                                </Link>
+                                <span v-else>{{ product.tenant.display_name }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Botão compartilhar -->
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="flex items-center gap-1"
+                            @click="openShare"
+                        >
+                            <Share2 class="h-4 w-4" />
+                            Compartilhar
+                        </Button>
                     </div>
 
                     <!-- Price -->
@@ -544,5 +621,76 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 </div>
             </section>
         </main>
+
+        <!-- Diálogo de compartilhamento -->
+        <Dialog :open="shareDialogOpen" @update:open="shareDialogOpen = $event">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Compartilhar Produto</DialogTitle>
+                    <DialogDescription>
+                        {{ shareTitle }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Copiar Link -->
+                    <Button
+                        variant="outline"
+                        class="flex items-center justify-center gap-2"
+                        @click="copyLink"
+                    >
+                        <Copy v-if="!shareCopied" class="h-4 w-4" />
+                        <Link2 v-else class="h-4 w-4 text-green-600" />
+                        {{ shareCopied ? 'Copiado!' : 'Copiar Link' }}
+                    </Button>
+
+                    <!-- WhatsApp -->
+                    <Button
+                        variant="outline"
+                        class="flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100"
+                        @click="shareWhatsApp"
+                    >
+                        <MessageCircle class="h-4 w-4 text-green-600" />
+                        WhatsApp
+                    </Button>
+
+                    <!-- Facebook -->
+                    <Button
+                        variant="outline"
+                        class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100"
+                        @click="shareFacebook"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#1877F2">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                    </Button>
+
+                    <!-- X (Twitter) -->
+                    <Button
+                        variant="outline"
+                        class="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100"
+                        @click="shareTwitter"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#0F1419">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        X
+                    </Button>
+
+                    <!-- Telegram -->
+                    <Button
+                        variant="outline"
+                        class="flex items-center justify-center gap-2 bg-sky-50 hover:bg-sky-100"
+                        @click="shareTelegram"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#0088CC">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.26.333-.54.333l.194-2.76 5.02-4.536c.223-.198-.048-.308-.346-.11l-6.2 3.9-2.67-.834c-.58-.182-.592-.58.122-.862l10.43-4.02c.483-.18.904.117.746.876z"/>
+                        </svg>
+                        Telegram
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

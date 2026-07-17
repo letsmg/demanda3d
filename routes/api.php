@@ -25,6 +25,10 @@ Route::prefix('produtos')->name('api.produtos.')->group(function () {
 // Consulta de CEP — retorna estado baseado na faixa de CEP
 Route::get('/cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
 
+// Autocomplete de busca — sugestões em tempo real (Redis + PostgreSQL)
+Route::get('/search/suggestions', \App\Http\Controllers\Api\SearchSuggestionController::class)
+    ->name('api.search.suggestions');
+
 // Validação de cupom de desconto
 Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'check'])
     ->middleware('auth:clients')
