@@ -45,8 +45,8 @@ class StoreController extends Controller
         $categories = $categoriesQuery->get(['slug', 'name']);
 
         return Inertia::render('Store/Index', [
-            'products'   => $products,
-            'categories' => $categories,
+            'products'   => $products->toArray(),
+            'categories' => $categories->toArray(),
             'filters'    => $filters,
         ]);
     }

@@ -172,7 +172,17 @@ class ProductService
             $cached = Cache::get($cacheKey);
 
             if ($cached !== null) {
-                return $cached;
+                // Se o cache retornou um array (formato correto), converte para Collection
+                if (is_array($cached)) {
+                    return collect($cached);
+                }
+
+                // Se for uma Collection válida (pré-serialização), retorna diretamente
+                if ($cached instanceof \Illuminate\Database\Eloquent\Collection) {
+                    return $cached;
+                }
+
+                // Incomplete object ou formato inválido — ignora cache, recria
             }
         }
 
@@ -186,9 +196,9 @@ class ProductService
             $this->logEmptyStoreDiagnostics();
         }
 
-        // ── D. Store in Redis for future identical queries ────
+        // ── D. Store as array in Redis for safe serialization ────
         if ($cacheKey !== null) {
-            Cache::put($cacheKey, $results, now()->addMinutes(10));
+            Cache::put($cacheKey, $results->toArray(), now()->addMinutes(10));
         }
 
         return $results;
