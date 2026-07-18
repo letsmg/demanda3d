@@ -1,0 +1,23 @@
+- name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5' # AJUSTADO PARA COMBINAR COM O DEPLOY
+          extensions: pdo_pgsql, redis, bcmath
+          coverage: none
+          ini-values: post_max_size=256M, upload_max_filesize=256M
+        env:
+          update: true # Opcional: mantém o ambiente atualizado
+
+      # DICA: Adicionar cache de dependências Composer também ajuda
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer
+        run: composer install --no-interaction --prefer-dist
