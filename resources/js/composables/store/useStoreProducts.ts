@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue';
 
 interface ProductList {
-    products: any[];
+    products: any; // Aceita array ou objeto (paginator)
 }
 
 interface FilterState {
@@ -13,59 +13,49 @@ interface FilterState {
     sortOrder: { value: string };
 }
 
+// Função auxiliar para extrair a lista de produtos corretamente
+const extractProducts = (data: any): any[] => {
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object' && Array.isArray(data.data)) return data.data;
+    return [];
+};
+
 export function useStoreProducts(props: ProductList, filters?: FilterState) {
-    const visibleProducts = ref<any[]>(Array.isArray(props.products) ? [...props.products] : []);
-    const hasMore = ref(Array.isArray(props.products) ? props.products.length >= 8 : false);
+    // Inicialização robusta
+    const productsList = extractProducts(props.products);
+    
+    const visibleProducts = ref<any[]>(productsList);
+    const hasMore = ref(productsList.length >= 24); // Ajustado para 24
     const currentPage = ref(1);
     const loadingMore = ref(false);
 
     watch(
         () => props.products,
         (newList) => {
-            if (!newList || !Array.isArray(newList)) {
-                return;
-            }
-
-            visibleProducts.value = [...newList];
-            hasMore.value = newList.length >= 8;
+            const items = extractProducts(newList);
+            visibleProducts.value = [...items];
+            // Se a página retornou 24 itens (ou o total esperado), possivelmente há mais
+            hasMore.value = items.length >= 24; 
             currentPage.value = 1;
         },
-        { immediate: true },
+        { deep: true },
     );
 
     async function loadMoreProducts(): Promise<void> {
-        if (loadingMore.value || !hasMore.value) {
-            return;
-        }
+        if (loadingMore.value || !hasMore.value) return;
 
         loadingMore.value = true;
-
         const nextPage = currentPage.value + 1;
 
         try {
             const qs = new URLSearchParams();
-
             qs.set('page', String(nextPage));
 
             if (filters) {
-                const trimmedSearch = filters.searchTerm.value.trim();
-
-                if (trimmedSearch.length >= 3) {
-                    qs.set('search', trimmedSearch);
-                }
-
-                if (filters.priceMin.value) {
-                    qs.set('min_price', filters.priceMin.value);
-                }
-
-                if (filters.priceMax.value) {
-                    qs.set('max_price', filters.priceMax.value);
-                }
-
-                if (filters.selectedCategories.value.length > 0) {
-                    qs.set('categories', filters.selectedCategories.value.join(','));
-                }
-
+                if (filters.searchTerm.value.trim().length >= 3) qs.set('search', filters.searchTerm.value.trim());
+                if (filters.priceMin.value) qs.set('min_price', filters.priceMin.value);
+                if (filters.priceMax.value) qs.set('max_price', filters.priceMax.value);
+                if (filters.selectedCategories.value.length > 0) qs.set('categories', filters.selectedCategories.value.join(','));
                 qs.set('sort', filters.sortBy.value);
                 qs.set('sort_dir', filters.sortOrder.value);
             }
@@ -75,9 +65,11 @@ export function useStoreProducts(props: ProductList, filters?: FilterState) {
 
             if (res.ok) {
                 const json = await res.json();
-
-                visibleProducts.value.push(...json.data);
-                hasMore.value = json.has_more;
+                // json.data é o padrão de resposta do Laravel Resource/Paginator
+                const newItems = json.data || []; 
+                
+                visibleProducts.value.push(...newItems);
+                hasMore.value = newItems.length > 0; // Se veio algo, assume que pode ter mais
                 currentPage.value = nextPage;
             }
         } finally {

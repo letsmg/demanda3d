@@ -84,7 +84,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 </p>
             </div>
 
-            <!-- Filtros + Busca + Ordenação -->
             <StoreFilterCard
                 :search-term="storeFilters.searchTerm.value"
                 :suggestions="storeFilters.suggestions.value"
@@ -97,14 +96,15 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 :sort-options="storeFilters.sortOptions"
                 :current-sort="storeFilters.getCurrentSort()"
                 :has-filters="storeFilters.hasFilters.value"
-                @update:search-term="storeFilters.searchTerm = $event"
+                
+                @update:search-term="storeFilters.searchTerm.value = $event"
                 @input-search="storeFilters.onSearchInput()"
                 @keydown-search="storeFilters.onSearchKeydown($event)"
                 @select-suggestion="storeFilters.selectSuggestion($event)"
                 @clear-search="storeFilters.clearSearch()"
                 @update:price-range="storeFilters.updatePriceRange($event)"
                 @toggle-category="storeFilters.toggleCategory($event)"
-                @select-all-categories="storeFilters.selectedCategories = []; storeFilters.applyStoreFilters()"
+                @select-all-categories="storeFilters.clearCategories()"
                 @update:sort="storeFilters.handleSortChange($event)"
             />
 
