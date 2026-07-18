@@ -101,33 +101,19 @@ jobs:
 
       - name: 🔨 Instalar dependências e gerar build
         run: |
-
           set -Eeuo pipefail
 
-          composer install \
-            --no-dev \
-            --prefer-dist \
-            --optimize-autoloader \
-            --no-interaction
-
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
           npm ci
-
           npm run build
 
-          # 👇 ADICIONE ESTES DOIS PASSOS BEM AQUI:
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache-dependency-path: go-service/go.mod
-
-      - name: 📦 Compilar Microserviço em Go
-        run: |
-          set -Eeuo pipefail
-          cd go-service
-          go mod tidy
-          # Compila gerando o binário direto na pasta do serviço que será zipada
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o notification-service .
+          # 🛡️ VERIFICAÇÃO AUTOMÁTICA DE BUILD
+          if [ ! -d "public/build" ]; then
+            echo "❌ ERRO: A pasta 'public/build' não foi gerada pelo Vite!"
+            exit 1
+          fi
+          echo "✅ Build gerado com sucesso. Arquivos presentes:"
+          ls -la public/build/assets/
 
       # ==========================================================================
       # PACOTE
@@ -135,10 +121,14 @@ jobs:
 
       - name: 📦 Criar pacote de Deploy
         run: |
-
           set -Eeuo pipefail
 
-          # O zip vai empacotar o 'go-service/notification-service' gerado no passo anterior
+          # 🛡️ VERIFICAÇÃO FINAL ANTES DE ZIPAR
+          if [ ! -d "public/build" ]; then
+            echo "❌ ERRO CRÍTICO: Pasta public/build desapareceu antes do zip!"
+            exit 1
+          fi
+
           zip -rq deploy.zip . \
             -x ".git/*" \
             ".github/*" \
