@@ -65,9 +65,10 @@ gcloud-api-7bbd403db8e7*
 public/fonts*
 
 # Pipeline de otimização de imagens
-# Exclui TODOS os diretórios de tenants (numéricos: {tenant_id}/products/, {tenant_id}/profile/)
-# Apenas home/ e originals/ são versionadas (carrossel da página inicial)
-/storage/app/public/imgs/[0-9]*/
+# Apenas imgs/site/ é versionado (logo, carrossel, artigos, etc.)
+# Tudo mais (tenants, diretórios legados) é ignorado
+/storage/app/public/imgs/*
+!/storage/app/public/imgs/site/
 
 # Playwright
 /test-results/

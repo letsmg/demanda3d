@@ -14,7 +14,7 @@ defineProps<Props>();
 
 <template>
     <img
-        src="/logo.jpg"
+        src="/storage/imgs/site/logo.jpg"
         alt="Demanda 3D"
         :class="className ?? 'h-8 w-8'"
         v-bind="$attrs"

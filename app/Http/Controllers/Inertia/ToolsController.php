@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SecurityLog;
 use App\Services\ImageModerationService;
 use App\Services\ImageOptimizationService;
+use App\Services\ImageStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -120,24 +121,25 @@ class ToolsController extends Controller
      * Remove uma imagem do carrossel (admin only).
      */
     /**
-     * Recria todas as imagens otimizadas em imgs/home/ a partir dos originais em imgs/originais/.
+     * Recria todas as imagens otimizadas em imgs/site/home/optimized/ a partir
+     * dos originais em imgs/site/home/original/.
      *
      * Fluxo:
-     * 1. Limpa todo o conteúdo de imgs/home/
-     * 2. Itera sobre cada arquivo em imgs/originais/
+     * 1. Limpa todo o conteúdo de imgs/site/home/optimized/
+     * 2. Itera sobre cada arquivo em imgs/site/home/original/
      * 3. Para cada arquivo, executa o pipeline de otimização (resize + compressão)
-     * 4. O WelcomeController já lê imgs/home/ — os novos arquivos aparecem automaticamente
+     * 4. O WelcomeController já lê imgs/site/home/optimized/ — os novos arquivos aparecem automaticamente
      */
     public function rebuildHeroImages(ImageOptimizationService $imageService): RedirectResponse
     {
         Gate::authorize('admin.only');
 
-        $originalDir = 'imgs/originals';
-        $homeDir = 'imgs/home';
+        $originalDir  = ImageStorageService::siteHomeOriginalDir();
+        $optimizedDir = ImageStorageService::siteHomeOptimizedDir();
 
-        // 1. Limpa imgs/home/
-        $existingHomeFiles = Storage::disk('public')->files($homeDir);
-        foreach ($existingHomeFiles as $file) {
+        // 1. Limpa diretório de otimizados
+        $existingOptimizedFiles = Storage::disk('public')->files($optimizedDir);
+        foreach ($existingOptimizedFiles as $file) {
             Storage::disk('public')->delete($file);
         }
 
@@ -151,7 +153,7 @@ class ToolsController extends Controller
 
         if (empty($originalImages)) {
             return redirect()->route('tools.index')
-                ->with('error', 'Nenhuma imagem original encontrada em imgs/originals/.');
+                ->with('error', "Nenhuma imagem original encontrada em {$originalDir}/.");
         }
 
         $processed = 0;
@@ -172,7 +174,7 @@ class ToolsController extends Controller
         }
 
         return redirect()->route('tools.index')
-            ->with('success', "{$processed} imagem(ns) recriada(s) com sucesso em imgs/home/" . ($failed > 0 ? ". {$failed} falha(s)." : ''));
+            ->with('success', "{$processed} imagem(ns) recriada(s) com sucesso em {$optimizedDir}/" . ($failed > 0 ? ". {$failed} falha(s)." : ''));
     }
 
     public function deleteHeroImage(Request $request): RedirectResponse
@@ -184,8 +186,10 @@ class ToolsController extends Controller
         ]);
 
         $filename = basename($request->input('filename'));
-        $originalPath = 'imgs/originals/' . $filename;
-        $homePath = 'imgs/home/' . $filename;
+        $originalDir  = ImageStorageService::siteHomeOriginalDir();
+        $optimizedDir = ImageStorageService::siteHomeOptimizedDir();
+        $originalPath = $originalDir . '/' . $filename;
+        $optimizedPath = $optimizedDir . '/' . $filename;
         $deleted = 0;
 
         if (Storage::disk('public')->exists($originalPath)) {
@@ -193,8 +197,8 @@ class ToolsController extends Controller
             $deleted++;
         }
 
-        if (Storage::disk('public')->exists($homePath)) {
-            Storage::disk('public')->delete($homePath);
+        if (Storage::disk('public')->exists($optimizedPath)) {
+            Storage::disk('public')->delete($optimizedPath);
             $deleted++;
         }
 
@@ -207,7 +211,7 @@ class ToolsController extends Controller
      */
     private function getCurrentHeroImages(): array
     {
-        $files = Storage::disk('public')->files('imgs/home');
+        $files = Storage::disk('public')->files(ImageStorageService::siteHomeOptimizedDir());
         $images = [];
 
         foreach ($files as $file) {
@@ -233,7 +237,7 @@ class ToolsController extends Controller
     {
         $maxIndex = 0;
 
-        foreach (Storage::disk('public')->files('imgs/home') as $file) {
+        foreach (Storage::disk('public')->files(ImageStorageService::siteHomeOptimizedDir()) as $file) {
             $filename = basename($file);
             if (preg_match('/^3d-(\d+)\./', $filename, $matches)) {
                 $index = (int) $matches[1];

@@ -50,7 +50,7 @@ type DashboardStats = {
 };
 
 const { stats, user_access_level } = defineProps<{
-    stats: DashboardStats;
+    stats?: DashboardStats;
     user_access_level: number;
 }>();
 
@@ -72,7 +72,7 @@ const formatDate = (dateStr: string) => {
 <template>
     <Head title="Painel" />
 
-    <div class="space-y-6 p-4 md:p-6">
+    <div v-if="stats" class="space-y-6 p-4 md:p-6">
         <!-- Page Header -->
         <div
             class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
@@ -278,11 +278,11 @@ const formatDate = (dateStr: string) => {
                             <div class="flex items-center gap-2">
                                 <div class="h-2 w-2 rounded-full bg-primary" />
                                 <span class="font-medium">{{
-                                    input.filaments
+                                    input.description
                                 }}</span>
                             </div>
                             <span class="text-muted-foreground">{{
-                                formatCurrency(Number(input.cost_buy))
+                                formatCurrency(Number(input.cost_value))
                             }}</span>
                         </div>
                     </div>
@@ -448,5 +448,10 @@ const formatDate = (dateStr: string) => {
                 </template>
             </CardContent>
         </Card>
+    </div>
+
+    <!-- Skeleton / fallback enquanto stats não carrega -->
+    <div v-else class="flex items-center justify-center p-12">
+        <p class="text-sm text-muted-foreground">Carregando painel...</p>
     </div>
 </template>

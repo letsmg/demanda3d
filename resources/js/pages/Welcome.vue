@@ -15,6 +15,7 @@ import { dashboard, login, register } from '@/routes';
 
 defineOptions({
     layout: WelcomeLayout,
+    inheritAttrs: false, 
 });
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const props = defineProps<{
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+
 const stats = computed(
     () =>
         page.props.stats as {
@@ -35,20 +37,7 @@ const stats = computed(
 
 // Imagens do carrossel recebidas do WelcomeController
 // Se não houver, usa fallback hardcoded
-const heroImages = computed(() => {
-    if (props.heroImages && props.heroImages.length > 0) {
-        return props.heroImages;
-    }
-    // Fallback para quando acessado sem controller (ex: Route::inertia)
-    return [
-        '/storage/imgs/home/3.webp',
-        '/storage/imgs/home/4.webp',
-        '/storage/imgs/home/5.webp',
-        '/storage/imgs/home/6.webp',
-        '/storage/imgs/home/7.webp',
-        '/storage/imgs/home/8.webp',
-    ];
-});
+const heroImages = computed(() => props.heroImages || []);
 
 const currentImageIndex = ref(0);
 let imageInterval: ReturnType<typeof setInterval> | null = null;
@@ -127,7 +116,7 @@ const features = [
     </Head>
 
     <!-- Hero Section -->
-    <section class="relative flex min-h-[600px] items-center overflow-hidden">
+    <section class="relative flex min-h-[600px] items-center overflow-hidden">      
         <!-- Rotating background images with overlay -->
         <div
             v-for="(img, idx) in heroImages"
