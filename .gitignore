@@ -64,11 +64,12 @@ storage/debugbar/
 gcloud-api-7bbd403db8e7*
 public/fonts*
 
-# Pipeline de otimização de imagens
-# Apenas imgs/site/ é versionado (logo, carrossel, artigos, etc.)
-# Tudo mais (tenants, diretórios legados) é ignorado
+# Ignora todo o conteúdo da pasta imgs
 /storage/app/public/imgs/*
+
+# Permite a pasta site e todo o conteúdo dentro dela recursivamente
 !/storage/app/public/imgs/site/
+!/storage/app/public/imgs/site/**
 
 # Playwright
 /test-results/
