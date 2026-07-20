@@ -57,7 +57,7 @@ services:
   # =============================================
   go-notification-service:
     build:
-      context: . # Ajuste o caminho do context se o Dockerfile estiver em uma subpasta (ex: ./go-notification)
+      context: ./go-service
       dockerfile: Dockerfile
     image: go-notification-service:latest 
     container_name: go-notification-service-hom

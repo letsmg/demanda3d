@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
@@ -84,7 +85,9 @@ function onOpenShare(name: string, slug: string): void {
         <CardHeader class="pb-2">
             <div class="flex items-start justify-between">
                 <div>
-                    <CardTitle class="text-base text-amber-900 cursor-pointer hover:text-amber-600 transition" @click="emit('open-gallery', product, 0)">{{ product.name }}</CardTitle>
+                    <Link :href="`/store/${product.slug}`" class="block">
+                        <CardTitle class="text-base text-amber-900 transition hover:text-amber-600">{{ product.name }}</CardTitle>
+                    </Link>
                     <p v-if="product.categories && product.categories.length > 0" class="mt-0.5 text-[11px] text-amber-500">
                         {{ product.categories[0].name }}
                     </p>
