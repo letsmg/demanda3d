@@ -51,12 +51,14 @@ services:
   # Alivia o core Laravel de processamento síncrono.
   # Container ultra-leve (~8MB binário compilado).
   # =============================================
+  
   # =============================================
   # Go Notification Service — Microsserviço Assíncrono
   # =============================================
   go-notification-service:
-    # 1. Use o nome da imagem que você construiu no Dockerfile
-    # (Supondo que você deu o nome 'go-notification-service' no CI/CD)
+    build:
+      context: . # Ajuste o caminho do context se o Dockerfile estiver em uma subpasta (ex: ./go-notification)
+      dockerfile: Dockerfile
     image: go-notification-service:latest 
     container_name: go-notification-service-hom
     restart: unless-stopped
@@ -64,8 +66,6 @@ services:
       REDIS_HOST: demanda-redis-hom
       REDIS_PORT: "6379"
       NOTIFICATIONS_QUEUE: notifications_queue
-    # 2. REMOVA O VOLUMES (não precisa mais disso)
-    # 3. REMOVA O COMMAND (o ENTRYPOINT do Dockerfile já cuida disso)
     depends_on:
       demanda-redis-hom:
         condition: service_healthy

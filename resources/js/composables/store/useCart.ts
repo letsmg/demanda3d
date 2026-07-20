@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { setCartCount } from '@/stores/cartStore';
 
 function csrfToken(): string {
@@ -14,9 +15,14 @@ export function useCart() {
     const cartLoading = ref(false);
 
     function isAuthenticated(): boolean {
+        // Verifica nos props do Inertia (fonte primária)
         const page = (window as any).__inertia_page?.props;
+        if (page?.auth_client?.user) {
+            return true;
+        }
 
-        return !!(page?.auth_client?.user);
+        // Fallback: verifica no DOM se o ClientHeader está renderizado
+        return !!document.querySelector('[data-client-header]');
     }
 
     async function fetchCartData(): Promise<void> {
@@ -42,7 +48,7 @@ export function useCart() {
 
     async function addToCart(productId: number): Promise<void> {
         if (!isAuthenticated()) {
-            window.location.href = '/login_cli';
+            router.get('/login_cli');
 
             return;
         }

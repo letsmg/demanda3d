@@ -30,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
+            'api/log-frontend-error',
+            'cart',
+            'cart/*',
         ]);
 
         $middleware->web(append: [

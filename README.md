@@ -59,53 +59,6 @@ php artisan images:optimize-batch --force
 
 ---
 
-<a id="english"></a>
-# 🚀 Demanda3D (English Version)
-*SaaS platform specialized in operational, financial, and production management for 3D printing businesses.*
-
-[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
-
-## 🎯 About the Project
-Demanda3D is a robust SaaS platform built for end-to-end management of 3D printing businesses. The system handles everything from raw material inventory and production costs to recurring subscriptions and final delivery, utilizing a **multi-tenant** architecture with strict data isolation.
-
-## 🏗️ Engineering Highlights
-* **Scalable Infrastructure:** Designed with Docker containers and ready for Kubernetes orchestration.
-* **High Availability:** PostgreSQL Master/Replica replication strategy to ensure resilience and read performance.
-* **Security by Design:** Compliance with data protection standards through encryption-at-rest (`AES-256`) and `Argon2id` password hashing.
-* **Performance:** High-performance caching and distributed queues via Redis.
-* **Optimized Search:** **Meilisearch** integrated for high-performance full-text search, typo tolerance, and instant autocomplete.
-
-## 🛠️ Tech Stack
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Backend** | [![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com) [![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat&logo=php&logoColor=white)](https://php.net) [![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org) [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io) [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com) |
-| **Frontend** | [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat&logo=vuedotjs&logoColor=white)](https://vuejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org) Tailwind CSS, Inertia.js |
-| **DevOps** | [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com) Kubernetes, [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)](https://grafana.com), Loki, Promtail, [![Meilisearch](https://img.shields.io/badge/Meilisearch-FF5722?style=flat&logo=meilisearch&logoColor=white)](https://www.meilisearch.com) |
-| **Payments** | Stripe API, Pix, Credit/Debit Cards |
-
----
-
-## 🚀 Setup and Installation
-The project includes a detailed infrastructure guide.
-> 📖 **[Click here to access the Detailed Setup Guide (docs/SETUP.md)](docs/SETUP.md)**
-
-### 📦 System Dependencies (apt)
-```bash
-sudo apt-get update && sudo apt-get install -y jpegoptim optipng pngquant webp gifsicle
-```
-
-### 🖼️ Image Optimization Pipeline
-```bash
-# Process all images from originais/ → home/
-php artisan images:optimize-batch
-
-# Force reprocess all files
-php artisan images:optimize-batch --force
-```
-
----
-
 ## 🔍 Meilisearch & Estratégia de Busca Híbrida
 
 O projeto utiliza o **Meilisearch** como motor de busca principal para catálogos, produtos e termos textuais, oferecendo alta velocidade e tolerância a erros (fuzzy search).
@@ -176,7 +129,142 @@ npx playwright show-report
 
 ---
 
-## 🎭 E2E Testing — Playwright (English)
+## 📊 Grafana + Loki + Promtail (Monitoramento Local)
+
+Stack de observabilidade 100% local para desenvolvimento:
+- **Loki**: agregação de logs (datasource principal).
+- **Promtail**: agente que coleta logs do Laravel (`storage/logs/*.log`) e envia para o Loki.
+- **Grafana**: dashboards interativos (erros, severidade, live tail) + **Grafana Alerting** nativo.
+
+---
+
+## 🗄️ PostgreSQL — Master/Replica (DEV)
+
+O ambiente de desenvolvimento simula a arquitetura real de produção com dois containers PostgreSQL independentes:
+
+| Container | Porta | Função |
+| :--- | :--- | :--- |
+| `demanda-psql-dev` | `5434` | Master (escrita + leitura) |
+| `demanda-psql-rep-dev` | `5435` | Réplica (leitura dedicada) |
+
+---
+
+## 🐇 RabbitMQ — Message Broker Assíncrono
+
+Message broker utilizado para processamento assíncrono de jobs pesados e filas robustas, totalmente independente do Redis.
+
+```bash
+# Iniciar RabbitMQ
+docker compose up -d demanda-rabbitmq-dev
+```
+
+---
+
+## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
+
+Sistema híbrido Laravel + Go para processamento assíncrono de notificações via Redis List (`notifications_queue`) consumidas por workers em Go utilizando Goroutines para máxima performance e baixo consumo de RAM.
+
+---
+
+## 📝 Roadmap
+- [ ] Rate Limiting avançado para endpoints da API.
+- [x] RabbitMQ — Message Broker para processamento assíncrono.
+- [x] Audit Logs — Sistema de logs de auditoria polimórfico e multi-tenant.
+- [x] Meilisearch — Motor de busca full-text integrado.
+
+---
+
+## ✒️ Autor
+**Luiz** — Fullstack PHP/Laravel Developer.
+[LinkedIn](https://www.linkedin.com/in/letsmg/) | [Portfolio](https://www.hierarca.com)
+
+---
+
+<a id="english"></a>
+# 🚀 Demanda3D (English Version)
+*SaaS platform specialized in operational, financial, and production management for 3D printing businesses.*
+
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat&logo=php)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel)](https://laravel.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vuedotjs)](https://vuejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)](https://postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)](https://docker.com)
+[![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?style=flat&logo=redis)](https://redis.io)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Broker-FF6600?style=flat&logo=rabbitmq)](https://www.rabbitmq.com)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Meilisearch](https://img.shields.io/badge/Meilisearch-Search-FF5722?style=flat&logo=meilisearch)](https://www.meilisearch.com)
+[![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?style=flat&logo=grafana)](https://grafana.com)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
+
+---
+
+## 🎯 About the Project
+Demanda3D is a robust SaaS platform built for end-to-end management of 3D printing businesses. The system handles everything from raw material inventory and production costs to recurring subscriptions and final delivery, utilizing a **multi-tenant** architecture with strict data isolation.
+
+## 🏗️ Engineering Highlights
+* **Scalable Infrastructure:** Designed with Docker containers and ready for Kubernetes orchestration.
+* **High Availability:** PostgreSQL Master/Replica replication strategy to ensure resilience and read performance.
+* **Security by Design:** Compliance with data protection standards through encryption-at-rest (`AES-256`) and `Argon2id` password hashing.
+* **Performance:** High-performance caching and distributed queues via Redis.
+* **Optimized Search:** **Meilisearch** integrated for high-performance full-text search, typo tolerance, and instant autocomplete.
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | [![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com) [![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat&logo=php&logoColor=white)](https://php.net) [![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org) [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io) [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com) |
+| **Frontend** | [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat&logo=vuedotjs&logoColor=white)](https://vuejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org) Tailwind CSS, Inertia.js |
+| **DevOps** | [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com) Kubernetes, [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)](https://grafana.com), Loki, Promtail, [![Meilisearch](https://img.shields.io/badge/Meilisearch-FF5722?style=flat&logo=meilisearch&logoColor=white)](https://www.meilisearch.com) |
+| **Payments** | Stripe API, Pix, Credit/Debit Cards |
+
+---
+
+## 🚀 Setup and Installation
+The project includes a detailed infrastructure guide.
+> 📖 **[Click here to access the Detailed Setup Guide (docs/SETUP.md)](docs/SETUP.md)**
+
+### 📦 System Dependencies (apt)
+```bash
+sudo apt-get update && sudo apt-get install -y jpegoptim optipng pngquant webp gifsicle
+```
+
+### 🖼️ Image Optimization Pipeline
+```bash
+# Process all images from originais/ → home/
+php artisan images:optimize-batch
+
+# Force reprocess all files
+php artisan images:optimize-batch --force
+```
+
+---
+
+## 🔍 Meilisearch & Hybrid Search Strategy
+
+The project uses **Meilisearch** as the primary search engine for catalogs, products, and text terms, offering high speed and typo tolerance (fuzzy search).
+
+### Smart Search Flow (Redis + PostgreSQL + Meilisearch)
+1. **Redis Cache**: Product queries first check Redis.
+2. **PostgreSQL Fallback**: If not found in Redis, the search falls back to PostgreSQL and the result is written to Redis for faster future access.
+3. **Indexing**: Meilisearch operates in parallel, keeping the catalog indexed for complex full-text searches.
+
+| Variable | Local Value | Description |
+| :--- | :--- | :--- |
+| `MEILISEARCH_HOST` | `http://127.0.0.1:7700` | Meilisearch API URL |
+| `MEILISEARCH_KEY` | `masterKey` | Master authentication key |
+
+### Docker Container
+```bash
+# Start Meilisearch via Docker Compose
+docker compose up -d demanda-meilisearch
+
+# Check service health
+curl http://localhost:7700/health
+```
+
+---
+
+## 🎭 E2E Testing — Playwright
 
 The project uses **Playwright** for end-to-end (E2E) testing, validating critical flows such as multi-profile login, progressive registration, checkout, and permission restrictions.
 
@@ -221,48 +309,48 @@ npx playwright show-report
 
 ---
 
-## 📊 Grafana + Loki + Promtail (Monitoramento Local)
+## 📊 Grafana + Loki + Promtail (Local Monitoring)
 
-Stack de observabilidade 100% local para desenvolvimento:
-- **Loki**: agregação de logs (datasource principal).
-- **Promtail**: agente que coleta logs do Laravel (`storage/logs/*.log`) e envia para o Loki.
-- **Grafana**: dashboards interativos (erros, severidade, live tail) + **Grafana Alerting** nativo.
+100% local observability stack for development:
+- **Loki**: log aggregation (primary datasource).
+- **Promtail**: agent that collects Laravel logs (`storage/logs/*.log`) and sends them to Loki.
+- **Grafana**: interactive dashboards (errors, severity, live tail) + native **Grafana Alerting**.
 
 ---
 
 ## 🗄️ PostgreSQL — Master/Replica (DEV)
 
-O ambiente de desenvolvimento simula a arquitetura real de produção com dois containers PostgreSQL independentes:
+The development environment simulates the real production architecture with two independent PostgreSQL containers:
 
-| Container | Porta | Função |
+| Container | Port | Role |
 | :--- | :--- | :--- |
-| `demanda-psql-dev` | `5434` | Master (escrita + leitura) |
-| `demanda-psql-rep-dev` | `5435` | Réplica (leitura dedicada) |
+| `demanda-psql-dev` | `5434` | Master (write + read) |
+| `demanda-psql-rep-dev` | `5435` | Replica (read-only) |
 
 ---
 
-## 🐇 RabbitMQ — Message Broker Assíncrono
+## 🐇 RabbitMQ — Async Message Broker
 
-Message broker utilizado para processamento assíncrono de jobs pesados e filas robustas, totalmente independente do Redis.
+Message broker used for asynchronous heavy job processing and robust queues, completely independent of Redis.
 
 ```bash
-# Iniciar RabbitMQ
+# Start RabbitMQ
 docker compose up -d demanda-rabbitmq-dev
 ```
 
 ---
 
-## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
+## 🔔 Notifications — Go Microservice (Hybrid Architecture)
 
-Sistema híbrido Laravel + Go para processamento assíncrono de notificações via Redis List (`notifications_queue`) consumidas por workers em Go utilizando Goroutines para máxima performance e baixo consumo de RAM.
+Hybrid Laravel + Go system for asynchronous notification processing via Redis List (`notifications_queue`) consumed by Go workers using Goroutines for maximum performance and low RAM consumption.
 
 ---
 
 ## 📝 Roadmap
 - [ ] Advanced Rate Limiting for API endpoints.
-- [x] RabbitMQ — Message Broker para processamento assíncrono.
-- [x] Audit Logs — Sistema de logs de auditoria polimórfico e multi-tenant.
-- [x] Meilisearch — Motor de busca full-text integrado.
+- [x] RabbitMQ — Async message broker.
+- [x] Audit Logs — Polymorphic and multi-tenant audit logging system.
+- [x] Meilisearch — Integrated full-text search engine.
 
 ---
 

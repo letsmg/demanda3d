@@ -29,6 +29,10 @@ Route::get('/cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
 Route::get('/search/suggestions', \App\Http\Controllers\Api\SearchSuggestionController::class)
     ->name('api.search.suggestions');
 
+// Log de erros do frontend — captura silenciosa via sendBeacon
+Route::post('/log-frontend-error', [\App\Http\Controllers\Api\FrontendErrorLogController::class, '__invoke'])
+    ->name('api.log-frontend-error');
+
 // Validação de cupom de desconto
 Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'check'])
     ->middleware('auth:clients')

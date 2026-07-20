@@ -7,7 +7,9 @@ import {
     ImageIcon,
     Link2,
     MessageCircle,
+    Minus,
     Package,
+    Plus,
     Share2,
     ShoppingBag,
     Star,
@@ -158,6 +160,61 @@ function csrfToken(): string {
     const meta = document.querySelector('meta[name="csrf-token"]');
 
     return meta ? (meta as HTMLMetaElement).content : '';
+}
+
+function getCartItemId(productId: number): number | null {
+    const item = cartItems.value.find((i: any) => i.product_id === productId);
+    return item ? item.id : null;
+}
+
+async function removeFromCart(productId: number): Promise<void> {
+    if (!authClient.value) return;
+
+    const item = cartItems.value.find((i: any) => i.product_id === productId);
+    if (!item || item.quantity <= 1) {
+        await removeCartItem(getCartItemId(productId) ?? 0);
+        return;
+    }
+
+    try {
+        const res = await fetch(`/cart/${item.id}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({ quantity: item.quantity - 1 }),
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
+        }
+    } catch {
+        // ignore
+    }
+}
+
+async function removeCartItem(cartItemId: number): Promise<void> {
+    try {
+        const res = await fetch(`/cart/${cartItemId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'X-CSRF-TOKEN': csrfToken() },
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            cartItems.value = data.items || [];
+            cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
+        }
+    } catch {
+        // ignore
+    }
 }
 
 async function addToCart(productId: number): Promise<void> {
@@ -529,20 +586,34 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         </div>
                     </div>
 
-                    <!-- Add to Cart Button -->
+                    <!-- Add to Cart Section -->
                     <div class="pt-2">
+                        <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-3">
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                @click="removeFromCart(product.id)"
+                            >
+                                <Minus class="h-5 w-5" />
+                            </button>
+                            <span class="min-w-[2rem] text-center text-lg font-bold text-amber-900">{{ getCartQty(product.id) }}</span>
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                @click="addToCart(product.id)"
+                            >
+                                <Plus class="h-5 w-5" />
+                            </button>
+                        </div>
                         <Button
+                            v-else
                             size="lg"
                             class="w-full sm:w-auto"
                             :disabled="cartLoading"
                             @click="addToCart(product.id)"
                         >
                             <ShoppingBag class="mr-2 h-5 w-5" />
-                            {{
-                                getCartQty(product.id) > 0
-                                    ? `Adicionar mais (${getCartQty(product.id)})`
-                                    : 'Adicionar ao carrinho'
-                            }}
+                            Adicionar ao carrinho
                         </Button>
                     </div>
                 </div>
@@ -607,7 +678,25 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             </p>
                         </CardContent>
                         <CardFooter class="pt-0">
+                            <div v-if="getCartQty(rp.id) > 0" class="flex w-full items-center justify-center gap-2">
+                                <button
+                                    type="button"
+                                    class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                    @click="removeFromCart(rp.id)"
+                                >
+                                    <Minus class="h-3.5 w-3.5" />
+                                </button>
+                                <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(rp.id) }}</span>
+                                <button
+                                    type="button"
+                                    class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                    @click="addToCart(rp.id)"
+                                >
+                                    <Plus class="h-3.5 w-3.5" />
+                                </button>
+                            </div>
                             <Button
+                                v-else
                                 variant="outline"
                                 size="sm"
                                 class="w-full"

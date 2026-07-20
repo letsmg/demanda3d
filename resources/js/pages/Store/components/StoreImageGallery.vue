@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, ExternalLink, ImageIcon, Star } from 'lucide-vue-next';
+import { ChevronDown, ExternalLink, ImageIcon, Minus, Plus, Star } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,6 +14,7 @@ defineProps<{
     currentImageIndex: number;
     formatPrice: (value: string | number) => string;
     getCartQty: (productId: number) => number;
+    getCartItemId: (productId: number) => number | null;
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
     'next-image': [];
     'select-image': [index: number];
     'add-to-cart': [productId: number];
+    'remove-from-cart': [cartItemId: number];
     'close': [];
 }>();
 </script>
@@ -73,9 +75,28 @@ const emit = defineEmits<{
                                 <span class="text-sm text-amber-900">({{ product.tenant.rating_count }} avaliações)</span>
                             </div>
                         </div>
-                        <Button type="button" class="bg-amber-800 text-white hover:bg-amber-900" @click="emit('add-to-cart', product.id)">
-                            {{ getCartQty(product.id) > 0 ? `Adicionar mais (${getCartQty(product.id)})` : 'Adicionar ao carrinho' }}
-                        </Button>
+                        <div class="flex items-center gap-2">
+                            <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                    @click="emit('remove-from-cart', (getCartItemId(product.id) ?? 0))"
+                                >
+                                    <Minus class="h-4 w-4" />
+                                </button>
+                                <span class="min-w-[1.5rem] text-center text-sm font-bold text-amber-900">{{ getCartQty(product.id) }}</span>
+                                <button
+                                    type="button"
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
+                                    @click="emit('add-to-cart', product.id)"
+                                >
+                                    <Plus class="h-4 w-4" />
+                                </button>
+                            </div>
+                            <Button v-else type="button" class="bg-amber-800 text-white hover:bg-amber-900" @click="emit('add-to-cart', product.id)">
+                                Adicionar ao carrinho
+                            </Button>
+                        </div>
                     </div>
                     <a :href="`/store/${product.slug}`"
                         class="inline-flex w-full items-center justify-center gap-2 rounded-md bg-amber-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-900"

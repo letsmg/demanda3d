@@ -146,11 +146,13 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             :current-image-index="gallery.currentImageIndex.value"
             :format-price="formatPrice"
             :get-cart-qty="cart.getCartQty"
+            :get-cart-item-id="cart.getCartItemId"
             @update:open="gallery.closeGallery()"
             @prev-image="gallery.prevImage()"
             @next-image="gallery.nextImage()"
             @select-image="gallery.currentImageIndex = $event"
             @add-to-cart="cart.addToCart"
+            @remove-from-cart="cart.removeFromCart"
             @close="gallery.closeGallery()"
         />
 

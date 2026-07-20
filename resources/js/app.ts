@@ -20,9 +20,33 @@ createInertiaApp({
     resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, pages),
 
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .mount(el);
+        const vueApp = createApp({ render: () => h(App, props) });
+
+        // ── Captura global de erros não tratados (Vue) ──────────
+        vueApp.config.errorHandler = (err: unknown) => {
+            const payload = JSON.stringify({
+                message: err instanceof Error ? err.message : String(err),
+                stack: err instanceof Error ? (err.stack ?? null) : null,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+            });
+
+            navigator.sendBeacon('/api/log-frontend-error', payload);
+        };
+
+        // ── Captura de promessas rejeitadas não tratadas ─────────
+        window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+            const payload = JSON.stringify({
+                message: event.reason instanceof Error ? event.reason.message : String(event.reason),
+                stack: event.reason instanceof Error ? (event.reason.stack ?? null) : null,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+            });
+
+            navigator.sendBeacon('/api/log-frontend-error', payload);
+        });
+
+        vueApp.use(plugin).mount(el);
     },
 
     layout: (name) => {
