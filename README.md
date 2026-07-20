@@ -14,6 +14,7 @@
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Meilisearch](https://img.shields.io/badge/Meilisearch-Search-FF5722?style=flat&logo=meilisearch)](https://www.meilisearch.com)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?style=flat&logo=grafana)](https://grafana.com)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
 
 ---
 
@@ -61,6 +62,8 @@ php artisan images:optimize-batch --force
 <a id="english"></a>
 # 🚀 Demanda3D (English Version)
 *SaaS platform specialized in operational, financial, and production management for 3D printing businesses.*
+
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
 
 ## 🎯 About the Project
 Demanda3D is a robust SaaS platform built for end-to-end management of 3D printing businesses. The system handles everything from raw material inventory and production costs to recurring subscriptions and final delivery, utilizing a **multi-tenant** architecture with strict data isolation.
@@ -125,6 +128,96 @@ docker compose up -d demanda-meilisearch
 # Verificar saúde do serviço
 curl http://localhost:7700/health
 ```
+
+---
+
+## 🎭 Testes E2E — Playwright
+
+O projeto utiliza **Playwright** para testes ponta a ponta (E2E), validando fluxos críticos como login de múltiplos perfis, registro progressivo, checkout e restrições de permissões.
+
+### Configuração
+
+O arquivo `playwright.config.ts` na raiz do projeto define:
+- **Diretório de testes:** `./e2e`
+- **Navegadores:** Chromium, Firefox, WebKit
+- **Base URL:** `http://127.0.0.1:8000` (servidor Laravel local)
+- **Web Server:** Inicia automaticamente `php artisan serve --port=8000` antes dos testes
+- **Timeout:** 120 segundos para o servidor iniciar
+
+### Pré-requisitos
+
+Os containers Docker (PostgreSQL, Redis) devem estar em execução antes de rodar os testes:
+
+```bash
+# Subir os containers essenciais
+docker compose up -d demanda-psql-dev demanda-redis-dev
+```
+
+### Instalação e Execução
+
+```bash
+# Instalar navegadores do Playwright (apenas na primeira vez)
+npx playwright install
+
+# Executar todos os testes E2E
+npx playwright test
+
+# Executar um arquivo específico
+npx playwright test e2e/nome-do-teste.spec.ts
+
+# Modo interativo (UI) para depuração
+npx playwright test --ui
+
+# Gerar relatório HTML após execução
+npx playwright show-report
+```
+
+> ⚠️ **Importante:** Certifique-se de que o arquivo `.env` esteja configurado corretamente e que as migrations tenham sido executadas (`php artisan migrate`) antes de rodar os testes.
+
+---
+
+## 🎭 E2E Testing — Playwright (English)
+
+The project uses **Playwright** for end-to-end (E2E) testing, validating critical flows such as multi-profile login, progressive registration, checkout, and permission restrictions.
+
+### Configuration
+
+The `playwright.config.ts` file at the project root defines:
+- **Test directory:** `./e2e`
+- **Browsers:** Chromium, Firefox, WebKit
+- **Base URL:** `http://127.0.0.1:8000` (local Laravel server)
+- **Web Server:** Automatically starts `php artisan serve --port=8000` before tests
+- **Timeout:** 120 seconds for the server to start
+
+### Prerequisites
+
+Docker containers (PostgreSQL, Redis) must be running before executing tests:
+
+```bash
+# Start essential containers
+docker compose up -d demanda-psql-dev demanda-redis-dev
+```
+
+### Setup and Execution
+
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install
+
+# Run all E2E tests
+npx playwright test
+
+# Run a specific test file
+npx playwright test e2e/test-name.spec.ts
+
+# Interactive UI mode for debugging
+npx playwright test --ui
+
+# Generate HTML report after execution
+npx playwright show-report
+```
+
+> ⚠️ **Important:** Make sure the `.env` file is properly configured and migrations have been executed (`php artisan migrate`) before running tests.
 
 ---
 

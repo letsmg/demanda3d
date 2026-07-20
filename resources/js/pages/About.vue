@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ShoppingBag, Store, Package, TrendingUp, Shield, Users } from '@lucide/vue';
+import { ShoppingBag, Store, Package, TrendingUp, Shield, Users } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
