@@ -62,8 +62,12 @@ const activeCategory = ref(props.filters.category || '');
 // ============================================================
 // Lazy loading state ("Mostrar mais")
 // ============================================================
-const visibleProducts = ref<any[]>(Array.isArray(props.products) ? [...props.products] : []);
-const hasMore = ref(Array.isArray(props.products) ? props.products.length >= 8 : false);
+const visibleProducts = ref<any[]>(
+    Array.isArray(props.products) ? [...props.products] : [],
+);
+const hasMore = ref(
+    Array.isArray(props.products) ? props.products.length >= 8 : false,
+);
 const currentPage = ref(1);
 const loadingMore = ref(false);
 
@@ -83,8 +87,12 @@ async function loadMoreProducts(): Promise<void> {
         qs.set('sort', sortBy.value);
         qs.set('sort_dir', sortOrder.value);
 
-        const url = `/api/tenant/${props.tenant.fantasy_slug}/products?` + qs.toString();
-        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        const url =
+            `/api/tenant/${props.tenant.fantasy_slug}/products?` +
+            qs.toString();
+        const res = await fetch(url, {
+            headers: { Accept: 'application/json' },
+        });
 
         if (res.ok) {
             const json = await res.json();
@@ -116,17 +124,17 @@ watch(
         visibleProducts.value = [...newList];
         hasMore.value = newList.length >= 8;
         currentPage.value = 1;
-    }
+    },
 );
 
 watch(searchTerm, (newVal) => {
     if (searchTimer) {
-      clearTimeout(searchTimer);
+        clearTimeout(searchTimer);
     }
     if (newVal.length >= 3) {
         searchTimer = setTimeout(() => applyTenantFilters(), 500);
     } else if (newVal.length === 0) {
-      applyTenantFilters();
+        applyTenantFilters();
     }
 });
 
@@ -152,7 +160,9 @@ async function fetchCartData() {
             cartCount.value = data.count || 0;
             setCartCount(data.count || 0);
         }
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
 }
 
 async function addToCart(productId: number) {
@@ -207,7 +217,9 @@ async function removeFromCart(cartItemId: number) {
             cartCount.value = data.count || 0;
             setCartCount(data.count || 0);
         }
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
 }
 
 async function removeCartItem(cartItemId: number) {
@@ -224,7 +236,9 @@ async function removeCartItem(cartItemId: number) {
             cartCount.value = data.count || 0;
             setCartCount(data.count || 0);
         }
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
 }
 
 async function clearCart() {
@@ -240,7 +254,9 @@ async function clearCart() {
             cartCount.value = 0;
             setCartCount(0);
         }
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
 }
 
 function getCartQty(productId: number): number {
@@ -369,32 +385,59 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
 
     <div class="min-h-screen bg-amber-50">
         <!-- Banner -->
-        <div v-if="tenant.banner_url" class="w-full h-48 md:h-64 bg-amber-100 overflow-hidden">
-            <img :src="tenant.banner_url" :alt="tenant.fantasy_name" class="w-full h-full object-cover" />
+        <div
+            v-if="tenant.banner_url"
+            class="h-48 w-full overflow-hidden bg-amber-100 md:h-64"
+        >
+            <img
+                :src="tenant.banner_url"
+                :alt="tenant.fantasy_name"
+                class="h-full w-full object-cover"
+            />
         </div>
-        <div v-else class="w-full h-32 bg-amber-100"></div>
+        <div v-else class="h-32 w-full bg-amber-100"></div>
 
         <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <!-- Tenant Info Header -->
-            <div class="flex flex-col md:flex-row items-start gap-6 mb-8">
-                <div v-if="tenant.logo_url" class="w-24 h-24 rounded-full bg-white shadow-md overflow-hidden flex-shrink-0">
-                    <img :src="tenant.logo_url" :alt="tenant.fantasy_name" class="w-full h-full object-cover" />
+            <div class="mb-8 flex flex-col items-start gap-6 md:flex-row">
+                <div
+                    v-if="tenant.logo_url"
+                    class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-full bg-white shadow-md"
+                >
+                    <img
+                        :src="tenant.logo_url"
+                        :alt="tenant.fantasy_name"
+                        class="h-full w-full object-cover"
+                    />
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-amber-900">{{ tenant.fantasy_name }}</h1>
-                    <p class="text-amber-600 text-sm">
+                    <h1 class="text-3xl font-bold text-amber-900">
+                        {{ tenant.fantasy_name }}
+                    </h1>
+                    <p class="text-sm text-amber-600">
                         {{ tenant.city }}, {{ tenant.state }}
                     </p>
-                    <p v-if="tenant.rating_count > 0" class="text-amber-700 text-sm mt-1">
-                        ⭐ {{ tenant.rating_average }} ({{ tenant.rating_count }} avaliações)
+                    <p
+                        v-if="tenant.rating_count > 0"
+                        class="mt-1 text-sm text-amber-700"
+                    >
+                        ⭐ {{ tenant.rating_average }} ({{
+                            tenant.rating_count
+                        }}
+                        avaliações)
                     </p>
                 </div>
             </div>
 
             <div class="mb-8">
-                <p class="text-amber-800 text-sm">
-                    Você está visualizando apenas produtos de <strong>{{ tenant.fantasy_name }}</strong>.
-                    <a href="/store" class="font-semibold text-amber-900 hover:underline">
+                <p class="text-sm text-amber-800">
+                    Você está visualizando apenas produtos de
+                    <strong>{{ tenant.fantasy_name }}</strong
+                    >.
+                    <a
+                        href="/store"
+                        class="font-semibold text-amber-900 hover:underline"
+                    >
                         Ver produtos de outros vendedores
                     </a>
                 </p>
@@ -404,7 +447,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             <div class="mb-4 space-y-4">
                 <div class="relative">
                     <Search
-                        class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-910"
+                        class="text-amber-910 absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2"
                     />
                     <Input
                         v-model="searchTerm"
@@ -414,8 +457,11 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     />
                     <button
                         v-if="searchTerm"
-                        class="absolute top-1/2 right-3 -translate-y-1/2 text-amber-910 hover:text-amber-600"
-                        @click="searchTerm = ''; applyTenantFilters()"
+                        class="text-amber-910 absolute top-1/2 right-3 -translate-y-1/2 hover:text-amber-600"
+                        @click="
+                            searchTerm = '';
+                            applyTenantFilters();
+                        "
                     >
                         <X class="h-4 w-4" />
                     </button>
@@ -484,11 +530,20 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
 
                 <!-- Categorias -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <label class="text-sm font-medium text-amber-700">Categorias:</label>
+                    <label class="text-sm font-medium text-amber-700"
+                        >Categorias:</label
+                    >
                     <button
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="!activeCategory ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-910'"
-                        @click="activeCategory = ''; applyTenantFilters()"
+                        :class="
+                            !activeCategory
+                                ? 'border-amber-500 bg-amber-100 text-amber-800'
+                                : 'hover:border-amber-910 border-amber-200 text-amber-600'
+                        "
+                        @click="
+                            activeCategory = '';
+                            applyTenantFilters();
+                        "
                     >
                         Todas
                     </button>
@@ -496,8 +551,15 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         v-for="cat in props.categories"
                         :key="cat.slug"
                         class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                        :class="activeCategory === cat.slug ? 'border-amber-500 bg-amber-100 text-amber-800' : 'border-amber-200 text-amber-600 hover:border-amber-910'"
-                        @click="activeCategory = cat.slug; applyTenantFilters()"
+                        :class="
+                            activeCategory === cat.slug
+                                ? 'border-amber-500 bg-amber-100 text-amber-800'
+                                : 'hover:border-amber-910 border-amber-200 text-amber-600'
+                        "
+                        @click="
+                            activeCategory = cat.slug;
+                            applyTenantFilters();
+                        "
                     >
                         {{ cat.name }}
                     </button>
@@ -513,7 +575,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 <p class="mt-1 text-sm text-amber-600">
                     Tente ajustar os filtros ou buscar por outros termos.
                 </p>
-                <Button variant="outline" class="mt-4" @click="clearTenantFilters"
+                <Button
+                    variant="outline"
+                    class="mt-4"
+                    @click="clearTenantFilters"
                     >Limpar filtros</Button
                 >
             </div>
@@ -567,17 +632,29 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     <CardHeader class="pb-2">
                         <div class="flex items-start justify-between">
                             <div>
-                                <CardTitle class="text-base text-amber-900">{{ product.name }}</CardTitle>
+                                <CardTitle class="text-base text-amber-900">{{
+                                    product.name
+                                }}</CardTitle>
                             </div>
                             <div class="flex items-center gap-1">
-                                <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-1">
+                                <div
+                                    v-if="getCartQty(product.id) > 0"
+                                    class="flex items-center gap-1"
+                                >
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
-                                        @click="removeFromCart(getCartItemId(product.id)!)"
+                                        @click="
+                                            removeFromCart(
+                                                getCartItemId(product.id)!,
+                                            )
+                                        "
                                     >
                                         <Minus class="h-3.5 w-3.5" />
                                     </button>
-                                    <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(product.id) }}</span>
+                                    <span
+                                        class="min-w-[1.5rem] text-center text-sm font-medium"
+                                        >{{ getCartQty(product.id) }}</span
+                                    >
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
                                         @click="addToCart(product.id)"
@@ -587,15 +664,22 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 </div>
                                 <button
                                     v-else
-                                    class="flex h-8 w-8 items-center justify-center rounded-full text-amber-910 transition hover:bg-amber-50 hover:text-amber-600"
+                                    class="text-amber-910 flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-amber-50 hover:text-amber-600"
                                     @click="addToCart(product.id)"
-                                    :title="authClient ? 'Adicionar ao carrinho' : 'Faça login para comprar'"
+                                    :title="
+                                        authClient
+                                            ? 'Adicionar ao carrinho'
+                                            : 'Faça login para comprar'
+                                    "
                                 >
                                     <ShoppingBag class="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
-                        <CardDescription v-if="product.description" class="line-clamp-2 text-xs">
+                        <CardDescription
+                            v-if="product.description"
+                            class="line-clamp-2 text-xs"
+                        >
                             {{ product.description }}
                         </CardDescription>
                     </CardHeader>
@@ -614,11 +698,19 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     <CardFooter class="pt-0">
                         <Button
                             class="w-full"
-                            :variant="getCartQty(product.id) > 0 ? 'secondary' : 'default'"
+                            :variant="
+                                getCartQty(product.id) > 0
+                                    ? 'secondary'
+                                    : 'default'
+                            "
                             @click="addToCart(product.id)"
                             :disabled="cartLoading"
                         >
-                            {{ getCartQty(product.id) > 0 ? 'Adicionar mais' : 'Adicionar' }}
+                            {{
+                                getCartQty(product.id) > 0
+                                    ? 'Adicionar mais'
+                                    : 'Adicionar'
+                            }}
                         </Button>
                     </CardFooter>
                 </Card>
@@ -635,8 +727,20 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 >
                     <span v-if="loadingMore" class="flex items-center gap-2">
                         <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                                fill="none"
+                            />
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
                         </svg>
                         Carregando...
                     </span>
@@ -650,55 +754,91 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             <DialogContent class="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>{{ selectedProduct?.name }}</DialogTitle>
-                    <DialogDescription v-if="selectedProduct?.description">{{ selectedProduct.description }}</DialogDescription>
+                    <DialogDescription v-if="selectedProduct?.description">{{
+                        selectedProduct.description
+                    }}</DialogDescription>
                 </DialogHeader>
                 <div class="relative" v-if="selectedProduct">
                     <div class="flex items-center justify-center">
                         <img
-                            v-if="selectedProduct.images && selectedProduct.images[currentImageIndex]"
+                            v-if="
+                                selectedProduct.images &&
+                                selectedProduct.images[currentImageIndex]
+                            "
                             :src="selectedProduct.images[currentImageIndex].url"
                             :alt="`${selectedProduct.name} - Imagem ${currentImageIndex + 1}`"
                             class="max-h-[60vh] rounded-lg object-contain"
                         />
-                        <div v-else class="flex h-64 w-full items-center justify-center rounded-lg bg-amber-100">
+                        <div
+                            v-else
+                            class="flex h-64 w-full items-center justify-center rounded-lg bg-amber-100"
+                        >
                             <ImageIcon class="h-16 w-16 text-amber-900" />
                         </div>
                     </div>
                     <button
-                        v-if="selectedProduct.images && selectedProduct.images.length > 1"
+                        v-if="
+                            selectedProduct.images &&
+                            selectedProduct.images.length > 1
+                        "
                         class="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white"
                         @click="prevImage"
                     >
                         <ChevronDown class="h-5 w-5 rotate-90 text-gray-600" />
                     </button>
                     <button
-                        v-if="selectedProduct.images && selectedProduct.images.length > 1"
+                        v-if="
+                            selectedProduct.images &&
+                            selectedProduct.images.length > 1
+                        "
                         class="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow hover:bg-white"
                         @click="nextImage"
                     >
                         <ChevronDown class="h-5 w-5 -rotate-90 text-gray-600" />
                     </button>
-                    <div v-if="selectedProduct.images && selectedProduct.images.length > 1" class="mt-4 flex justify-center gap-2">
+                    <div
+                        v-if="
+                            selectedProduct.images &&
+                            selectedProduct.images.length > 1
+                        "
+                        class="mt-4 flex justify-center gap-2"
+                    >
                         <button
                             v-for="(img, idx) in selectedProduct.images"
                             :key="idx"
                             class="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition"
-                            :class="idx === currentImageIndex ? 'border-amber-500' : 'border-transparent opacity-60 hover:opacity-100'"
+                            :class="
+                                idx === currentImageIndex
+                                    ? 'border-amber-500'
+                                    : 'border-transparent opacity-60 hover:opacity-100'
+                            "
                             @click="currentImageIndex = idx"
                         >
-                            <img :src="img.url" :alt="`${selectedProduct.name} thumb ${idx + 1}`" class="h-full w-full object-cover" />
+                            <img
+                                :src="img.url"
+                                :alt="`${selectedProduct.name} thumb ${idx + 1}`"
+                                class="h-full w-full object-cover"
+                            />
                         </button>
                     </div>
                     <div class="mt-4 space-y-3 rounded-lg bg-amber-50 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-2xl font-bold text-emerald-700">{{ formatPrice(selectedProduct.sale_price) }}</p>
+                                <p class="text-2xl font-bold text-emerald-700">
+                                    {{
+                                        formatPrice(selectedProduct.sale_price)
+                                    }}
+                                </p>
                                 <p class="text-sm text-amber-600">
                                     {{ tenant.fantasy_name }}
                                 </p>
                             </div>
                             <Button @click="addToCart(selectedProduct.id)">
-                                {{ getCartQty(selectedProduct.id) > 0 ? `Adicionar mais (${getCartQty(selectedProduct.id)})` : 'Adicionar ao carrinho' }}
+                                {{
+                                    getCartQty(selectedProduct.id) > 0
+                                        ? `Adicionar mais (${getCartQty(selectedProduct.id)})`
+                                        : 'Adicionar ao carrinho'
+                                }}
                             </Button>
                         </div>
                         <a
@@ -719,16 +859,23 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             v-if="cartCount > 0"
             class="fixed right-0 bottom-0 left-0 z-40 border-t border-amber-200 bg-white shadow-lg"
         >
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+            <div
+                class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8"
+            >
                 <div class="flex items-center gap-4">
                     <ShoppingBag class="h-5 w-5 text-amber-500" />
                     <span class="text-sm text-amber-600">
-                        <strong class="text-amber-900">{{ cartCount }}</strong> item(ns) no carrinho
+                        <strong class="text-amber-900">{{ cartCount }}</strong>
+                        item(ns) no carrinho
                     </span>
-                    <span class="text-lg font-bold text-amber-900">{{ formatPrice(cartTotal) }}</span>
+                    <span class="text-lg font-bold text-amber-900">{{
+                        formatPrice(cartTotal)
+                    }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" @click="clearCart">Limpar</Button>
+                    <Button variant="ghost" size="sm" @click="clearCart"
+                        >Limpar</Button
+                    >
                 </div>
             </div>
         </div>

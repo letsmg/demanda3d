@@ -20,7 +20,9 @@ export function useImageGallery() {
         }
 
         currentImageIndex.value =
-            (currentImageIndex.value - 1 + selectedProduct.value.images.length) %
+            (currentImageIndex.value -
+                1 +
+                selectedProduct.value.images.length) %
             selectedProduct.value.images.length;
     }
 

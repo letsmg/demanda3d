@@ -1,13 +1,18 @@
-name: Nome do Workflow  # Opcional, mas recomendado
+name: Tests  # Opcional, mas recomendado
 
 on:
   push:
     branches:
-      - main  # Ou o nome da sua branch principal
+      - hom
+      #- main
+  pull_request:
+    branches:
+      - hom
+      #- main
   workflow_dispatch:  # Permite rodar manualmente pelo painel do GitHub
 
 jobs:
-  seu-job:
+  tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

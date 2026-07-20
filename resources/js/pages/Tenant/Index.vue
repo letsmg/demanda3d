@@ -141,7 +141,7 @@ function getCurrentSort(): string {
             <div class="mb-8 space-y-4">
                 <div class="relative">
                     <Search
-                        class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-910"
+                        class="text-amber-910 absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2"
                     />
                     <Input
                         v-model="searchTerm"
@@ -151,8 +151,11 @@ function getCurrentSort(): string {
                     />
                     <button
                         v-if="searchTerm"
-                        class="absolute top-1/2 right-3 -translate-y-1/2 text-amber-910 hover:text-amber-600"
-                        @click="searchTerm = ''; applyTenantFilters()"
+                        class="text-amber-910 absolute top-1/2 right-3 -translate-y-1/2 hover:text-amber-600"
+                        @click="
+                            searchTerm = '';
+                            applyTenantFilters();
+                        "
                     >
                         <X class="h-4 w-4" />
                     </button>
@@ -207,7 +210,11 @@ function getCurrentSort(): string {
                 <p class="mt-1 text-sm text-amber-600">
                     Tente ajustar os filtros ou buscar por outros termos.
                 </p>
-                <Button variant="outline" class="mt-4" @click="clearTenantFilters">
+                <Button
+                    variant="outline"
+                    class="mt-4"
+                    @click="clearTenantFilters"
+                >
                     Limpar filtros
                 </Button>
             </div>
@@ -216,7 +223,11 @@ function getCurrentSort(): string {
                 v-else
                 class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
-                <Card v-for="tenant in tenants" :key="tenant.id" class="flex flex-col overflow-hidden">
+                <Card
+                    v-for="tenant in tenants"
+                    :key="tenant.id"
+                    class="flex flex-col overflow-hidden"
+                >
                     <div class="relative h-48 w-full bg-amber-100">
                         <img
                             v-if="tenant.logo_url"
@@ -245,8 +256,15 @@ function getCurrentSort(): string {
                                 </CardDescription>
                             </div>
                         </div>
-                        <div v-if="tenant.city || tenant.state" class="mt-1 text-xs text-amber-800">
-                            {{ [tenant.city, tenant.state].filter(Boolean).join(' - ') }}
+                        <div
+                            v-if="tenant.city || tenant.state"
+                            class="mt-1 text-xs text-amber-800"
+                        >
+                            {{
+                                [tenant.city, tenant.state]
+                                    .filter(Boolean)
+                                    .join(' - ')
+                            }}
                         </div>
                     </CardHeader>
                     <CardContent class="flex-1 pb-2">
@@ -256,9 +274,16 @@ function getCurrentSort(): string {
                         >
                             {{ tenant.description }}
                         </p>
-                        <div v-if="tenant.rating_count && tenant.rating_count > 0" class="mt-2 flex items-center gap-1">
+                        <div
+                            v-if="
+                                tenant.rating_count && tenant.rating_count > 0
+                            "
+                            class="mt-2 flex items-center gap-1"
+                        >
                             <span class="text-xs font-medium text-amber-700">
-                                ⭐ {{ tenant.rating_average }} ({{ tenant.rating_count }})
+                                ⭐ {{ tenant.rating_average }} ({{
+                                    tenant.rating_count
+                                }})
                             </span>
                         </div>
                         <div v-else class="mt-2 text-xs text-amber-800">

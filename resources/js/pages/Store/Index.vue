@@ -80,7 +80,8 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                     Loja de Produtos
                 </h1>
                 <p class="mt-1 text-sm text-amber-700">
-                    Produtos disponíveis para impressão 3D de todos os nossos vendedores
+                    Produtos disponíveis para impressão 3D de todos os nossos
+                    vendedores
                 </p>
             </div>
 
@@ -96,7 +97,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 :sort-options="storeFilters.sortOptions"
                 :current-sort="storeFilters.getCurrentSort()"
                 :has-filters="storeFilters.hasFilters.value"
-                
                 @update:search-term="storeFilters.searchTerm.value = $event"
                 @input-search="storeFilters.onSearchInput()"
                 @keydown-search="storeFilters.onSearchKeydown($event)"

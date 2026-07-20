@@ -35,16 +35,25 @@ createInertiaApp({
         };
 
         // ── Captura de promessas rejeitadas não tratadas ─────────
-        window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-            const payload = JSON.stringify({
-                message: event.reason instanceof Error ? event.reason.message : String(event.reason),
-                stack: event.reason instanceof Error ? (event.reason.stack ?? null) : null,
-                url: window.location.href,
-                timestamp: new Date().toISOString(),
-            });
+        window.addEventListener(
+            'unhandledrejection',
+            (event: PromiseRejectionEvent) => {
+                const payload = JSON.stringify({
+                    message:
+                        event.reason instanceof Error
+                            ? event.reason.message
+                            : String(event.reason),
+                    stack:
+                        event.reason instanceof Error
+                            ? (event.reason.stack ?? null)
+                            : null,
+                    url: window.location.href,
+                    timestamp: new Date().toISOString(),
+                });
 
-            navigator.sendBeacon('/api/log-frontend-error', payload);
-        });
+                navigator.sendBeacon('/api/log-frontend-error', payload);
+            },
+        );
 
         vueApp.use(plugin).mount(el);
     },
@@ -63,7 +72,7 @@ createInertiaApp({
                 return AppLayout;
         }
     },
-    
+
     progress: {
         color: '#4B5563',
     },

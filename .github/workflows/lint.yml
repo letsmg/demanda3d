@@ -1,14 +1,14 @@
-name: Quality
+name: Lint Quality
 
 on:
   push:
     branches:
-      - develop
-      - main
+      - hom
+      #- main
   pull_request:
     branches:
-      - develop
-      - main
+      - hom
+      #- main
 
 jobs:
   quality:

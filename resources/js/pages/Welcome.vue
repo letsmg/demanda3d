@@ -15,7 +15,7 @@ import { dashboard, login, register } from '@/routes';
 
 defineOptions({
     layout: WelcomeLayout,
-    inheritAttrs: false, 
+    inheritAttrs: false,
 });
 
 const props = defineProps<{
@@ -179,7 +179,10 @@ const features = [
                     </template>
                 </div>
                 <!-- Image dots -->
-                <div v-if="heroImages.length > 0" class="mt-8 flex justify-center gap-2">
+                <div
+                    v-if="heroImages.length > 0"
+                    class="mt-8 flex justify-center gap-2"
+                >
                     <button
                         v-for="(img, idx) in heroImages"
                         :key="img"

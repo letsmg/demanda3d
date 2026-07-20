@@ -63,15 +63,29 @@ const hasMore = computed(() => currentPage.value < props.logs.last_page);
 function eventColor(event: string): string {
     const lower = event.toLowerCase();
 
-    if (lower.includes('criou') || lower.includes('criado') || lower.includes('create')) {
+    if (
+        lower.includes('criou') ||
+        lower.includes('criado') ||
+        lower.includes('create')
+    ) {
         return 'border-l-green-500 bg-green-50';
     }
 
-    if (lower.includes('excluiu') || lower.includes('bloqueou') || lower.includes('delete') || lower.includes('block')) {
+    if (
+        lower.includes('excluiu') ||
+        lower.includes('bloqueou') ||
+        lower.includes('delete') ||
+        lower.includes('block')
+    ) {
         return 'border-l-red-500 bg-red-50';
     }
 
-    if (lower.includes('atualizou') || lower.includes('editou') || lower.includes('update') || lower.includes('edit')) {
+    if (
+        lower.includes('atualizou') ||
+        lower.includes('editou') ||
+        lower.includes('update') ||
+        lower.includes('edit')
+    ) {
         return 'border-l-orange-500 bg-orange-50';
     }
 
@@ -81,15 +95,29 @@ function eventColor(event: string): string {
 function eventIcon(event: string) {
     const lower = event.toLowerCase();
 
-    if (lower.includes('criou') || lower.includes('criado') || lower.includes('create')) {
+    if (
+        lower.includes('criou') ||
+        lower.includes('criado') ||
+        lower.includes('create')
+    ) {
         return 'text-green-600';
     }
 
-    if (lower.includes('excluiu') || lower.includes('bloqueou') || lower.includes('delete') || lower.includes('block')) {
+    if (
+        lower.includes('excluiu') ||
+        lower.includes('bloqueou') ||
+        lower.includes('delete') ||
+        lower.includes('block')
+    ) {
         return 'text-red-600';
     }
 
-    if (lower.includes('atualizou') || lower.includes('editou') || lower.includes('update') || lower.includes('edit')) {
+    if (
+        lower.includes('atualizou') ||
+        lower.includes('editou') ||
+        lower.includes('update') ||
+        lower.includes('edit')
+    ) {
         return 'text-orange-600';
     }
 
@@ -159,11 +187,15 @@ function clearFilters() {
     dateFromFilter.value = '';
     dateToFilter.value = '';
 
-    router.get('/audit-logs', {}, {
-        preserveState: true,
-        replace: true,
-        only: ['logs', 'filters'],
-    });
+    router.get(
+        '/audit-logs',
+        {},
+        {
+            preserveState: true,
+            replace: true,
+            only: ['logs', 'filters'],
+        },
+    );
 }
 
 // ── Load More (carrega próxima página) ────────────────────
@@ -230,14 +262,22 @@ function formatDate(dateStr: string): string {
 <template>
     <Head title="Logs de Auditoria" />
 
-    <div class="p-6 max-w-5xl mx-auto">
+    <div class="mx-auto max-w-5xl p-6">
         <!-- Cabeçalho -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="mb-6 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Logs de Auditoria</h1>
-                <p class="text-sm text-gray-500 mt-1">
-                    {{ isAdmin ? 'Visualizando todos os registros do sistema.' : 'Visualizando apenas registros da sua loja.' }}
-                    <span class="text-gray-400">({{ props.logs.total }} registros)</span>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    Logs de Auditoria
+                </h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    {{
+                        isAdmin
+                            ? 'Visualizando todos os registros do sistema.'
+                            : 'Visualizando apenas registros da sua loja.'
+                    }}
+                    <span class="text-gray-400"
+                        >({{ props.logs.total }} registros)</span
+                    >
                 </p>
             </div>
 
@@ -247,19 +287,24 @@ function formatDate(dateStr: string): string {
                 @click="showFilters = !showFilters"
                 :class="{ 'border-indigo-500 text-indigo-600': showFilters }"
             >
-                <Filter class="w-4 h-4 mr-2" />
+                <Filter class="mr-2 h-4 w-4" />
                 Filtros
-                <ChevronDown class="w-4 h-4 ml-1" :class="{ 'rotate-180': showFilters }" />
+                <ChevronDown
+                    class="ml-1 h-4 w-4"
+                    :class="{ 'rotate-180': showFilters }"
+                />
             </Button>
         </div>
 
         <!-- Barra de Filtros -->
         <Card v-if="showFilters" class="mb-6">
             <CardContent class="pt-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <!-- Tipo de Ação -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Tipo de Ação
                         </label>
                         <select
@@ -268,18 +313,32 @@ function formatDate(dateStr: string): string {
                         >
                             <option value="">Todos</option>
                             <option value="Criou Produto">Criou Produto</option>
-                            <option value="Atualizou Produto">Atualizou Produto</option>
-                            <option value="Excluiu Produto">Excluiu Produto</option>
-                            <option value="Bloqueou Usuário">Bloqueou Usuário</option>
-                            <option value="Desbloqueou Usuário">Desbloqueou Usuário</option>
-                            <option value="Atualizou Pedido">Atualizou Pedido</option>
-                            <option value="Cancelou Pedido">Cancelou Pedido</option>
+                            <option value="Atualizou Produto">
+                                Atualizou Produto
+                            </option>
+                            <option value="Excluiu Produto">
+                                Excluiu Produto
+                            </option>
+                            <option value="Bloqueou Usuário">
+                                Bloqueou Usuário
+                            </option>
+                            <option value="Desbloqueou Usuário">
+                                Desbloqueou Usuário
+                            </option>
+                            <option value="Atualizou Pedido">
+                                Atualizou Pedido
+                            </option>
+                            <option value="Cancelou Pedido">
+                                Cancelou Pedido
+                            </option>
                         </select>
                     </div>
 
                     <!-- Recurso Afetado -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Recurso
                         </label>
                         <select
@@ -292,16 +351,22 @@ function formatDate(dateStr: string): string {
                             <option value="App\Models\User">Usuário</option>
                             <option value="App\Models\Tenant">Loja</option>
                             <option value="App\Models\Client">Cliente</option>
-                            <option value="App\Models\Carrier">Transportadora</option>
+                            <option value="App\Models\Carrier">
+                                Transportadora
+                            </option>
                             <option value="App\Models\Input">Insumo</option>
-                            <option value="App\Models\Supplier">Fornecedor</option>
+                            <option value="App\Models\Supplier">
+                                Fornecedor
+                            </option>
                             <option value="App\Models\Coupon">Cupom</option>
                         </select>
                     </div>
 
                     <!-- ID do Usuário -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             ID do Usuário
                         </label>
                         <Input
@@ -313,42 +378,32 @@ function formatDate(dateStr: string): string {
 
                     <!-- Data Início -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Data Início
                         </label>
-                        <Input
-                            v-model="dateFromFilter"
-                            type="date"
-                        />
+                        <Input v-model="dateFromFilter" type="date" />
                     </div>
 
                     <!-- Data Fim -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            class="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Data Fim
                         </label>
-                        <Input
-                            v-model="dateToFilter"
-                            type="date"
-                        />
+                        <Input v-model="dateToFilter" type="date" />
                     </div>
 
                     <!-- Botões -->
                     <div class="flex items-end gap-2">
-                        <Button
-                            @click="applyFilters"
-                            size="sm"
-                            class="w-full"
-                        >
-                            <Search class="w-4 h-4 mr-2" />
+                        <Button @click="applyFilters" size="sm" class="w-full">
+                            <Search class="mr-2 h-4 w-4" />
                             Filtrar
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            @click="clearFilters"
-                        >
-                            <X class="w-4 h-4 mr-1" />
+                        <Button variant="ghost" size="sm" @click="clearFilters">
+                            <X class="mr-1 h-4 w-4" />
                             Limpar
                         </Button>
                     </div>
@@ -361,39 +416,58 @@ function formatDate(dateStr: string): string {
             <div
                 v-for="log in allLogs"
                 :key="log.id"
-                class="flex items-start gap-4 p-4 border-l-4 rounded-r-lg shadow-sm bg-white"
+                class="flex items-start gap-4 rounded-r-lg border-l-4 bg-white p-4 shadow-sm"
                 :class="eventColor(log.event)"
             >
                 <!-- Ícone -->
-                <div class="flex-shrink-0 mt-1" :class="eventIcon(log.event)">
-                    <PlusCircle v-if="/criou|criado|create/i.test(log.event)" class="w-5 h-5" />
-                    <Pencil v-else-if="/atualizou|editou|update|edit/i.test(log.event)" class="w-5 h-5" />
-                    <Trash2 v-else-if="/excluiu|delete/i.test(log.event)" class="w-5 h-5" />
-                    <Ban v-else-if="/bloqueou|block/i.test(log.event)" class="w-5 h-5" />
-                    <CheckCircle v-else-if="/desbloqueou|unblock/i.test(log.event)" class="w-5 h-5" />
-                    <Filter v-else class="w-5 h-5" />
+                <div class="mt-1 flex-shrink-0" :class="eventIcon(log.event)">
+                    <PlusCircle
+                        v-if="/criou|criado|create/i.test(log.event)"
+                        class="h-5 w-5"
+                    />
+                    <Pencil
+                        v-else-if="
+                            /atualizou|editou|update|edit/i.test(log.event)
+                        "
+                        class="h-5 w-5"
+                    />
+                    <Trash2
+                        v-else-if="/excluiu|delete/i.test(log.event)"
+                        class="h-5 w-5"
+                    />
+                    <Ban
+                        v-else-if="/bloqueou|block/i.test(log.event)"
+                        class="h-5 w-5"
+                    />
+                    <CheckCircle
+                        v-else-if="/desbloqueou|unblock/i.test(log.event)"
+                        class="h-5 w-5"
+                    />
+                    <Filter v-else class="h-5 w-5" />
                 </div>
 
                 <!-- Conteúdo -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-semibold text-gray-900 text-sm">
+                <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-semibold text-gray-900">
                             {{ log.causer?.display_name || 'Sistema' }}
                         </span>
                         <span
                             v-if="log.causer?.access_level?.label"
-                            class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+                            class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
                         >
                             {{ log.causer.access_level.label }}
                         </span>
                     </div>
 
-                    <p class="text-sm text-gray-700 mt-1 leading-relaxed">
+                    <p class="mt-1 text-sm leading-relaxed text-gray-700">
                         {{ log.description || log.event }}
                     </p>
 
                     <!-- Metadados -->
-                    <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                    <div
+                        class="mt-2 flex items-center gap-3 text-xs text-gray-400"
+                    >
                         <span>{{ formatDate(log.created_at) }}</span>
                         <span v-if="log.subject_type">
                             · {{ subjectLabel(log.subject_type) }}
@@ -408,18 +482,15 @@ function formatDate(dateStr: string): string {
             <!-- Estado vazio -->
             <div
                 v-if="allLogs.length === 0 && !loading"
-                class="text-center py-12 text-gray-400"
+                class="py-12 text-center text-gray-400"
             >
-                <Filter class="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <Filter class="mx-auto mb-3 h-12 w-12 opacity-30" />
                 <p class="text-sm">Nenhum log de auditoria encontrado.</p>
             </div>
         </div>
 
         <!-- Load More Button -->
-        <div
-            v-if="hasMore"
-            class="flex justify-center mt-6"
-        >
+        <div v-if="hasMore" class="mt-6 flex justify-center">
             <Button
                 variant="outline"
                 @click="loadMore"
@@ -427,10 +498,12 @@ function formatDate(dateStr: string): string {
                 class="px-8"
             >
                 <span v-if="loading" class="flex items-center gap-2">
-                    <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24">
                         <circle
                             class="opacity-25"
-                            cx="12" cy="12" r="10"
+                            cx="12"
+                            cy="12"
+                            r="10"
                             stroke="currentColor"
                             stroke-width="4"
                             fill="none"
@@ -443,16 +516,14 @@ function formatDate(dateStr: string): string {
                     </svg>
                     Carregando...
                 </span>
-                <span v-else>
-                    Mostrar Mais
-                </span>
+                <span v-else> Mostrar Mais </span>
             </Button>
         </div>
 
         <!-- Indicador de fim da lista -->
         <div
             v-if="!hasMore && allLogs.length > 0"
-            class="text-center mt-6 text-xs text-gray-400"
+            class="mt-6 text-center text-xs text-gray-400"
         >
             — Fim dos registros —
         </div>

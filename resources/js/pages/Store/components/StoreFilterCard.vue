@@ -2,10 +2,7 @@
 import { computed } from 'vue';
 import { Search, RotateCw, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -26,24 +23,27 @@ interface SortOption {
     label: string;
 }
 
-const props = withDefaults(defineProps<{
-    searchTerm: string;
-    suggestions: string[];
-    showSuggestions: boolean;
-    highlightedIndex: number;
-    priceMin: number;
-    priceMax: number;
-    categories: Category[];
-    selectedCategories: string[];
-    sortOptions: SortOption[];
-    currentSort: string;
-    hasFilters: boolean;
-}>(), {
-    selectedCategories: () => [],
-    categories: () => [],
-    suggestions: () => [],
-    sortOptions: () => [],
-});
+const props = withDefaults(
+    defineProps<{
+        searchTerm: string;
+        suggestions: string[];
+        showSuggestions: boolean;
+        highlightedIndex: number;
+        priceMin: number;
+        priceMax: number;
+        categories: Category[];
+        selectedCategories: string[];
+        sortOptions: SortOption[];
+        currentSort: string;
+        hasFilters: boolean;
+    }>(),
+    {
+        selectedCategories: () => [],
+        categories: () => [],
+        suggestions: () => [],
+        sortOptions: () => [],
+    },
+);
 
 const emit = defineEmits<{
     'update:search-term': [value: string];
@@ -63,7 +63,10 @@ function onSearchInput(e: Event): void {
 }
 
 // Valor vinculado do slider como array [min, max]
-const sliderValue = computed<[number, number]>(() => [props.priceMin, props.priceMax]);
+const sliderValue = computed<[number, number]>(() => [
+    props.priceMin,
+    props.priceMax,
+]);
 
 function onSliderChange(values: [number, number]): void {
     emit('update:price-range', values);
@@ -78,7 +81,9 @@ function sliderTooltipFormatter(val: number): string {
     <!-- ═══════ HEADER: Busca + Ordenação lado a lado ═══════ -->
     <div class="mb-6 flex flex-col gap-3 sm:flex-row" data-search-area>
         <div class="relative flex-1">
-            <Search class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-700" />
+            <Search
+                class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-amber-700"
+            />
             <input
                 :value="searchTerm"
                 type="text"
@@ -106,7 +111,11 @@ function sliderTooltipFormatter(val: number): string {
                     v-for="(s, idx) in suggestions"
                     :key="idx"
                     class="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition"
-                    :class="idx === highlightedIndex ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'"
+                    :class="
+                        idx === highlightedIndex
+                            ? 'bg-amber-100 text-amber-900'
+                            : 'text-gray-700 hover:bg-amber-50'
+                    "
                     @mousedown.prevent="emit('select-suggestion', s)"
                 >
                     <Search class="h-3.5 w-3.5 text-amber-500" />
@@ -120,7 +129,9 @@ function sliderTooltipFormatter(val: number): string {
             :model-value="currentSort"
             @update:model-value="emit('update:sort', $event)"
         >
-            <SelectTrigger class="w-44 border-brand-amberInputBorder text-brand-amberDark">
+            <SelectTrigger
+                class="w-44 border-brand-amberInputBorder text-brand-amberDark"
+            >
                 <SelectValue placeholder="Nome A-Z" />
             </SelectTrigger>
             <SelectContent>
@@ -141,7 +152,9 @@ function sliderTooltipFormatter(val: number): string {
             <!-- Range Slider de Preço + Limpar Filtros lado a lado -->
             <div>
                 <div class="flex items-center justify-between">
-                    <label class="text-sm font-medium text-amber-50">Faixa de Preço:</label>
+                    <label class="text-sm font-medium text-amber-50"
+                        >Faixa de Preço:</label
+                    >
                     <span class="text-xs font-medium text-amber-200">
                         R$ {{ sliderValue[0] }} — R$ {{ sliderValue[1] }}
                     </span>
@@ -157,10 +170,28 @@ function sliderTooltipFormatter(val: number): string {
                             :tooltip-formatter="sliderTooltipFormatter"
                             :dot-size="22"
                             :height="8"
-                            :rail-style="{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '4px' }"
-                            :process-style="{ backgroundColor: '#f59e0b', borderRadius: '4px' }"
-                            :tooltip-style="{ backgroundColor: '#1c1917', borderColor: '#1c1917', color: '#fef3c7', fontSize: '12px', fontWeight: '600' }"
-                            :dot-style="{ backgroundColor: '#ffffff', borderColor: '#451a03', borderWidth: '3px', boxShadow: '0 2px 6px rgba(0,0,0,0.4), 0 0 0 2px rgba(245,158,11,0.4)' }"
+                            :rail-style="{
+                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                borderRadius: '4px',
+                            }"
+                            :process-style="{
+                                backgroundColor: '#f59e0b',
+                                borderRadius: '4px',
+                            }"
+                            :tooltip-style="{
+                                backgroundColor: '#1c1917',
+                                borderColor: '#1c1917',
+                                color: '#fef3c7',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                            }"
+                            :dot-style="{
+                                backgroundColor: '#ffffff',
+                                borderColor: '#451a03',
+                                borderWidth: '3px',
+                                boxShadow:
+                                    '0 2px 6px rgba(0,0,0,0.4), 0 0 0 2px rgba(245,158,11,0.4)',
+                            }"
                             @change="onSliderChange"
                         />
                     </div>
@@ -171,7 +202,10 @@ function sliderTooltipFormatter(val: number): string {
                         variant="outline"
                         size="sm"
                         class="shrink-0 border-amber-200 text-amber-50 hover:bg-amber-700 hover:text-white"
-                        @click="emit('select-all-categories'); emit('update:price-range', [0, 1500])"
+                        @click="
+                            emit('select-all-categories');
+                            emit('update:price-range', [0, 1500]);
+                        "
                     >
                         <RotateCw class="mr-1 h-4 w-4" />Limpar Filtros
                     </Button>
@@ -180,14 +214,18 @@ function sliderTooltipFormatter(val: number): string {
 
             <!-- Categorias multi-seleção -->
             <div class="space-y-2">
-                <label class="text-sm font-medium text-amber-50">Categorias:</label>
+                <label class="text-sm font-medium text-amber-50"
+                    >Categorias:</label
+                >
                 <div class="flex flex-wrap items-center gap-2">
                     <button
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs font-medium transition select-none"
-                        :class="selectedCategories.length === 0
-                            ? 'border-amber-50 bg-amber-800 text-white shadow-sm'
-                            : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'"
+                        :class="
+                            selectedCategories.length === 0
+                                ? 'border-amber-50 bg-amber-800 text-white shadow-sm'
+                                : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'
+                        "
                         @click="emit('select-all-categories')"
                     >
                         Todas
@@ -195,16 +233,18 @@ function sliderTooltipFormatter(val: number): string {
                     <div
                         v-for="cat in categories"
                         :key="cat.slug"
-                        class="flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition select-none shadow-sm"
-                        :class="selectedCategories.includes(cat.slug)
-                            ? 'border-amber-50 bg-amber-800 text-white'
-                            : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'"
+                        class="flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition select-none"
+                        :class="
+                            selectedCategories.includes(cat.slug)
+                                ? 'border-amber-50 bg-amber-800 text-white'
+                                : 'border-amber-300 bg-transparent text-amber-50 hover:border-amber-100 hover:bg-amber-700'
+                        "
                         @click="emit('toggle-category', cat.slug)"
                     >
                         <input
                             type="checkbox"
                             :checked="selectedCategories.includes(cat.slug)"
-                            class="h-3.5 w-3.5 rounded border-amber-400 bg-transparent text-amber-600 focus:ring-0 focus:ring-offset-0 pointer-events-none transition-colors checked:border-amber-50"
+                            class="pointer-events-none h-3.5 w-3.5 rounded border-amber-400 bg-transparent text-amber-600 transition-colors checked:border-amber-50 focus:ring-0 focus:ring-offset-0"
                         />
                         <span>{{ cat.name }}</span>
                     </div>

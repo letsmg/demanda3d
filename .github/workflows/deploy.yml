@@ -185,7 +185,8 @@ jobs:
             PROJECT_NAME="dev-demanda3d"
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
-            MIGRATION_STRATEGY="migrate:fresh --seed"
+            MIGRATION_STRATEGY="migrate"
+            #MIGRATION_STRATEGY="migrate:fresh --seed"
             DB_CONTAINER_TARGET="demanda-psql-hom"
 
           fi
@@ -263,7 +264,7 @@ jobs:
             # 2. Subir Containers
             #######################################################################
             echo "🔄 Garantindo que containers estão de pé..."
-            
+
             # 👇 A LINHA MÁGICA: Linka a pasta de código do Go da nova release para a shared
             ln -sfn "$NEW_RELEASE/go-service" "$SHARED/go-service"
 
@@ -275,7 +276,7 @@ jobs:
             fi
 
             sudo docker compose -f docker-compose.yml -p "$PROJECT_NAME" up -d --remove-orphans
-            
+
             cd "$NEW_RELEASE"
 
             # =======================================================================
@@ -375,7 +376,7 @@ jobs:
               else
                   echo "⏭️  Backup pulado (ambiente hom usa migrate:fresh, backup não é útil aqui)."
               fi
-              
+
               # 5. Migrations
               echo "🚀 Rodando Migrations nativamente no servidor..."
               cd "$NEW_RELEASE"
@@ -387,32 +388,38 @@ jobs:
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
-              
+
               rm -rf public/storage
               linktarget="$SHARED/storage/app/public"
               if [ ! -d "$linktarget" ]; then
                   mkdir -p "$linktarget"
               fi
               ln -sfn "$linktarget" public/storage
-              
+
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
               sudo systemctl reload php8.5-fpm
-              
+
               echo "🔄 Compilando e reiniciando serviço Go..."
               sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" build go-notification-service
               sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" up -d --no-deps go-notification-service
 
               # 6. Ativação Atômica
-              echo "🔄 Atualizando link atual..."
-              sudo rm -rf "$CURRENT"
-              sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
-              sudo chown -h ubuntu:ubuntu "$CURRENT"
+             echo "🔄 Atualizando link atual..."
+             sudo rm -rf "$CURRENT"
+             sudo ln -sfn "$NEW_RELEASE" "$CURRENT"
+             sudo chown -h ubuntu:ubuntu "$CURRENT"
 
-              # 7. Limpeza
-              echo "🧹 Limpando..."
-              cd "$RELEASES" && ls -1tr | head -n -5 | xargs -d '\n' rm -rf -- || true
-              rm -f "/tmp/$PROJECT_NAME.zip"
-              echo "✅ Deploy concluído com sucesso!"
-            ) || { echo "❌ Ocorreu um erro no bloco crítico de deploy"; exit 1; }
+             # 7. Limpeza (Mantém as 5 últimas versões e força permissão para evitar erro do Composer)
+             echo "🧹 Limpando releases antigos..."
+             cd "$RELEASES"
+             ls -dt */ | tail -n +6 | while read -r dir; do
+                 echo "Removendo release antigo: $dir"
+                 sudo chmod -R +w "$dir" 2>/dev/null || true
+                 sudo rm -rf "$dir"
+             done
+
+             rm -f "/tmp/$PROJECT_NAME.zip"
+             echo "✅ Deploy concluído com sucesso!"
+             ) || { echo "❌ Ocorreu um erro no bloco crítico de deploy"; exit 1; }
           DEPLOY_SCRIPT

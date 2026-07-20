@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Banknote, Check, X, Eye, AlertTriangle } from 'lucide-vue-next';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 
 interface BankDetailDecrypted {
     bank_name: string;
@@ -33,7 +39,10 @@ defineProps<{
 
 function maskDoc(doc: string): string {
     if (doc.length === 14) {
-        return doc.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        return doc.replace(
+            /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+            '$1.$2.$3/$4-$5',
+        );
     }
     return doc;
 }
@@ -49,9 +58,12 @@ function formatDate(date: string | null): string {
 
     <div class="space-y-6 p-4 md:p-6">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Dados Bancários</h1>
+            <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                Dados Bancários
+            </h1>
             <p class="text-sm text-muted-foreground">
-                Visualização administrativa dos dados bancários de todos os vendedores ativos.
+                Visualização administrativa dos dados bancários de todos os
+                vendedores ativos.
             </p>
         </div>
 
@@ -60,7 +72,8 @@ function formatDate(date: string | null): string {
                 <CardTitle>Todos os Vendedores</CardTitle>
                 <CardDescription>
                     {{ tenants.length }} vendedor(es) ativo(s) cadastrado(s).
-                    Dados bancários descriptografados apenas para contas com consentimento ativo.
+                    Dados bancários descriptografados apenas para contas com
+                    consentimento ativo.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -69,10 +82,16 @@ function formatDate(date: string | null): string {
                         <thead>
                             <tr class="border-b">
                                 <th class="px-4 py-3 font-medium">Loja</th>
-                                <th class="px-4 py-3 font-medium">Responsável Legal</th>
+                                <th class="px-4 py-3 font-medium">
+                                    Responsável Legal
+                                </th>
                                 <th class="px-4 py-3 font-medium">Banco</th>
-                                <th class="px-4 py-3 font-medium">Consentimento</th>
-                                <th class="px-4 py-3 text-right font-medium">Ações</th>
+                                <th class="px-4 py-3 font-medium">
+                                    Consentimento
+                                </th>
+                                <th class="px-4 py-3 text-right font-medium">
+                                    Ações
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -82,49 +101,98 @@ function formatDate(date: string | null): string {
                                 class="border-b hover:bg-muted/50"
                             >
                                 <td class="px-4 py-3">
-                                    <div class="font-medium">{{ tenant.fantasy_name }}</div>
-                                    <div class="text-xs text-muted-foreground">
-                                        {{ tenant.company_name || 'Razão social não disponível' }}
+                                    <div class="font-medium">
+                                        {{ tenant.fantasy_name }}
                                     </div>
                                     <div class="text-xs text-muted-foreground">
-                                        {{ tenant.document ? maskDoc(tenant.document) : '—' }}
+                                        {{
+                                            tenant.company_name ||
+                                            'Razão social não disponível'
+                                        }}
+                                    </div>
+                                    <div class="text-xs text-muted-foreground">
+                                        {{
+                                            tenant.document
+                                                ? maskDoc(tenant.document)
+                                                : '—'
+                                        }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
                                     {{ tenant.legal_responsible_name || '—' }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <template v-if="tenant.has_bank && tenant.bank_detail">
+                                    <template
+                                        v-if="
+                                            tenant.has_bank &&
+                                            tenant.bank_detail
+                                        "
+                                    >
                                         <div class="flex items-center gap-1.5">
-                                            <Banknote class="h-4 w-4 text-green-600" />
-                                            <span>{{ tenant.bank_detail.bank_name }}</span>
+                                            <Banknote
+                                                class="h-4 w-4 text-green-600"
+                                            />
+                                            <span>{{
+                                                tenant.bank_detail.bank_name
+                                            }}</span>
                                         </div>
-                                        <div class="text-xs text-muted-foreground">
-                                            Ag: {{ tenant.bank_detail.routing_number || '—' }}
-                                            | CC: {{ tenant.bank_detail.account_number || '—' }}
+                                        <div
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            Ag:
+                                            {{
+                                                tenant.bank_detail
+                                                    .routing_number || '—'
+                                            }}
+                                            | CC:
+                                            {{
+                                                tenant.bank_detail
+                                                    .account_number || '—'
+                                            }}
                                         </div>
                                     </template>
                                     <template v-else>
-                                        <div class="flex items-center gap-1.5 text-muted-foreground">
+                                        <div
+                                            class="flex items-center gap-1.5 text-muted-foreground"
+                                        >
                                             <AlertTriangle class="h-4 w-4" />
-                                            <span class="italic">Não cadastrado</span>
+                                            <span class="italic"
+                                                >Não cadastrado</span
+                                            >
                                         </div>
                                     </template>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <template v-if="tenant.bank_detail?.consented">
-                                        <div class="flex items-center gap-1.5 text-green-600">
+                                    <template
+                                        v-if="tenant.bank_detail?.consented"
+                                    >
+                                        <div
+                                            class="flex items-center gap-1.5 text-green-600"
+                                        >
                                             <Check class="h-4 w-4" />
                                             <span>Sim</span>
                                         </div>
-                                        <div class="text-xs text-muted-foreground">
-                                            {{ formatDate(tenant.bank_detail.consented_at) }}
+                                        <div
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{
+                                                formatDate(
+                                                    tenant.bank_detail
+                                                        .consented_at,
+                                                )
+                                            }}
                                         </div>
                                     </template>
                                     <template v-else>
-                                        <div class="flex items-center gap-1.5 text-muted-foreground">
+                                        <div
+                                            class="flex items-center gap-1.5 text-muted-foreground"
+                                        >
                                             <X class="h-4 w-4" />
-                                            <span>{{ tenant.has_bank ? 'Não consentido' : '—' }}</span>
+                                            <span>{{
+                                                tenant.has_bank
+                                                    ? 'Não consentido'
+                                                    : '—'
+                                            }}</span>
                                         </div>
                                     </template>
                                 </td>
@@ -139,7 +207,10 @@ function formatDate(date: string | null): string {
                                 </td>
                             </tr>
                             <tr v-if="tenants.length === 0">
-                                <td colspan="5" class="py-8 text-center text-muted-foreground">
+                                <td
+                                    colspan="5"
+                                    class="py-8 text-center text-muted-foreground"
+                                >
                                     Nenhum vendedor ativo encontrado.
                                 </td>
                             </tr>

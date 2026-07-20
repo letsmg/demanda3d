@@ -16,14 +16,15 @@ interface FilterState {
 // Função auxiliar para extrair a lista de produtos corretamente
 const extractProducts = (data: any): any[] => {
     if (Array.isArray(data)) return data;
-    if (data && typeof data === 'object' && Array.isArray(data.data)) return data.data;
+    if (data && typeof data === 'object' && Array.isArray(data.data))
+        return data.data;
     return [];
 };
 
 export function useStoreProducts(props: ProductList, filters?: FilterState) {
     // Inicialização robusta
     const productsList = extractProducts(props.products);
-    
+
     const visibleProducts = ref<any[]>(productsList);
     const hasMore = ref(productsList.length >= 24); // Ajustado para 24
     const currentPage = ref(1);
@@ -35,7 +36,7 @@ export function useStoreProducts(props: ProductList, filters?: FilterState) {
             const items = extractProducts(newList);
             visibleProducts.value = [...items];
             // Se a página retornou 24 itens (ou o total esperado), possivelmente há mais
-            hasMore.value = items.length >= 24; 
+            hasMore.value = items.length >= 24;
             currentPage.value = 1;
         },
         { deep: true },
@@ -52,22 +53,31 @@ export function useStoreProducts(props: ProductList, filters?: FilterState) {
             qs.set('page', String(nextPage));
 
             if (filters) {
-                if (filters.searchTerm.value.trim().length >= 3) qs.set('search', filters.searchTerm.value.trim());
-                if (filters.priceMin.value) qs.set('min_price', filters.priceMin.value);
-                if (filters.priceMax.value) qs.set('max_price', filters.priceMax.value);
-                if (filters.selectedCategories.value.length > 0) qs.set('categories', filters.selectedCategories.value.join(','));
+                if (filters.searchTerm.value.trim().length >= 3)
+                    qs.set('search', filters.searchTerm.value.trim());
+                if (filters.priceMin.value)
+                    qs.set('min_price', filters.priceMin.value);
+                if (filters.priceMax.value)
+                    qs.set('max_price', filters.priceMax.value);
+                if (filters.selectedCategories.value.length > 0)
+                    qs.set(
+                        'categories',
+                        filters.selectedCategories.value.join(','),
+                    );
                 qs.set('sort', filters.sortBy.value);
                 qs.set('sort_dir', filters.sortOrder.value);
             }
 
             const url = '/api/store/products?' + qs.toString();
-            const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            const res = await fetch(url, {
+                headers: { Accept: 'application/json' },
+            });
 
             if (res.ok) {
                 const json = await res.json();
                 // json.data é o padrão de resposta do Laravel Resource/Paginator
-                const newItems = json.data || []; 
-                
+                const newItems = json.data || [];
+
                 visibleProducts.value.push(...newItems);
                 hasMore.value = newItems.length > 0; // Se veio algo, assume que pode ter mais
                 currentPage.value = nextPage;
