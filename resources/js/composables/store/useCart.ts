@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import { router } from '@inertiajs/vue3';
 import { setCartCount } from '@/stores/cartStore';
 
 function csrfToken(): string {
@@ -43,7 +42,7 @@ export function useCart() {
 
     async function addToCart(productId: number): Promise<void> {
         if (!isAuthenticated()) {
-            router.get('/login_cli');
+            window.location.href = '/login_cli';
 
             return;
         }
@@ -56,19 +55,34 @@ export function useCart() {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken(),
                 },
                 body: JSON.stringify({ product_id: productId, quantity: 1 }),
             });
 
-            if (res.ok) {
-                const data = await res.json();
+            if (!res.ok) {
+                if (res.status === 401) {
+                    window.location.href = '/login_cli';
+                }
 
-                cartItems.value = data.items || [];
-                cartTotal.value = data.total || 0;
-                cartCount.value = data.count || 0;
-                setCartCount(data.count || 0);
+                return;
             }
+
+            const contentType = res.headers.get('content-type') || '';
+
+            if (!contentType.includes('application/json')) {
+                return;
+            }
+
+            const data = await res.json();
+
+            cartItems.value = data.items || [];
+            cartTotal.value = data.total || 0;
+            cartCount.value = data.count || 0;
+            setCartCount(data.count || 0);
+        } catch {
+            // Erro de rede ou JSON inválido — ignora silenciosamente
         } finally {
             cartLoading.value = false;
         }

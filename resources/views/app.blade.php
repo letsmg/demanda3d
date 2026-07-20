@@ -100,6 +100,7 @@
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <x-inertia::head>
             <title>{{ config('app.name', 'Demanda 3D') }}</title>
         </x-inertia::head>
