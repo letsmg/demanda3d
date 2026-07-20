@@ -422,4 +422,4 @@ jobs:
              rm -f "/tmp/$PROJECT_NAME.zip"
              echo "✅ Deploy concluído com sucesso!"
              ) || { echo "❌ Ocorreu um erro no bloco crítico de deploy"; exit 1; }
-           DEPLOY_SCRIPT
+          DEPLOY_SCRIPT
