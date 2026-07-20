@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\Review;
+use App\Observers\ProductMeilisearchObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ReviewObserver;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $this->defineGates();
         Review::observe(ReviewObserver::class);
         Product::observe(ProductObserver::class);
+        Product::observe(ProductMeilisearchObserver::class);
     }
 
     /**

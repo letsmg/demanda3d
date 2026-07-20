@@ -19,16 +19,20 @@ class StoreController extends Controller
      */
     public function index(Request $request): Response
     {
-        \Log::info('DADOS DO REQUEST:', $request->all());
         $filters = $request->validate([            
-            'search'      => 'nullable|string|min:3|max:255',
+            'search'      => 'nullable|string|max:255',
             'min_price'   => 'nullable|numeric|min:0',
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
             'sort_dir'    => 'nullable|in:asc,desc',
             'categories'  => 'nullable|string|max:500', // comma-separated category slugs
         ]);
-        \Log::info('FILTROS ENVIADOS AO SERVICE:', $filters); // <--- ADICIONE ISSO
+
+        // Remove search com menos de 3 caracteres — evita erro 422 e queries inúteis
+        if (! empty($filters['search']) && strlen($filters['search']) < 3) {
+            unset($filters['search']);
+        }
+
         // Verifica se o usuário pode ver conteúdo adulto (18+)
         $canViewAdult = false;
         $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('clients')->user();
@@ -37,8 +41,7 @@ class StoreController extends Controller
         }
         
         $products = $this->productService->listActiveForStore($filters, $canViewAdult);
-        \Log::info('Produtos encontrados:', ['count' => count($products)]);
-        \Log::info('QTD PRODUTOS RETORNADOS:', ['count' => count($products)]); // <--- ADICIONE ISSO
+
         // Filtra categorias visíveis: sem "adulto" para menores
         $categoriesQuery = Category::orderBy('name');
         if (! $canViewAdult) {

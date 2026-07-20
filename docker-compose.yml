@@ -132,42 +132,30 @@ services:
       - demanda-net-dev
 
   # =============================================
-  # OpenSearch - DEV (busca local otimizada)
+  # Meilisearch — Motor de Busca Full-Text (DEV)
   #
-  # ATENÇÃO: Recurso EXCLUSIVO de desenvolvimento local.
-  # Em produção (Oracle Free Tier), OPENSEARCH_ENABLED=false
-  # e as buscas usam PostgreSQL nativamente.
+  # Busca textual de alta performance com tolerância
+  # a erros tipográficos (fuzzy search) e autocomplete.
+  # Integrado com Redis (cache) + PostgreSQL (fallback).
   # =============================================
-  demanda-opensearch-dev:
-    image: opensearchproject/opensearch:2.19-alpine
-    container_name: demanda-opensearch-dev
+  demanda-meilisearch:
+    image: getmeili/meilisearch:v1.11-alpine
+    container_name: demanda-meilisearch
     restart: unless-stopped
-    profiles:
-      - opensearch
     environment:
-      discovery.type: single-node
-      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "Demanda3D@OS2026!"
-      DISABLE_SECURITY_PLUGIN: "true"
-      DISABLE_INSTALL_DEMO_CONFIG: "true"
-      bootstrap.memory_lock: "true"
+      MEILI_MASTER_KEY: masterKeyLocal
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
     ports:
-      - "9201:9200"
-      - "9601:9600"
+      - "7700:7700"
     volumes:
-      - demanda-opensearch-dev:/usr/share/opensearch/data
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+      - demanda-meilisearch:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"green\"|\"status\":\"yellow\"'"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7700/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 15s
     networks:
       - demanda-net-dev
 
@@ -262,8 +250,8 @@ volumes:
     name: demanda-psql-rep-dev
   demanda-redis-dev:
     name: demanda-redis-dev
-  demanda-opensearch-dev:
-    name: demanda-opensearch-dev
+  demanda-meilisearch:
+    name: demanda-meilisearch
   demanda-loki-dev:
     name: demanda-loki-dev
   demanda-grafana-dev:

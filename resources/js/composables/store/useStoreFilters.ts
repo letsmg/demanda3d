@@ -75,8 +75,6 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         params.sort = forceString(fieldSort.value, 'name');
         params.sort_dir = forceString(dirSort.value, 'asc');
 
-        console.log('ENVIANDO PARA BACKEND (LIMPO):', params);
-
         router.get('/store', params, {
             preserveState: true,
             preserveScroll: true,

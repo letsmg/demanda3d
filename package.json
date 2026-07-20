@@ -37,7 +37,6 @@
   "dependencies": {
     "@inertiajs/vite": "^3.0.0",
     "@inertiajs/vue3": "^3.6.1",
-    "@lucide/vue": "^1.17.0",
     "@types/sortablejs": "^1.15.9",
     "@vueuse/core": "^14.3.0",
     "@vueuse/shared": "^14.3.0",

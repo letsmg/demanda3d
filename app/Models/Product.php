@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'tenant_id',
@@ -36,7 +37,7 @@ use Illuminate\Support\Str;
 ])]
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, Searchable, SoftDeletes;
 
     /**
      * Accessors SEO — 100% derivados dos campos nativos do produto.
@@ -241,6 +242,62 @@ class Product extends Model
                         });
                   });
             });
+    }
+
+    /**
+     * Get the indexable data array for the Meilisearch index.
+     *
+     * Called automatically by Scout when syncing the model.
+     * Returns a flat array with all relevant searchable fields.
+     */
+    public function toSearchableArray(): array
+    {
+        $tenantName = $this->relationLoaded('tenant')
+            ? ($this->tenant?->display_name ?? $this->tenant?->fantasy_name ?? '')
+            : '';
+
+        $categoryNames = $this->relationLoaded('categories')
+            ? $this->categories->pluck('name')->implode(' ')
+            : '';
+
+        return [
+            'id' => (int) $this->id,
+            'tenant_id' => (int) $this->tenant_id,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'description' => trim(strip_tags($this->description ?? '')),
+            'material_type' => $this->material_type ?? '',
+            'sale_price' => (float) ($this->sale_price ?? 0),
+            'is_active' => (bool) $this->is_active,
+            'categories' => $categoryNames,
+            'tenant_name' => $tenantName,
+            'created_at' => $this->created_at?->timestamp ?? 0,
+        ];
+    }
+
+    /**
+     * Determines if the model should be searchable in Meilisearch.
+     *
+     * Only sync products belonging to active tenants with verified email.
+     * This prevents indexing products from incomplete/unverified sellers.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        if (! $this->is_active) {
+            return false;
+        }
+
+        $tenant = $this->tenant()->withoutGlobalScopes()->first();
+
+        if (! $tenant || ! $tenant->active) {
+            return false;
+        }
+
+        if (! $tenant->user?->email_verified_at) {
+            return false;
+        }
+
+        return true;
     }
 
     public static function generateUniqueSlug(string $name, ?int $tenantId = null, ?int $excludeId = null): string

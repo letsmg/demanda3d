@@ -1,14 +1,26 @@
-- name: Setup PHP
+name: Nome do Workflow  # Opcional, mas recomendado
+
+on:
+  push:
+    branches:
+      - main  # Ou o nome da sua branch principal
+  workflow_dispatch:  # Permite rodar manualmente pelo painel do GitHub
+
+jobs:
+  seu-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5' # AJUSTADO PARA COMBINAR COM O DEPLOY
+          php-version: '8.4'
           extensions: pdo_pgsql, redis, bcmath
           coverage: none
           ini-values: post_max_size=256M, upload_max_filesize=256M
-        env:
-          update: true # Opcional: mantém o ambiente atualizado
 
-      # DICA: Adicionar cache de dependências Composer também ajuda
       - name: Get Composer Cache Directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
