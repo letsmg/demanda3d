@@ -116,7 +116,7 @@ const features = [
     </Head>
 
     <!-- Hero Section -->
-    <section class="relative flex min-h-[600px] items-center overflow-hidden">
+    <section class="relative flex min-h-[600px] items-center overflow-hidden">      
         <!-- Rotating background images with overlay -->
         <div
             v-for="(img, idx) in heroImages"
