@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ShoppingBag, RotateCw } from '@lucide/vue';
+import { ShoppingBag, RotateCw } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import StoreProductCard from './StoreProductCard.vue';
 

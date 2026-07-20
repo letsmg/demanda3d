@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, ExternalLink, ImageIcon, Star } from '@lucide/vue';
+import { ChevronDown, ExternalLink, ImageIcon, Star } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

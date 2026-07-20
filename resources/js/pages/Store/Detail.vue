@@ -11,7 +11,7 @@ import {
     Share2,
     ShoppingBag,
     Star,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {

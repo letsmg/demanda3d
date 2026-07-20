@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Banknote, KeyRound, LogOut, Palette, User as UserIcon } from '@lucide/vue';
+import { Banknote, KeyRound, LogOut, Palette, User as UserIcon } from 'lucide-vue-next';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,

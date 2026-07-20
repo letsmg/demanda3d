@@ -10,7 +10,7 @@ import {
     DollarSign,
     Shield,
     Store,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,

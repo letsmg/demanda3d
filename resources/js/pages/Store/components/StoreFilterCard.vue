@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Search, RotateCw, X } from '@lucide/vue';
+import { Search, RotateCw, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Card,

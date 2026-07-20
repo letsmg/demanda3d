@@ -7,7 +7,7 @@ import {
     Plus,
     ArrowLeft,
     CreditCard,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Card,

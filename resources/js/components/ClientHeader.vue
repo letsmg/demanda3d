@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { ShoppingBag, Menu, X } from '@lucide/vue';
+import { ShoppingBag, Menu, X } from 'lucide-vue-next';
 import { setCartCount } from '@/stores/cartStore';
 
 const props = defineProps<{

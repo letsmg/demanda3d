@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Save } from '@lucide/vue';
+import { Save } from 'lucide-vue-next';
 import FormTestHelper, {
     type TestField,
 } from '@/components/FormTestHelper.vue';

@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { setCartCount } from '@/stores/cartStore';
 
 function csrfToken(): string {
@@ -42,7 +43,7 @@ export function useCart() {
 
     async function addToCart(productId: number): Promise<void> {
         if (!isAuthenticated()) {
-            window.location.href = '/login_cli';
+            router.get('/login_cli');
 
             return;
         }

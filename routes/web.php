@@ -98,13 +98,15 @@ Route::middleware(['redirect_if_authenticated:carriers'])->group(function () {
 // ─────────────────────────────────────────────────
 // CART & CHECKOUT
 // ─────────────────────────────────────────────────
-Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
-Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/items', [CartController::class, 'index'])->name('index');
-    Route::post('/', [CartController::class, 'store'])->name('store');
-    Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
-    Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
-    Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+Route::middleware('auth:clients')->group(function () {
+    Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+    Route::prefix('cart')->name('cart.')->group(function () {
+        Route::get('/items', [CartController::class, 'index'])->name('index');
+        Route::post('/', [CartController::class, 'store'])->name('store');
+        Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
+        Route::delete('/{cartItem}', [CartController::class, 'destroy'])->name('destroy');
+        Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+    });
 });
 
 Route::controller(CheckoutController::class)->group(function () {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { Wrench, RefreshCw, FileText, CheckCircle, Image, Upload, Trash2, AlertCircle } from '@lucide/vue';
+import { Wrench, RefreshCw, FileText, CheckCircle, Image, Upload, Trash2, AlertCircle } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

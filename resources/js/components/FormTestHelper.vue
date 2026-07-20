@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Beaker, Eraser } from '@lucide/vue';
+import { Beaker, Eraser } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
 export interface TestField {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from '@lucide/vue';
+import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Card,

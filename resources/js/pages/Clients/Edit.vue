@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { AlertCircle, ArrowLeft, Save } from '@lucide/vue';
+import { AlertCircle, ArrowLeft, Save } from 'lucide-vue-next';
 import FormTestHelper, {
     type TestField,
 } from '@/components/FormTestHelper.vue';

@@ -40,8 +40,8 @@ const products = useStoreProducts(props, {
     priceMin: storeFilters.priceMin,
     priceMax: storeFilters.priceMax,
     selectedCategories: storeFilters.selectedCategories,
-    sortBy: storeFilters.sortBy,
-    sortOrder: storeFilters.sortOrder,
+    sortBy: storeFilters.fieldSort,
+    sortOrder: storeFilters.dirSort,
 });
 const gallery = useImageGallery();
 const share = useShareDialog();

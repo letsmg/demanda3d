@@ -10,7 +10,7 @@ import {
     Search,
     Trash2,
     X,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

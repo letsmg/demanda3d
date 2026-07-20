@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Link2, MessageCircle } from '@lucide/vue';
+import { Copy, Link2, MessageCircle } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
