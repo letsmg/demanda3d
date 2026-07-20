@@ -1,4 +1,4 @@
-name: Nome do Workflow  # Opcional, mas recomendado
+name: Tests  # Opcional, mas recomendado
 
 on:
   push:
