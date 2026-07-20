@@ -85,13 +85,55 @@ interface TestCard {
     behavior: string;
 }
 const stripeTestCards: TestCard[] = [
-    { category: 'Sucesso', brand: 'Visa', number: '4242424242424242', cvc: '123', behavior: 'Aprova com sucesso imediato' },
-    { category: 'Sucesso', brand: 'Mastercard', number: '5555555555554444', cvc: '123', behavior: 'Aprova com sucesso imediato' },
-    { category: 'Autenticação', brand: 'Visa (3D Secure)', number: '4000000000003020', cvc: '123', behavior: 'Dispara simulação de autenticação 3D' },
-    { category: 'Recusa', brand: 'Visa (Geral)', number: '4000000000000002', cvc: '123', behavior: 'Simula Cartão Recusado pelo banco' },
-    { category: 'Recusa', brand: 'Visa (Sem Saldo)', number: '4000000000000051', cvc: '123', behavior: 'Simula Saldo Insuficiente' },
-    { category: 'Recusa', brand: 'Visa (Expirado)', number: '4000000000000003', cvc: '123', behavior: 'Simula Cartão Vencido' },
-    { category: 'Recusa', brand: 'Visa (Fraude)', number: '4000000000000004', cvc: '123', behavior: 'Simula Bloqueio por Suspeita de Fraude' },
+    {
+        category: 'Sucesso',
+        brand: 'Visa',
+        number: '4242424242424242',
+        cvc: '123',
+        behavior: 'Aprova com sucesso imediato',
+    },
+    {
+        category: 'Sucesso',
+        brand: 'Mastercard',
+        number: '5555555555554444',
+        cvc: '123',
+        behavior: 'Aprova com sucesso imediato',
+    },
+    {
+        category: 'Autenticação',
+        brand: 'Visa (3D Secure)',
+        number: '4000000000003020',
+        cvc: '123',
+        behavior: 'Dispara simulação de autenticação 3D',
+    },
+    {
+        category: 'Recusa',
+        brand: 'Visa (Geral)',
+        number: '4000000000000002',
+        cvc: '123',
+        behavior: 'Simula Cartão Recusado pelo banco',
+    },
+    {
+        category: 'Recusa',
+        brand: 'Visa (Sem Saldo)',
+        number: '4000000000000051',
+        cvc: '123',
+        behavior: 'Simula Saldo Insuficiente',
+    },
+    {
+        category: 'Recusa',
+        brand: 'Visa (Expirado)',
+        number: '4000000000000003',
+        cvc: '123',
+        behavior: 'Simula Cartão Vencido',
+    },
+    {
+        category: 'Recusa',
+        brand: 'Visa (Fraude)',
+        number: '4000000000000004',
+        cvc: '123',
+        behavior: 'Simula Bloqueio por Suspeita de Fraude',
+    },
 ];
 
 // ── Test cards helper panel toggle ──
@@ -109,9 +151,14 @@ function fillTestCard(card: TestCard) {
 }
 
 function copyCardNumber(number: string) {
-    navigator.clipboard.writeText(number).then(() => {
-        // Feedback visual breve
-    }).catch(() => { /* ignore */ });
+    navigator.clipboard
+        .writeText(number)
+        .then(() => {
+            // Feedback visual breve
+        })
+        .catch(() => {
+            /* ignore */
+        });
 }
 
 const canAdvanceStep2 = computed(() => {
@@ -170,7 +217,9 @@ function submitCheckout() {
         const rawCard = cardNumber.value.replace(/\s+/g, '');
 
         if (!STRIPE_TEST_CARD_NUMBERS.has(rawCard)) {
-            alert('⚠️ Cartão não autorizado para o ambiente de desenvolvimento! Utilize apenas cartões de teste da Stripe no painel "Stripe Test Cards Helper".');
+            alert(
+                '⚠️ Cartão não autorizado para o ambiente de desenvolvimento! Utilize apenas cartões de teste da Stripe no painel "Stripe Test Cards Helper".',
+            );
             return;
         }
     }
@@ -244,15 +293,17 @@ onMounted(() => {
             v-if="isDev"
             class="mb-6 flex items-start gap-3 rounded-lg border-2 border-red-600 bg-red-700 px-5 py-4 text-white shadow-lg"
         >
-            <AlertTriangle class="mt-0.5 h-6 w-6 flex-shrink-0 text-yellow-300" />
+            <AlertTriangle
+                class="mt-0.5 h-6 w-6 flex-shrink-0 text-yellow-300"
+            />
             <div>
                 <p class="text-lg font-extrabold text-yellow-300">
                     ⚠️ ATENÇÃO: AMBIENTE DE TESTES
                 </p>
                 <p class="mt-1 text-sm text-red-100">
-                    Este site está operando atualmente em fase de homologação e testes.
-                    Nenhuma transação financeira real está sendo processada e nenhuma
-                    cobrança será efetuada em seu cartão.
+                    Este site está operando atualmente em fase de homologação e
+                    testes. Nenhuma transação financeira real está sendo
+                    processada e nenhuma cobrança será efetuada em seu cartão.
                 </p>
             </div>
         </div>
@@ -269,29 +320,42 @@ onMounted(() => {
                 class="flex w-full items-center justify-between text-left"
                 @click="showTestCards = !showTestCards"
             >
-                <span class="flex items-center gap-2 text-sm font-bold text-amber-800">
+                <span
+                    class="flex items-center gap-2 text-sm font-bold text-amber-800"
+                >
                     <CreditCard class="h-4 w-4" />
                     Stripe Test Cards Helper
                 </span>
-                <ChevronDown v-if="!showTestCards" class="h-4 w-4 text-amber-600" />
+                <ChevronDown
+                    v-if="!showTestCards"
+                    class="h-4 w-4 text-amber-600"
+                />
                 <ChevronUp v-else class="h-4 w-4 text-amber-600" />
             </button>
 
             <div v-if="showTestCards" class="mt-3 space-y-2">
                 <p class="text-xs text-amber-600">
                     Clique em um cartão para preencher automaticamente os campos
-                    de pagamento abaixo. Todos os cartões listados são cartões de teste
-                    oficiais da Stripe.
+                    de pagamento abaixo. Todos os cartões listados são cartões
+                    de teste oficiais da Stripe.
                 </p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs">
                         <thead>
-                            <tr class="border-b border-amber-200 text-left text-amber-700">
-                                <th class="pb-1 pr-2 font-semibold">Categoria</th>
-                                <th class="pb-1 pr-2 font-semibold">Bandeira</th>
-                                <th class="pb-1 pr-2 font-semibold">Número</th>
-                                <th class="pb-1 pr-2 font-semibold">CVC</th>
-                                <th class="pb-1 font-semibold">Comportamento</th>
+                            <tr
+                                class="border-b border-amber-200 text-left text-amber-700"
+                            >
+                                <th class="pr-2 pb-1 font-semibold">
+                                    Categoria
+                                </th>
+                                <th class="pr-2 pb-1 font-semibold">
+                                    Bandeira
+                                </th>
+                                <th class="pr-2 pb-1 font-semibold">Número</th>
+                                <th class="pr-2 pb-1 font-semibold">CVC</th>
+                                <th class="pb-1 font-semibold">
+                                    Comportamento
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -307,7 +371,8 @@ onMounted(() => {
                                             'inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold',
                                             card.category === 'Sucesso'
                                                 ? 'bg-emerald-100 text-emerald-700'
-                                                : card.category === 'Autenticação'
+                                                : card.category ===
+                                                    'Autenticação'
                                                   ? 'bg-blue-100 text-blue-700'
                                                   : 'bg-red-100 text-red-700',
                                         ]"
@@ -315,30 +380,40 @@ onMounted(() => {
                                         {{ card.category }}
                                     </span>
                                 </td>
-                                <td class="py-1.5 pr-2 font-medium text-amber-900">
+                                <td
+                                    class="py-1.5 pr-2 font-medium text-amber-900"
+                                >
                                     {{ card.brand }}
                                 </td>
                                 <td class="py-1.5 pr-2">
                                     <span class="flex items-center gap-1">
-                                        <code class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900">
+                                        <code
+                                            class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900"
+                                        >
                                             {{ card.number }}
                                         </code>
                                         <button
                                             type="button"
                                             class="text-amber-400 hover:text-amber-600"
                                             title="Copiar número"
-                                            @click.stop="copyCardNumber(card.number)"
+                                            @click.stop="
+                                                copyCardNumber(card.number)
+                                            "
                                         >
                                             <Copy class="h-3 w-3" />
                                         </button>
                                     </span>
                                 </td>
                                 <td class="py-1.5 pr-2 text-center">
-                                    <code class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900">
+                                    <code
+                                        class="rounded bg-white px-1.5 py-0.5 text-[11px] text-amber-900"
+                                    >
                                         {{ card.cvc }}
                                     </code>
                                 </td>
-                                <td class="py-1.5 text-amber-600">{{ card.behavior }}</td>
+                                <td class="py-1.5 text-amber-600">
+                                    {{ card.behavior }}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -361,7 +436,7 @@ onMounted(() => {
                             'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
                             step >= s
                                 ? 'border-amber-600 bg-amber-600 text-white hover:bg-amber-700'
-                                : 'border-amber-900 text-amber-910',
+                                : 'text-amber-910 border-amber-900',
                         ]"
                     >
                         <Check v-if="step > s" class="h-4 w-4" />
@@ -395,7 +470,7 @@ onMounted(() => {
                     <div
                         v-for="addr in addresses"
                         :key="addr.id"
-                        class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:border-amber-910"
+                        class="hover:border-amber-910 flex cursor-pointer items-start gap-3 rounded-lg border p-3"
                         :class="{
                             'border-amber-500 bg-amber-50':
                                 selectedAddressId === addr.id,
@@ -567,7 +642,7 @@ onMounted(() => {
                         <div
                             v-for="carrier in carriers"
                             :key="carrier.id"
-                            class="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:border-amber-910"
+                            class="hover:border-amber-910 flex cursor-pointer items-center justify-between rounded-lg border p-3"
                             :class="{
                                 'border-amber-500 bg-amber-50':
                                     selectedCarrierId === carrier.id,
@@ -611,7 +686,12 @@ onMounted(() => {
                     <div class="flex justify-between text-sm">
                         <span>Subtotal ({{ count }} itens)</span>
                         <span>
-                            R$ {{ Number(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            R$
+                            {{
+                                Number(total).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                     <div
@@ -620,7 +700,14 @@ onMounted(() => {
                     >
                         <span>Desconto ({{ couponCode }})</span>
                         <span>
-                            - R$ {{ Number(couponData.discount_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            - R$
+                            {{
+                                Number(
+                                    couponData.discount_amount,
+                                ).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                     <div
@@ -629,7 +716,14 @@ onMounted(() => {
                     >
                         <span>Total com Desconto</span>
                         <span>
-                            R$ {{ Number(couponData.discounted_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            R$
+                            {{
+                                Number(
+                                    couponData.discounted_total,
+                                ).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                 </div>
@@ -661,12 +755,21 @@ onMounted(() => {
                 <div class="space-y-3">
                     <div
                         v-for="method in [
-                            { id: 'card', label: 'Cartão de Crédito (Visa/Master)', icon: '💳', note: 'Dados do cartão processados via Stripe — nunca armazenados.' },
-                            { id: 'boleto', label: 'Boleto Bancário', icon: '📄' },
+                            {
+                                id: 'card',
+                                label: 'Cartão de Crédito (Visa/Master)',
+                                icon: '💳',
+                                note: 'Dados do cartão processados via Stripe — nunca armazenados.',
+                            },
+                            {
+                                id: 'boleto',
+                                label: 'Boleto Bancário',
+                                icon: '📄',
+                            },
                             { id: 'pix', label: 'Pix', icon: '⚡' },
                         ]"
                         :key="method.id"
-                        class="cursor-pointer rounded-lg border p-4 hover:border-amber-910"
+                        class="hover:border-amber-910 cursor-pointer rounded-lg border p-4"
                         :class="{
                             'border-amber-500 bg-amber-50':
                                 selectedPaymentMethod === method.id,
@@ -703,38 +806,47 @@ onMounted(() => {
 
                         <!-- Card input fields (only when 'card' selected + DEV mode) -->
                         <div
-                            v-if="isDev && method.id === 'card' && selectedPaymentMethod === 'card'"
+                            v-if="
+                                isDev &&
+                                method.id === 'card' &&
+                                selectedPaymentMethod === 'card'
+                            "
                             class="mt-4 space-y-3 border-t border-amber-200 pt-4"
                         >
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div>
-                                    <Label for="card-number">Número do Cartão</Label>
+                                    <Label for="card-number"
+                                        >Número do Cartão</Label
+                                    >
                                     <Input
                                         id="card-number"
                                         v-model="cardNumber"
                                         placeholder="4242 4242 4242 4242"
                                         maxlength="19"
                                         :readonly="cardFieldReadonly"
-                                        class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                        class="placeholder:text-amber-910 border-amber-900 bg-white font-mono text-amber-900 focus:border-amber-500"
                                         @input="formatCardNumber"
                                     />
                                     <p
                                         v-if="cardFieldReadonly"
                                         class="mt-1 text-xs text-amber-500"
                                     >
-                                        ⚠️ Bloqueado no DEV — use o Stripe Test Cards Helper acima
+                                        ⚠️ Bloqueado no DEV — use o Stripe Test
+                                        Cards Helper acima
                                     </p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <Label for="card-expiry">Validade</Label>
+                                        <Label for="card-expiry"
+                                            >Validade</Label
+                                        >
                                         <Input
                                             id="card-expiry"
                                             v-model="cardExpiry"
                                             placeholder="MM/AA"
                                             maxlength="5"
                                             :readonly="cardFieldReadonly"
-                                            class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                            class="placeholder:text-amber-910 border-amber-900 bg-white font-mono text-amber-900 focus:border-amber-500"
                                             @input="formatCardExpiry"
                                         />
                                     </div>
@@ -746,7 +858,7 @@ onMounted(() => {
                                             placeholder="123"
                                             maxlength="4"
                                             :readonly="cardFieldReadonly"
-                                            class="font-mono border-amber-900 bg-white text-amber-900 placeholder:text-amber-910 focus:border-amber-500"
+                                            class="placeholder:text-amber-910 border-amber-900 bg-white font-mono text-amber-900 focus:border-amber-500"
                                         />
                                     </div>
                                 </div>
@@ -760,7 +872,12 @@ onMounted(() => {
                     <div class="flex justify-between text-sm">
                         <span>Subtotal ({{ count }} itens)</span>
                         <span>
-                            R$ {{ Number(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            R$
+                            {{
+                                Number(total).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                     <div
@@ -769,7 +886,14 @@ onMounted(() => {
                     >
                         <span>Desconto</span>
                         <span>
-                            - R$ {{ Number(couponData.discount_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            - R$
+                            {{
+                                Number(
+                                    couponData.discount_amount,
+                                ).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                     <div
@@ -777,11 +901,19 @@ onMounted(() => {
                     >
                         <span>Total</span>
                         <span class="text-amber-900">
-                            R$ {{ (couponData?.discounted_total || total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                            R$
+                            {{
+                                (
+                                    couponData?.discounted_total || total
+                                ).toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 2,
+                                })
+                            }}
                         </span>
                     </div>
                     <p class="mt-2 text-xs text-muted-foreground">
-                        Limite por produto: R$ 500,00 | Limite total: R$ 1.500,00
+                        Limite por produto: R$ 500,00 | Limite total: R$
+                        1.500,00
                     </p>
                 </div>
 

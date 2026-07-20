@@ -21,7 +21,8 @@ interface FilterParams {
 
 // ── Função de Segurança: Garante que nunca enviaremos uma função ao backend ──
 function forceString(val: any, fallback: string): string {
-    if (val === undefined || val === null || typeof val === 'function') return fallback;
+    if (val === undefined || val === null || typeof val === 'function')
+        return fallback;
     const str = String(val);
     if (str.includes('[native code]')) return fallback;
     return str;
@@ -39,8 +40,10 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
     const searchTerm = ref(forceString(props.filters.search, ''));
     const priceMin = ref(Number(props.filters.min_price) || 0);
     const priceMax = ref(Number(props.filters.max_price) || 1500);
-    const selectedCategories = ref<string[]>(parseCategories(props.filters.categories));
-    
+    const selectedCategories = ref<string[]>(
+        parseCategories(props.filters.categories),
+    );
+
     // RENOMEADO: Usando nomes impossíveis de confundir com métodos nativos
     const fieldSort = ref(forceString(props.filters.sort, 'name'));
     const dirSort = ref(forceString(props.filters.sort_dir, 'asc'));
@@ -54,11 +57,11 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
             priceMin.value = Number(newFilters.min_price) || 0;
             priceMax.value = Number(newFilters.max_price) || 1500;
             selectedCategories.value = parseCategories(newFilters.categories);
-            
+
             fieldSort.value = forceString(newFilters.sort, 'name');
             dirSort.value = forceString(newFilters.sort_dir, 'asc');
         },
-        { deep: true }
+        { deep: true },
     );
 
     // ── Core: Aplicação de Filtros ─────────────────────────
@@ -69,8 +72,9 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         if (trimmedSearch.length >= 3) params.search = trimmedSearch;
         if (priceMin.value > 0) params.min_price = String(priceMin.value);
         if (priceMax.value < 1500) params.max_price = String(priceMax.value);
-        if (selectedCategories.value.length > 0) params.categories = selectedCategories.value.join(',');
-        
+        if (selectedCategories.value.length > 0)
+            params.categories = selectedCategories.value.join(',');
+
         // Forçando o envio dos nomes que o Backend espera, mas vindos de refs seguras
         params.sort = forceString(fieldSort.value, 'name');
         params.sort_dir = forceString(dirSort.value, 'asc');
@@ -123,10 +127,13 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
 
         abortController = new AbortController();
         try {
-            const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val)}`, {
-                signal: abortController.signal,
-                headers: { Accept: 'application/json' },
-            });
+            const res = await fetch(
+                `/api/search/suggestions?q=${encodeURIComponent(val)}`,
+                {
+                    signal: abortController.signal,
+                    headers: { Accept: 'application/json' },
+                },
+            );
             if (res.ok) {
                 const json = await res.json();
                 suggestions.value = json.suggestions || [];
@@ -159,13 +166,19 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         }
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            highlightedIndex.value = Math.min(highlightedIndex.value + 1, suggestions.value.length - 1);
+            highlightedIndex.value = Math.min(
+                highlightedIndex.value + 1,
+                suggestions.value.length - 1,
+            );
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             highlightedIndex.value = Math.max(highlightedIndex.value - 1, -1);
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            if (highlightedIndex.value >= 0 && highlightedIndex.value < suggestions.value.length) {
+            if (
+                highlightedIndex.value >= 0 &&
+                highlightedIndex.value < suggestions.value.length
+            ) {
                 selectSuggestion(suggestions.value[highlightedIndex.value]);
             } else {
                 showSuggestions.value = false;
@@ -178,7 +191,8 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
 
     function onWindowClick(e: MouseEvent): void {
         const target = e.target as HTMLElement;
-        if (!target.closest('[data-search-area]')) showSuggestions.value = false;
+        if (!target.closest('[data-search-area]'))
+            showSuggestions.value = false;
     }
 
     onMounted(() => window.addEventListener('click', onWindowClick));
@@ -213,11 +227,11 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
 
     function handleSortChange(value: string | null): void {
         if (!value || typeof value !== 'string') return;
-        
+
         const parts = value.split('_');
         const dir = parts.pop()!;
         const field = parts.join('_');
-        
+
         fieldSort.value = field;
         dirSort.value = dir;
         applyStoreFilters();

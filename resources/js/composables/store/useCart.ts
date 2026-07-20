@@ -61,7 +61,7 @@ export function useCart() {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken(),
                 },
                 body: JSON.stringify({ product_id: productId, quantity: 1 }),

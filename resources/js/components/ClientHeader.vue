@@ -49,44 +49,78 @@ function logout() {
 </script>
 
 <template>
-    <header data-client-header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
+    <header
+        data-client-header
+        class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md"
+    >
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
                 <!-- Logo -->
-                <Link href="/store" class="flex items-center gap-2 text-xl font-bold text-white">
+                <Link
+                    href="/store"
+                    class="flex items-center gap-2 text-xl font-bold text-white"
+                >
                     🏪 Demanda3D
                 </Link>
 
                 <!-- Desktop nav -->
-                <nav class="hidden md:flex items-center gap-4">
-                    <Link href="/store" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                <nav class="hidden items-center gap-4 md:flex">
+                    <Link
+                        href="/store"
+                        class="text-sm font-medium text-amber-200 transition hover:text-white"
+                    >
                         Loja
                     </Link>
-                    <Link href="/perfil" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                    <Link
+                        href="/perfil"
+                        class="text-sm font-medium text-amber-200 transition hover:text-white"
+                    >
                         Meu Perfil
                     </Link>
-                    <Link href="/perfil/enderecos" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                    <Link
+                        href="/perfil/enderecos"
+                        class="text-sm font-medium text-amber-200 transition hover:text-white"
+                    >
                         Meus Endereços
                     </Link>
-                    <Link href="/perfil/pedidos" class="text-sm font-medium text-amber-200 hover:text-white transition">
+                    <Link
+                        href="/perfil/pedidos"
+                        class="text-sm font-medium text-amber-200 transition hover:text-white"
+                    >
                         Meus Pedidos
                     </Link>
 
                     <!-- Cart -->
-                    <Link href="/cart" class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 hover:bg-amber-800 hover:text-amber-100 transition">
+                    <Link
+                        href="/cart"
+                        class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 transition hover:bg-amber-800 hover:text-amber-100"
+                    >
                         <ShoppingBag class="h-5 w-5" />
-                        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow">
+                        <span
+                            v-if="cartCount > 0"
+                            class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow"
+                        >
                             {{ cartCount > 99 ? '99+' : cartCount }}
                         </span>
                     </Link>
 
                     <!-- User avatar + logout -->
-                    <div class="flex items-center gap-2 ml-4 pl-4 border-l border-amber-700">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white">
+                    <div
+                        class="ml-4 flex items-center gap-2 border-l border-amber-700 pl-4"
+                    >
+                        <div
+                            class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white"
+                        >
                             {{ initials }}
                         </div>
-                        <span class="text-sm text-amber-200 max-w-[120px] truncate">{{ client.display_name || 'Cliente' }}</span>
-                        <button @click="logout" class="text-xs text-amber-300 hover:text-amber-100 ml-2 transition">
+                        <span
+                            class="max-w-[120px] truncate text-sm text-amber-200"
+                            >{{ client.display_name || 'Cliente' }}</span
+                        >
+                        <button
+                            @click="logout"
+                            class="ml-2 text-xs text-amber-300 transition hover:text-amber-100"
+                        >
                             Sair
                         </button>
                     </div>
@@ -94,13 +128,22 @@ function logout() {
 
                 <!-- Mobile hamburger -->
                 <div class="flex items-center gap-2 md:hidden">
-                    <Link href="/cart" class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 hover:bg-amber-800 transition">
+                    <Link
+                        href="/cart"
+                        class="relative inline-flex items-center justify-center rounded-md p-2 text-amber-200 transition hover:bg-amber-800"
+                    >
                         <ShoppingBag class="h-5 w-5" />
-                        <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow">
+                        <span
+                            v-if="cartCount > 0"
+                            class="absolute -top-1 -right-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow"
+                        >
                             {{ cartCount > 99 ? '99+' : cartCount }}
                         </span>
                     </Link>
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 text-amber-200 hover:bg-amber-800 rounded-md transition">
+                    <button
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="rounded-md p-2 text-amber-200 transition hover:bg-amber-800"
+                    >
                         <Menu v-if="!mobileMenuOpen" class="h-5 w-5" />
                         <X v-else class="h-5 w-5" />
                     </button>
@@ -108,26 +151,49 @@ function logout() {
             </div>
 
             <!-- Mobile menu -->
-            <div v-if="mobileMenuOpen" class="md:hidden pb-4 space-y-2">
-                <Link href="/store" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+            <div v-if="mobileMenuOpen" class="space-y-2 pb-4 md:hidden">
+                <Link
+                    href="/store"
+                    @click="mobileMenuOpen = false"
+                    class="block rounded-md px-3 py-2 text-sm text-amber-200 transition hover:bg-amber-800"
+                >
                     Loja
                 </Link>
-                <Link href="/perfil" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                <Link
+                    href="/perfil"
+                    @click="mobileMenuOpen = false"
+                    class="block rounded-md px-3 py-2 text-sm text-amber-200 transition hover:bg-amber-800"
+                >
                     Meu Perfil
                 </Link>
-                <Link href="/perfil/enderecos" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                <Link
+                    href="/perfil/enderecos"
+                    @click="mobileMenuOpen = false"
+                    class="block rounded-md px-3 py-2 text-sm text-amber-200 transition hover:bg-amber-800"
+                >
                     Meus Endereços
                 </Link>
-                <Link href="/perfil/pedidos" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-amber-200 hover:bg-amber-800 rounded-md transition">
+                <Link
+                    href="/perfil/pedidos"
+                    @click="mobileMenuOpen = false"
+                    class="block rounded-md px-3 py-2 text-sm text-amber-200 transition hover:bg-amber-800"
+                >
                     Meus Pedidos
                 </Link>
                 <div class="flex items-center gap-2 px-3 py-2">
-                    <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white">
+                    <div
+                        class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-xs font-medium text-white"
+                    >
                         {{ initials }}
                     </div>
-                    <span class="text-sm text-amber-200">{{ client.display_name || 'Cliente' }}</span>
+                    <span class="text-sm text-amber-200">{{
+                        client.display_name || 'Cliente'
+                    }}</span>
                 </div>
-                <button @click="logout" class="block w-full text-left px-3 py-2 text-sm text-amber-300 hover:bg-amber-800 rounded-md transition">
+                <button
+                    @click="logout"
+                    class="block w-full rounded-md px-3 py-2 text-left text-sm text-amber-300 transition hover:bg-amber-800"
+                >
                     Sair
                 </button>
             </div>

@@ -25,7 +25,9 @@ export function useShareDialog() {
     }
 
     function shareWhatsApp(): void {
-        const text = encodeURIComponent(`${shareTitle.value} — ${shareUrl.value}`);
+        const text = encodeURIComponent(
+            `${shareTitle.value} — ${shareUrl.value}`,
+        );
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const url = isMobile
             ? `whatsapp://send?text=${text}`
@@ -48,7 +50,9 @@ export function useShareDialog() {
     }
 
     function shareTelegram(): void {
-        const text = encodeURIComponent(`${shareTitle.value} — ${shareUrl.value}`);
+        const text = encodeURIComponent(
+            `${shareTitle.value} — ${shareUrl.value}`,
+        );
         const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl.value)}&text=${text}`;
 
         window.open(url, '_blank');

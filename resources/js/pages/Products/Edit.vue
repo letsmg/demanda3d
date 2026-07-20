@@ -2,11 +2,25 @@
 import { ref, onMounted, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Sortable from 'sortablejs';
-import { ArrowLeft, AlertCircle, Save, X, GripVertical, Plus, Trash2 } from 'lucide-vue-next';
+import {
+    ArrowLeft,
+    AlertCircle,
+    Save,
+    X,
+    GripVertical,
+    Plus,
+    Trash2,
+} from 'lucide-vue-next';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,7 +44,8 @@ interface NewPreview {
     url: string;
 }
 
-const { randomProductName, randomProductDescription, randomPrice } = useTestData();
+const { randomProductName, randomProductDescription, randomPrice } =
+    useTestData();
 
 const props = defineProps<{
     product: Product & {
@@ -74,13 +89,19 @@ function initSortable() {
             const newOrder = sortableInstance!.toArray();
 
             const reorderedExisting = newOrder
-                .map((id) => existingImages.value.find((img) => `existing-${img.id}` === id))
+                .map((id) =>
+                    existingImages.value.find(
+                        (img) => `existing-${img.id}` === id,
+                    ),
+                )
                 .filter(Boolean) as ExistingImage[];
 
             const reorderedNew = newOrder
                 .map((id) => {
                     const match = id.match(/^new-(\d+)$/);
-                    return match ? newPreviews.value[parseInt(match[1], 10)] : null;
+                    return match
+                        ? newPreviews.value[parseInt(match[1], 10)]
+                        : null;
                 })
                 .filter(Boolean) as NewPreview[];
 
@@ -100,7 +121,8 @@ function destroySortable() {
     }
 }
 
-const totalThumbnails = () => existingImages.value.length + newPreviews.value.length;
+const totalThumbnails = () =>
+    existingImages.value.length + newPreviews.value.length;
 
 // =========================================================================
 // Test data
@@ -158,7 +180,9 @@ function addImages(files: FileList) {
 }
 
 function removeExistingImage(imageId: number) {
-    existingImages.value = existingImages.value.filter((img) => img.id !== imageId);
+    existingImages.value = existingImages.value.filter(
+        (img) => img.id !== imageId,
+    );
     imagesToDelete.value.push(imageId);
     form.images_delete = [...imagesToDelete.value];
     form.images_order = existingImages.value.map((img) => img.id);
@@ -212,11 +236,17 @@ const submit = () => {
     <div class="space-y-6 p-4 md:p-6">
         <div class="flex items-center gap-4">
             <Button variant="outline" size="icon" as-child>
-                <Link :href="productsIndex()"><ArrowLeft class="h-4 w-4" /></Link>
+                <Link :href="productsIndex()"
+                    ><ArrowLeft class="h-4 w-4"
+                /></Link>
             </Button>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Editar Produto</h1>
-                <p class="text-sm text-muted-foreground">Editando: {{ product.name }}</p>
+                <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
+                    Editar Produto
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    Editando: {{ product.name }}
+                </p>
             </div>
         </div>
 
@@ -226,39 +256,82 @@ const submit = () => {
             <AlertDescription>Verifique os campos abaixo.</AlertDescription>
         </Alert>
 
-        <FormTestHelper :form="form" :fields="buildTestFields()" label="Editar Produto" @fill="handleFill" @clear="handleClear" />
+        <FormTestHelper
+            :form="form"
+            :fields="buildTestFields()"
+            label="Editar Produto"
+            @fill="handleFill"
+            @clear="handleClear"
+        />
 
         <form @submit.prevent="submit">
             <Card>
                 <CardHeader>
                     <CardTitle>Informações do Produto</CardTitle>
-                    <CardDescription>Edite os dados do produto. Os campos SEO são gerados automaticamente.</CardDescription>
+                    <CardDescription
+                        >Edite os dados do produto. Os campos SEO são gerados
+                        automaticamente.</CardDescription
+                    >
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="name">Nome *</Label>
-                            <Input id="name" v-model="form.name" placeholder="Nome" :class="{ 'border-destructive': form.errors.name }" />
-                            <span v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</span>
+                            <Input
+                                id="name"
+                                v-model="form.name"
+                                placeholder="Nome"
+                                :class="{
+                                    'border-destructive': form.errors.name,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.name"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.name }}</span
+                            >
                         </div>
                         <div class="space-y-2">
                             <Label for="sale_price">Preço de Venda *</Label>
-                            <Input id="sale_price" v-model="form.sale_price" type="number" step="0.01" placeholder="0.00" :class="{ 'border-destructive': form.errors.sale_price }" />
-                            <span v-if="form.errors.sale_price" class="text-sm text-destructive">{{ form.errors.sale_price }}</span>
+                            <Input
+                                id="sale_price"
+                                v-model="form.sale_price"
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.sale_price,
+                                }"
+                            />
+                            <span
+                                v-if="form.errors.sale_price"
+                                class="text-sm text-destructive"
+                                >{{ form.errors.sale_price }}</span
+                            >
                         </div>
                     </div>
 
                     <div class="space-y-2">
                         <Label for="description">Descrição</Label>
-                        <Textarea id="description" v-model="form.description" placeholder="Descrição" rows="4" />
+                        <Textarea
+                            id="description"
+                            v-model="form.description"
+                            placeholder="Descrição"
+                            rows="4"
+                        />
                     </div>
 
                     <!-- Imagens do Produto -->
                     <div class="space-y-2">
-                        <Label>Imagens do Produto (máx. {{ MAX_IMAGES }})</Label>
+                        <Label
+                            >Imagens do Produto (máx. {{ MAX_IMAGES }})</Label
+                        >
                         <p class="text-sm text-muted-foreground">
-                            Arraste as miniaturas para reordenar. Arraste novas imagens do seu computador para cá ou clique para selecionar.
-                            Tamanho máximo: 2MB. Formatos: JPG, PNG, WEBP.
+                            Arraste as miniaturas para reordenar. Arraste novas
+                            imagens do seu computador para cá ou clique para
+                            selecionar. Tamanho máximo: 2MB. Formatos: JPG, PNG,
+                            WEBP.
                         </p>
 
                         <!-- Área de drop + miniaturas existentes + novas + slots vazios -->
@@ -276,11 +349,15 @@ const submit = () => {
                                 :data-id="'existing-' + img.id"
                                 class="group relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
                             >
-                                <img :src="img.url" :alt="'Imagem ' + img.order" class="h-full w-full object-cover" />
+                                <img
+                                    :src="img.url"
+                                    :alt="'Imagem ' + img.order"
+                                    class="h-full w-full object-cover"
+                                />
                                 <button
                                     type="button"
                                     @click.stop="removeExistingImage(img.id)"
-                                    class="absolute right-0.5 top-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    class="absolute top-0.5 right-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                 >
                                     <Trash2 class="h-3 w-3" />
                                 </button>
@@ -299,11 +376,15 @@ const submit = () => {
                                 :data-id="'new-' + index"
                                 class="group relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-dashed border-primary/50 bg-muted"
                             >
-                                <img :src="preview.url" alt="Nova imagem" class="h-full w-full object-cover" />
+                                <img
+                                    :src="preview.url"
+                                    alt="Nova imagem"
+                                    class="h-full w-full object-cover"
+                                />
                                 <button
                                     type="button"
                                     @click.stop="removeNewImage(index)"
-                                    class="absolute right-0.5 top-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    class="absolute top-0.5 right-0.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                 >
                                     <X class="h-3 w-3" />
                                 </button>
@@ -317,13 +398,17 @@ const submit = () => {
 
                             <!-- Slots vazios com "+" — clicáveis para abrir o file picker -->
                             <button
-                                v-for="slot in SLOTS.filter((_, i) => i >= totalThumbnails())"
+                                v-for="slot in SLOTS.filter(
+                                    (_, i) => i >= totalThumbnails(),
+                                )"
                                 :key="'slot-' + slot"
                                 type="button"
                                 class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/50 transition-colors hover:border-primary/40 hover:bg-primary/5"
                                 @click="triggerFileInput"
                             >
-                                <Plus class="h-6 w-6 text-muted-foreground/50" />
+                                <Plus
+                                    class="h-6 w-6 text-muted-foreground/50"
+                                />
                             </button>
                         </div>
 
@@ -336,21 +421,38 @@ const submit = () => {
                             class="hidden"
                             @change="onFileChange"
                         />
-                        <span v-if="imageError" class="text-sm text-destructive">{{ imageError }}</span>
-                        <span v-if="form.errors.images" class="text-sm text-destructive">{{ form.errors.images }}</span>
+                        <span
+                            v-if="imageError"
+                            class="text-sm text-destructive"
+                            >{{ imageError }}</span
+                        >
+                        <span
+                            v-if="form.errors.images"
+                            class="text-sm text-destructive"
+                            >{{ form.errors.images }}</span
+                        >
                     </div>
 
                     <div class="flex items-center gap-2">
                         <Label for="is_active">Produto ativo?</Label>
-                        <input id="is_active" type="checkbox" v-model="form.is_active" class="h-4 w-4" />
+                        <input
+                            id="is_active"
+                            type="checkbox"
+                            v-model="form.is_active"
+                            class="h-4 w-4"
+                        />
                     </div>
                 </CardContent>
             </Card>
 
             <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="outline" as-child><Link :href="productsIndex()">Cancelar</Link></Button>
+                <Button variant="outline" as-child
+                    ><Link :href="productsIndex()">Cancelar</Link></Button
+                >
                 <Button type="submit" :disabled="form.processing">
-                    <Save class="mr-2 h-4 w-4" />{{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
+                    <Save class="mr-2 h-4 w-4" />{{
+                        form.processing ? 'Salvando...' : 'Salvar Alterações'
+                    }}
                 </Button>
             </div>
         </form>

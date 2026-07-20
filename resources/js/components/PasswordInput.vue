@@ -7,12 +7,15 @@ import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<{
-    class?: HTMLAttributes['class'];
-    show?: boolean;
-}>(), {
-    show: undefined,
-});
+const props = withDefaults(
+    defineProps<{
+        class?: HTMLAttributes['class'];
+        show?: boolean;
+    }>(),
+    {
+        show: undefined,
+    },
+);
 
 const emit = defineEmits<{
     'update:show': [value: boolean];

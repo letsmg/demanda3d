@@ -18,21 +18,33 @@ const graceDays = computed(() => legal.value?.grace_days ?? 7);
 
 const visible = computed(() => {
     const doc = legal.value;
-    return doc?.needs_acceptance && doc?.show_banner === true && !doc?.is_grace_expired;
+    return (
+        doc?.needs_acceptance &&
+        doc?.show_banner === true &&
+        !doc?.is_grace_expired
+    );
 });
 
 function handleAccept() {
-    router.post('/consent/accept', {}, {
-        preserveScroll: true,
-        preserveState: false,
-    });
+    router.post(
+        '/consent/accept',
+        {},
+        {
+            preserveScroll: true,
+            preserveState: false,
+        },
+    );
 }
 
 function handleDismiss() {
-    router.post('/consent/dismiss', {}, {
-        preserveScroll: true,
-        preserveState: false,
-    });
+    router.post(
+        '/consent/dismiss',
+        {},
+        {
+            preserveScroll: true,
+            preserveState: false,
+        },
+    );
 }
 </script>
 
@@ -40,9 +52,11 @@ function handleDismiss() {
     <Teleport to="body">
         <div
             v-if="visible"
-            class="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-2xl p-4"
+            class="fixed right-0 bottom-0 left-0 z-50 mx-auto max-w-2xl p-4"
         >
-            <div class="rounded-lg border border-amber-500 bg-amber-50 p-4 shadow-lg">
+            <div
+                class="rounded-lg border border-amber-500 bg-amber-50 p-4 shadow-lg"
+            >
                 <div class="flex items-start gap-3">
                     <div class="mt-0.5 shrink-0">
                         <AlertTriangle class="h-5 w-5 text-amber-600" />
@@ -52,9 +66,11 @@ function handleDismiss() {
                             {{ title }}
                         </p>
                         <p class="mt-1 text-xs text-amber-700">
-                            Nossos Termos de Uso e Pol&iacute;tica de Privacidade foram atualizados.
-                            Voc&ecirc; tem <strong>{{ graceDays }} dias</strong> para aceit&aacute;-los.
-                            Caso n&atilde;o aceite, seus produtos ser&atilde;o ocultados da loja.
+                            Nossos Termos de Uso e Pol&iacute;tica de
+                            Privacidade foram atualizados. Voc&ecirc; tem
+                            <strong>{{ graceDays }} dias</strong> para
+                            aceit&aacute;-los. Caso n&atilde;o aceite, seus
+                            produtos ser&atilde;o ocultados da loja.
                         </p>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
                             <Button

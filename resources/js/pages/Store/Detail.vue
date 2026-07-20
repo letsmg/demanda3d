@@ -395,7 +395,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             <button
                                 v-for="(img, idx) in productImages"
                                 :key="idx"
-                                class="h-2 w-2 rounded-full border border-amber-910 transition"
+                                class="border-amber-910 h-2 w-2 rounded-full border transition"
                                 :class="
                                     idx === currentImageIndex
                                         ? 'bg-amber-500'
@@ -449,7 +449,9 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 >
                                     {{ product.tenant.display_name }}
                                 </Link>
-                                <span v-else>{{ product.tenant.display_name }}</span>
+                                <span v-else>{{
+                                    product.tenant.display_name
+                                }}</span>
                             </p>
                         </div>
 
@@ -588,7 +590,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
 
                     <!-- Add to Cart Section -->
                     <div class="pt-2">
-                        <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-3">
+                        <div
+                            v-if="getCartQty(product.id) > 0"
+                            class="flex items-center gap-3"
+                        >
                             <button
                                 type="button"
                                 class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
@@ -596,7 +601,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             >
                                 <Minus class="h-5 w-5" />
                             </button>
-                            <span class="min-w-[2rem] text-center text-lg font-bold text-amber-900">{{ getCartQty(product.id) }}</span>
+                            <span
+                                class="min-w-[2rem] text-center text-lg font-bold text-amber-900"
+                                >{{ getCartQty(product.id) }}</span
+                            >
                             <button
                                 type="button"
                                 class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
@@ -678,7 +686,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                             </p>
                         </CardContent>
                         <CardFooter class="pt-0">
-                            <div v-if="getCartQty(rp.id) > 0" class="flex w-full items-center justify-center gap-2">
+                            <div
+                                v-if="getCartQty(rp.id) > 0"
+                                class="flex w-full items-center justify-center gap-2"
+                            >
                                 <button
                                     type="button"
                                     class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
@@ -686,7 +697,10 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                                 >
                                     <Minus class="h-3.5 w-3.5" />
                                 </button>
-                                <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(rp.id) }}</span>
+                                <span
+                                    class="min-w-[1.5rem] text-center text-sm font-medium"
+                                    >{{ getCartQty(rp.id) }}</span
+                                >
                                 <button
                                     type="button"
                                     class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
@@ -750,7 +764,9 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         @click="shareFacebook"
                     >
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#1877F2">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                            />
                         </svg>
                         Facebook
                     </Button>
@@ -762,7 +778,9 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         @click="shareTwitter"
                     >
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#0F1419">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                            />
                         </svg>
                         X
                     </Button>
@@ -774,7 +792,9 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                         @click="shareTelegram"
                     >
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="#0088CC">
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.26.333-.54.333l.194-2.76 5.02-4.536c.223-.198-.048-.308-.346-.11l-6.2 3.9-2.67-.834c-.58-.182-.592-.58.122-.862l10.43-4.02c.483-.18.904.117.746.876z"/>
+                            <path
+                                d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.26.333-.54.333l.194-2.76 5.02-4.536c.223-.198-.048-.308-.346-.11l-6.2 3.9-2.67-.834c-.58-.182-.592-.58.122-.862l10.43-4.02c.483-.18.904.117.746.876z"
+                            />
                         </svg>
                         Telegram
                     </Button>

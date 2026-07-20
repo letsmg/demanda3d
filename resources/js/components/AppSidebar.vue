@@ -39,7 +39,9 @@ import { index as freightContractsIndex } from '@/routes/freight-contracts';
 import { index as toolsIndex } from '@/routes/tools';
 import type { NavItem } from '@/types';
 
-const page = usePage<{ auth: { user?: { access_level?: number; isCarrier?: boolean } } }>();
+const page = usePage<{
+    auth: { user?: { access_level?: number; isCarrier?: boolean } };
+}>();
 const accessLevel = page.props.auth?.user?.access_level ?? 0;
 const isAdmin = accessLevel >= 10;
 const isCarrier = accessLevel === 5 || accessLevel === 6;
@@ -114,11 +116,13 @@ const mainNavItems: NavItem[] = isCarrier
               icon: ShoppingBag,
           },
           ...(isAdmin
-              ? [{
-                    title: 'Ferramentas',
-                    href: toolsIndex(),
-                    icon: Wrench,
-                }]
+              ? [
+                    {
+                        title: 'Ferramentas',
+                        href: toolsIndex(),
+                        icon: Wrench,
+                    },
+                ]
               : []),
           {
               title: 'Relatórios',
@@ -126,24 +130,30 @@ const mainNavItems: NavItem[] = isCarrier
               icon: BarChart3,
           },
           ...(isAdmin
-              ? [{
-                    title: 'Dados Bancários',
-                    href: '/admin/bank',
-                    icon: Banknote,
-                }]
+              ? [
+                    {
+                        title: 'Dados Bancários',
+                        href: '/admin/bank',
+                        icon: Banknote,
+                    },
+                ]
               : accessLevel === 1
-                ? [{
-                      title: 'Dados Bancários',
-                      href: '/settings/bank',
-                      icon: Banknote,
-                  }]
+                ? [
+                      {
+                          title: 'Dados Bancários',
+                          href: '/settings/bank',
+                          icon: Banknote,
+                      },
+                  ]
                 : []),
           ...(isAdmin
-              ? [{
-                    title: 'Vendedores',
-                    href: '/admin/users',
-                    icon: ShieldCheck,
-                }]
+              ? [
+                    {
+                        title: 'Vendedores',
+                        href: '/admin/users',
+                        icon: ShieldCheck,
+                    },
+                ]
               : []),
       ];
 

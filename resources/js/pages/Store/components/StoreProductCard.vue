@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from 'lucide-vue-next';
+import {
+    ExternalLink,
+    ImageIcon,
+    Minus,
+    Plus,
+    ShoppingBag,
+    Star,
+} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -44,10 +51,7 @@ function onOpenShare(name: string, slug: string): void {
                 :alt="product.name"
                 class="h-full w-full object-cover transition-transform hover:scale-105"
             />
-            <div
-                v-else
-                class="flex h-full w-full items-center justify-center"
-            >
+            <div v-else class="flex h-full w-full items-center justify-center">
                 <ImageIcon class="h-12 w-12 text-amber-200" />
             </div>
 
@@ -86,22 +90,41 @@ function onOpenShare(name: string, slug: string): void {
             <div class="flex items-start justify-between">
                 <div>
                     <Link :href="`/store/${product.slug}`" class="block">
-                        <CardTitle class="text-base text-amber-900 transition hover:text-amber-600">{{ product.name }}</CardTitle>
+                        <CardTitle
+                            class="text-base text-amber-900 transition hover:text-amber-600"
+                            >{{ product.name }}</CardTitle
+                        >
                     </Link>
-                    <p v-if="product.categories && product.categories.length > 0" class="mt-0.5 text-[11px] text-amber-500">
+                    <p
+                        v-if="
+                            product.categories && product.categories.length > 0
+                        "
+                        class="mt-0.5 text-[11px] text-amber-500"
+                    >
                         {{ product.categories[0].name }}
                     </p>
                 </div>
                 <div class="flex items-center gap-1">
-                    <div v-if="getCartQty(product.id) > 0" class="flex items-center gap-1">
+                    <div
+                        v-if="getCartQty(product.id) > 0"
+                        class="flex items-center gap-1"
+                    >
                         <button
                             type="button"
                             class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
-                            @click="emit('remove-from-cart', getCartItemId(product.id) ?? 0)"
+                            @click="
+                                emit(
+                                    'remove-from-cart',
+                                    getCartItemId(product.id) ?? 0,
+                                )
+                            "
                         >
                             <Minus class="h-3.5 w-3.5" />
                         </button>
-                        <span class="min-w-[1.5rem] text-center text-sm font-medium">{{ getCartQty(product.id) }}</span>
+                        <span
+                            class="min-w-[1.5rem] text-center text-sm font-medium"
+                            >{{ getCartQty(product.id) }}</span
+                        >
                         <button
                             type="button"
                             class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition hover:bg-amber-200"
@@ -121,7 +144,10 @@ function onOpenShare(name: string, slug: string): void {
                     </button>
                 </div>
             </div>
-            <CardDescription v-if="product.description" class="line-clamp-2 text-xs">
+            <CardDescription
+                v-if="product.description"
+                class="line-clamp-2 text-xs"
+            >
                 {{ product.description }}
             </CardDescription>
         </CardHeader>
@@ -132,17 +158,38 @@ function onOpenShare(name: string, slug: string): void {
                     {{ formatPrice(product.sale_price) }}
                 </p>
                 <p class="text-xs text-amber-600">
-                    <a v-if="product.tenant?.fantasy_slug" :href="`/tenant/${product.tenant.fantasy_slug}`" class="hover:text-amber-600 hover:underline">
-                        {{ product.tenant.fantasy_name || product.tenant.company_name || 'Vendedor' }}
+                    <a
+                        v-if="product.tenant?.fantasy_slug"
+                        :href="`/tenant/${product.tenant.fantasy_slug}`"
+                        class="hover:text-amber-600 hover:underline"
+                    >
+                        {{
+                            product.tenant.fantasy_name ||
+                            product.tenant.company_name ||
+                            'Vendedor'
+                        }}
                     </a>
-                    <span v-else>{{ product.tenant?.fantasy_name || product.tenant?.company_name || 'Vendedor' }}</span>
+                    <span v-else>{{
+                        product.tenant?.fantasy_name ||
+                        product.tenant?.company_name ||
+                        'Vendedor'
+                    }}</span>
                 </p>
-                <div v-if="product.tenant?.rating_count > 0" class="flex items-center gap-1">
+                <div
+                    v-if="product.tenant?.rating_count > 0"
+                    class="flex items-center gap-1"
+                >
                     <Star class="h-3.5 w-3.5 fill-amber-900 text-amber-900" />
-                    <span class="text-xs font-medium text-amber-700">{{ product.tenant.rating_average }}</span>
-                    <span class="text-xs text-amber-900">({{ product.tenant.rating_count }})</span>
+                    <span class="text-xs font-medium text-amber-700">{{
+                        product.tenant.rating_average
+                    }}</span>
+                    <span class="text-xs text-amber-900"
+                        >({{ product.tenant.rating_count }})</span
+                    >
                 </div>
-                <p v-else class="text-xs text-amber-900">sem histórico de vendas</p>
+                <p v-else class="text-xs text-amber-900">
+                    sem histórico de vendas
+                </p>
             </div>
         </CardContent>
 
@@ -154,7 +201,9 @@ function onOpenShare(name: string, slug: string): void {
                 @click="emit('add-to-cart', product.id)"
                 :disabled="cartLoading"
             >
-                {{ getCartQty(product.id) > 0 ? 'Adicionar mais' : 'Adicionar' }}
+                {{
+                    getCartQty(product.id) > 0 ? 'Adicionar mais' : 'Adicionar'
+                }}
             </Button>
         </CardFooter>
     </Card>

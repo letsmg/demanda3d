@@ -50,16 +50,18 @@ function onAddToCart(id: number): void {
         <p class="mt-1 text-sm text-amber-500">
             Tente ajustar os filtros ou limpar a busca.
         </p>
-        <Button type="button" variant="outline" class="mt-4 border-amber-500 text-amber-700 hover:bg-amber-50" @click="emit('clear-all')">
+        <Button
+            type="button"
+            variant="outline"
+            class="mt-4 border-amber-500 text-amber-700 hover:bg-amber-50"
+            @click="emit('clear-all')"
+        >
             <RotateCw class="mr-2 h-4 w-4" />Limpar tudo
         </Button>
     </div>
 
     <!-- Grid de produtos -->
-    <div
-        v-else
-        class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
+    <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <StoreProductCard
             v-for="product in products"
             :key="product.id"
@@ -88,8 +90,20 @@ function onAddToCart(id: number): void {
         >
             <span v-if="loadingMore" class="flex items-center gap-2">
                 <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                        fill="none"
+                    />
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                 </svg>
                 Carregando...
             </span>

@@ -260,7 +260,7 @@ function formatPrice(value: string | number): string {
                                 class="text-rose-500 hover:bg-rose-50 hover:text-rose-600"
                                 @click="removeItem(item.id)"
                             >
-                                 <Trash2 class="mr-1 h-4 w-4" />
+                                <Trash2 class="mr-1 h-4 w-4" />
                                 Remover
                             </Button>
                         </div>
