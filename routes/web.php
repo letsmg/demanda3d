@@ -117,6 +117,13 @@ Route::controller(CheckoutController::class)->group(function () {
 });
 
 // ─────────────────────────────────────────────────
+// STRIPE WEBHOOK (público, validado por assinatura)
+// ⚠️ Excluir da verificação CSRF no bootstrap/app.php
+// ─────────────────────────────────────────────────
+Route::post('/stripe/webhook', \App\Http\Controllers\StripeWebhookController::class)
+    ->name('stripe.webhook');
+
+// ─────────────────────────────────────────────────
 // PERFIL DO CLIENTE (Logado)
 // ─────────────────────────────────────────────────
 Route::middleware(['auth:clients', 'verify.user.exists'])->group(function () {

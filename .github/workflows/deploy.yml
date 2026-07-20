@@ -68,7 +68,7 @@ jobs:
       # ==========================================================================
 
       - name: 📥 Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       # ==========================================================================
       # PHP
@@ -90,7 +90,7 @@ jobs:
       # ==========================================================================
 
       - name: 🟢 Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -186,7 +186,6 @@ jobs:
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
             MIGRATION_STRATEGY="migrate:fresh --seed"
-            #MIGRATION_STRATEGY="migrate:fresh"
             DB_CONTAINER_TARGET="demanda-psql-hom"
 
           fi
@@ -238,7 +237,7 @@ jobs:
             fi
 
             echo "📦 Extraindo arquivos..."
-            unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
+            zip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
 
             # Corrige dono/grupo de TODO o conteúdo recém-extraído (o unzip
             # criava arquivos com grupo do processo, não www-data).
@@ -390,7 +389,11 @@ jobs:
               php artisan view:cache
               
               rm -rf public/storage
-              ln -sfn "$SHARED/storage/app/public" public/storage
+              linktarget="$SHARED/storage/app/public"
+              if [ ! -d "$linktarget" ]; then
+                  mkdir -p "$linktarget"
+              fi
+              ln -sfn "$linktarget" public/storage
               
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
