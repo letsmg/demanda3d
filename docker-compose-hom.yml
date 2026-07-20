@@ -54,23 +54,20 @@ services:
   
   # =============================================
   # Go Notification Service — Microsserviço Assíncrono
-  # =============================================
+  # =============================================  
   go-notification-service:
-    build:
-      context: ./go-service
-      dockerfile: Dockerfile
-    image: go-notification-service:latest 
-    container_name: go-notification-service-hom
+    image: go-notification-service:latest
+    container_name: go-notification-service-hom # (ou -prod no arquivo de prod)
     restart: unless-stopped
     environment:
-      REDIS_HOST: demanda-redis-hom
+      REDIS_HOST: demanda-redis-hom         # (ou demanda-redis-prod no arquivo de prod)
       REDIS_PORT: "6379"
       NOTIFICATIONS_QUEUE: notifications_queue
     depends_on:
-      demanda-redis-hom:
+      demanda-redis-hom:                    # (ou demanda-redis-prod no arquivo de prod)
         condition: service_healthy
     networks:
-      - demanda-net-hom
+      - demanda-net-hom                     # (ou demanda-net-prod no arquivo de prod)
 
 networks:
   demanda-net-hom:
