@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Banknote, Check, X, Eye, AlertTriangle } from '@lucide/vue';
+import { Banknote, Check, X, Eye, AlertTriangle } from 'lucide-vue-next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface BankDetailDecrypted {

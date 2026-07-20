@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from '@lucide/vue';
+import { Link } from '@inertiajs/vue3';
+import { ExternalLink, ImageIcon, Minus, Plus, ShoppingBag, Star } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -21,10 +22,14 @@ defineProps<{
 
 const emit = defineEmits<{
     'open-gallery': [product: any, index: number];
-    'open-share': [productName: string];
+    'open-share': [productName: string, productSlug: string];
     'remove-from-cart': [cartItemId: number];
     'add-to-cart': [productId: number];
 }>();
+
+function onOpenShare(name: string, slug: string): void {
+    emit('open-share', name, slug);
+}
 </script>
 
 <template>
@@ -49,7 +54,7 @@ const emit = defineEmits<{
             <button
                 type="button"
                 class="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-amber-700 shadow-sm transition hover:bg-white hover:text-amber-900"
-                @click.stop="emit('open-share', product.name)"
+                @click.stop="onOpenShare(product.name, product.slug)"
                 :title="'Compartilhar: ' + product.name"
             >
                 <ExternalLink class="h-4 w-4" />
@@ -80,7 +85,9 @@ const emit = defineEmits<{
         <CardHeader class="pb-2">
             <div class="flex items-start justify-between">
                 <div>
-                    <CardTitle class="text-base text-amber-900">{{ product.name }}</CardTitle>
+                    <Link :href="`/store/${product.slug}`" class="block">
+                        <CardTitle class="text-base text-amber-900 transition hover:text-amber-600">{{ product.name }}</CardTitle>
+                    </Link>
                     <p v-if="product.categories && product.categories.length > 0" class="mt-0.5 text-[11px] text-amber-500">
                         {{ product.categories[0].name }}
                     </p>

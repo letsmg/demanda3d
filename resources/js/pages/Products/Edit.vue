@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Sortable from 'sortablejs';
-import { ArrowLeft, AlertCircle, Save, X, GripVertical, Plus, Trash2 } from '@lucide/vue';
+import { ArrowLeft, AlertCircle, Save, X, GripVertical, Plus, Trash2 } from 'lucide-vue-next';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

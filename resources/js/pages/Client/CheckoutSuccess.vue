@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { CheckCircle2, ArrowRight } from '@lucide/vue';
+import { CheckCircle2, ArrowRight } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
 defineOptions({

@@ -68,7 +68,7 @@ jobs:
       # ==========================================================================
 
       - name: 📥 Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       # ==========================================================================
       # PHP
@@ -90,7 +90,7 @@ jobs:
       # ==========================================================================
 
       - name: 🟢 Setup Node
-        uses: actions/setup-node@v6.4.0
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -101,33 +101,19 @@ jobs:
 
       - name: 🔨 Instalar dependências e gerar build
         run: |
-
           set -Eeuo pipefail
 
-          composer install \
-            --no-dev \
-            --prefer-dist \
-            --optimize-autoloader \
-            --no-interaction
-
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
           npm ci
-
           npm run build
 
-          # 👇 ADICIONE ESTES DOIS PASSOS BEM AQUI:
-      - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache-dependency-path: go-service/go.mod
-
-      - name: 📦 Compilar Microserviço em Go
-        run: |
-          set -Eeuo pipefail
-          cd go-service
-          go mod tidy
-          # Compila gerando o binário direto na pasta do serviço que será zipada
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o notification-service .
+          # 🛡️ VERIFICAÇÃO AUTOMÁTICA DE BUILD
+          if [ ! -d "public/build" ]; then
+            echo "❌ ERRO: A pasta 'public/build' não foi gerada pelo Vite!"
+            exit 1
+          fi
+          echo "✅ Build gerado com sucesso. Arquivos presentes:"
+          ls -la public/build/assets/
 
       # ==========================================================================
       # PACOTE
@@ -135,10 +121,14 @@ jobs:
 
       - name: 📦 Criar pacote de Deploy
         run: |
-
           set -Eeuo pipefail
 
-          # O zip vai empacotar o 'go-service/notification-service' gerado no passo anterior
+          # 🛡️ VERIFICAÇÃO FINAL ANTES DE ZIPAR
+          if [ ! -d "public/build" ]; then
+            echo "❌ ERRO CRÍTICO: Pasta public/build desapareceu antes do zip!"
+            exit 1
+          fi
+
           zip -rq deploy.zip . \
             -x ".git/*" \
             ".github/*" \
@@ -196,7 +186,6 @@ jobs:
             ROOT="/var/www/dev-demanda3d"
             COMPOSE_FILE="docker-compose-hom.yml"
             MIGRATION_STRATEGY="migrate:fresh --seed"
-            #MIGRATION_STRATEGY="migrate:fresh"
             DB_CONTAINER_TARGET="demanda-psql-hom"
 
           fi
@@ -249,7 +238,7 @@ jobs:
 
             echo "📦 Extraindo arquivos..."
             unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
-
+            
             # Corrige dono/grupo de TODO o conteúdo recém-extraído (o unzip
             # criava arquivos com grupo do processo, não www-data).
             sudo chown -R ubuntu:www-data "$NEW_RELEASE"
@@ -289,10 +278,10 @@ jobs:
             
             cd "$NEW_RELEASE"
 
-            #######################################################################
-            # 3. Links Simbólicos e Permissões
-            #######################################################################
-            echo "🔗 Configurando links de ambiente, storage e bootstrap/cache..."
+            # =======================================================================
+            # 3. Links Simbólicos e Permissões (SCRIPT CORRIGIDO)
+            # =======================================================================
+            echo "🔗 Configurando links de ambiente, storage, cache e assets..."
 
             # Garante a existência das estruturas necessárias no SHARED
             sudo mkdir -p "$SHARED/storage/framework/cache/data"
@@ -300,21 +289,21 @@ jobs:
             sudo mkdir -p "$SHARED/storage/framework/sessions"
             sudo mkdir -p "$SHARED/bootstrap/cache"
 
-            # LIMPEZA CRÍTICA: Remove caches antigos do SHARED.
-            # Isso impede que o Laravel carregue classes da release anterior (causando o erro de Dispatcher).
+            # LIMPEZA CRÍTICA: Remove caches antigos do SHARED
             sudo rm -rf "$SHARED/bootstrap/cache/"*
 
-            # Sincroniza TODO o conteúdo de storage/ do release para o storage
-            # compartilhado, sobrescrevendo o que já existir.
-            # (Exceto storage/app/public/imgs/products)
+            # Sincroniza storage (preservando o que é upload de usuário)
             if [ -d "$NEW_RELEASE/storage" ]; then
-                echo "🔄 Sincronizando storage/ para o shared (preservando imgs/products)..."
-                rsync -a \
-                    --exclude 'app/public/imgs/products/' \
-                    "$NEW_RELEASE/storage/" "$SHARED/storage/"
+                echo "🔄 Sincronizando storage/..."
+                rsync -a --exclude 'app/public/imgs/products/' "$NEW_RELEASE/storage/" "$SHARED/storage/"
             fi
 
-            # Remove diretórios locais da nova release para recriar os links simbólicos
+            # 🚨 AJUSTE DE PERMISSÕES VITE (O ponto chave)
+            # Garante que o Nginx consiga ler a pasta de build
+            sudo chmod -R 755 "$NEW_RELEASE/public/build"
+            sudo chown -R ubuntu:www-data "$NEW_RELEASE/public/build"
+
+            # Remove diretórios locais para recriar os links
             rm -rf "$NEW_RELEASE/.env" "$NEW_RELEASE/storage" "$NEW_RELEASE/bootstrap/cache"
 
             # Cria os symlinks
@@ -322,11 +311,11 @@ jobs:
             ln -sfn "$SHARED/storage" "$NEW_RELEASE/storage"
             ln -sfn "$SHARED/bootstrap/cache" "$NEW_RELEASE/bootstrap/cache"
 
-            # Aplica permissões de escrita/dono
+            # Aplica permissões gerais
             sudo chown -R ubuntu:www-data "$SHARED/storage" "$SHARED/bootstrap/cache"
             sudo chmod -R 775 "$SHARED/storage" "$SHARED/bootstrap/cache"
 
-            echo "✅ Permissões aplicadas e cache compartilhado limpo."
+            echo "✅ Permissões aplicadas e cache limpo."
 
             #######################################################################
             # 4, 5, 6 e 7. Execução protegida (Banco, Migrations, Link e Limpeza)
@@ -400,13 +389,19 @@ jobs:
               php artisan view:cache
               
               rm -rf public/storage
-              ln -sfn "$SHARED/storage/app/public" public/storage
+              linktarget="$SHARED/storage/app/public"
+              if [ ! -d "$linktarget" ]; then
+                  mkdir -p "$linktarget"
+              fi
+              ln -sfn "$linktarget" public/storage
               
               # Recicla os workers do PHP-FPM para descartar opcache de arquivos
               # compilados do release anterior.
               sudo systemctl reload php8.5-fpm
-              echo "🔄 Reiniciando serviço Go para carregar novo binário..."
-              sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" restart go-notification-service
+              
+              echo "🔄 Compilando e reiniciando serviço Go..."
+              sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" build go-notification-service
+              sudo docker compose -f "$SHARED/docker-compose.yml" -p "$PROJECT_NAME" up -d --no-deps go-notification-service
 
               # 6. Ativação Atômica
               echo "🔄 Atualizando link atual..."

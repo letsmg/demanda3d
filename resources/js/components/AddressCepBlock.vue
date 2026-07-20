@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
-import { Lock } from '@lucide/vue';
+import { Lock } from 'lucide-vue-next';
 import { useCep } from '@/composables/useCep';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

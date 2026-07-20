@@ -40,8 +40,8 @@ const products = useStoreProducts(props, {
     priceMin: storeFilters.priceMin,
     priceMax: storeFilters.priceMax,
     selectedCategories: storeFilters.selectedCategories,
-    sortBy: storeFilters.sortBy,
-    sortOrder: storeFilters.sortOrder,
+    sortBy: storeFilters.fieldSort,
+    sortOrder: storeFilters.dirSort,
 });
 const gallery = useImageGallery();
 const share = useShareDialog();
@@ -84,7 +84,6 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 </p>
             </div>
 
-            <!-- Filtros + Busca + Ordenação -->
             <StoreFilterCard
                 :search-term="storeFilters.searchTerm.value"
                 :suggestions="storeFilters.suggestions.value"
@@ -97,14 +96,15 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
                 :sort-options="storeFilters.sortOptions"
                 :current-sort="storeFilters.getCurrentSort()"
                 :has-filters="storeFilters.hasFilters.value"
-                @update:search-term="storeFilters.searchTerm = $event"
+                
+                @update:search-term="storeFilters.searchTerm.value = $event"
                 @input-search="storeFilters.onSearchInput()"
                 @keydown-search="storeFilters.onSearchKeydown($event)"
                 @select-suggestion="storeFilters.selectSuggestion($event)"
                 @clear-search="storeFilters.clearSearch()"
                 @update:price-range="storeFilters.updatePriceRange($event)"
                 @toggle-category="storeFilters.toggleCategory($event)"
-                @select-all-categories="storeFilters.selectedCategories = []; storeFilters.applyStoreFilters()"
+                @select-all-categories="storeFilters.clearCategories()"
                 @update:sort="storeFilters.handleSortChange($event)"
             />
 
@@ -146,11 +146,13 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
             :current-image-index="gallery.currentImageIndex.value"
             :format-price="formatPrice"
             :get-cart-qty="cart.getCartQty"
+            :get-cart-item-id="cart.getCartItemId"
             @update:open="gallery.closeGallery()"
             @prev-image="gallery.prevImage()"
             @next-image="gallery.nextImage()"
             @select-image="gallery.currentImageIndex = $event"
             @add-to-cart="cart.addToCart"
+            @remove-from-cart="cart.removeFromCart"
             @close="gallery.closeGallery()"
         />
 

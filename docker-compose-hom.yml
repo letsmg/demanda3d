@@ -51,25 +51,23 @@ services:
   # Alivia o core Laravel de processamento síncrono.
   # Container ultra-leve (~8MB binário compilado).
   # =============================================
+  
+  # =============================================
+  # Go Notification Service — Microsserviço Assíncrono
+  # =============================================  
   go-notification-service:
-    # Em vez de 'build', use uma imagem leve (alpine)
-    image: alpine:latest
-    container_name: go-notification-service-hom
+    image: go-notification-service:latest
+    container_name: go-notification-service-hom # (ou -prod no arquivo de prod)
     restart: unless-stopped
     environment:
-      REDIS_HOST: demanda-redis-hom
+      REDIS_HOST: demanda-redis-hom         # (ou demanda-redis-prod no arquivo de prod)
       REDIS_PORT: "6379"
       NOTIFICATIONS_QUEUE: notifications_queue
-    # 👇 ADICIONE ISSO: Monta o binário que o seu script de deploy colocou no shared
-    volumes:
-      - /var/www/dev-demanda3d/shared/go-service:/app
-    # 👇 Comando para rodar o binário montado
-    command: /app/notification-service
     depends_on:
-      demanda-redis-hom:
+      demanda-redis-hom:                    # (ou demanda-redis-prod no arquivo de prod)
         condition: service_healthy
     networks:
-      - demanda-net-hom
+      - demanda-net-hom                     # (ou demanda-net-prod no arquivo de prod)
 
 networks:
   demanda-net-hom:

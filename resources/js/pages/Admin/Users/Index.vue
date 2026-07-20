@@ -27,7 +27,7 @@ import {
     Pencil,
     KeyRound,
     X,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 
 defineOptions({
     layout: {

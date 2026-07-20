@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { ShoppingBag, Menu, X } from '@lucide/vue';
-import { setCartCount } from '@/stores/cartStore';
+import { ShoppingBag, Menu, X } from 'lucide-vue-next';
+import { cartCount } from '@/stores/cartStore';
 
 const props = defineProps<{
     client: any;
@@ -15,8 +15,6 @@ function getCsrfToken(): string {
     return meta ? (meta as HTMLMetaElement).content : '';
 }
 
-const cartCount = ref(0);
-
 async function fetchCartCount() {
     try {
         const res = await fetch('/cart/items', {
@@ -26,7 +24,6 @@ async function fetchCartCount() {
         if (res.ok) {
             const data = await res.json();
             cartCount.value = data.count || 0;
-            setCartCount(data.count || 0);
         }
     } catch {
         // ignore
@@ -52,7 +49,7 @@ function logout() {
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
+    <header data-client-header class="sticky top-0 z-50 w-full border-b border-amber-700/30 bg-amber-950 shadow-md">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
                 <!-- Logo -->

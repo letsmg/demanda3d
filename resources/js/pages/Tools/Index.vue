@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { Wrench, RefreshCw, FileText, CheckCircle, Image, Upload, Trash2, AlertCircle } from '@lucide/vue';
+import { Wrench, RefreshCw, FileText, CheckCircle, Image, Upload, Trash2, AlertCircle } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -71,7 +71,7 @@ const deleteImage = (filename: string) => {
 const rebuildForm = useForm({});
 
 const rebuildAllImages = () => {
-    if (!confirm('Isso irá APAGAR todas as imagens em imgs/home/ e recriá-las a partir dos originais. Continuar?')) return;
+    if (!confirm('Isso irá APAGAR todas as imagens otimizadas e recriá-las a partir dos originais. Continuar?')) return;
     rebuildForm.post('/tools/hero-images/rebuild', { preserveScroll: true });
 };
 </script>
@@ -153,7 +153,7 @@ const rebuildAllImages = () => {
                             <RefreshCw class="mr-2 h-4 w-4" :class="{ 'animate-spin': rebuildForm.processing }" />
                             {{ rebuildForm.processing ? 'Recriando...' : 'Recriar Todas as Imagens' }}
                         </Button>
-                        <p class="mt-1 text-xs text-muted-foreground">Limpa imgs/home/ e reconstrói todas as imagens a partir dos originais com pipeline de otimização.</p>
+                        <p class="mt-1 text-xs text-muted-foreground">Recria todas as imagens otimizadas a partir dos originais com pipeline de otimização.</p>
                     </div>
 
                     <div v-if="heroImages.length > 0" class="space-y-2">

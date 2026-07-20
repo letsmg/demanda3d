@@ -19,8 +19,8 @@ class StoreController extends Controller
      */
     public function index(Request $request): Response
     {
-        $filters = $request->validate([
-            'search'      => 'nullable|string|min:3|max:255',
+        $filters = $request->validate([            
+            'search'      => 'nullable|string|max:255',
             'min_price'   => 'nullable|numeric|min:0',
             'max_price'   => 'nullable|numeric|min:0',
             'sort'        => 'nullable|in:name,sale_price,created_at',
@@ -28,13 +28,18 @@ class StoreController extends Controller
             'categories'  => 'nullable|string|max:500', // comma-separated category slugs
         ]);
 
+        // Remove search com menos de 3 caracteres — evita erro 422 e queries inúteis
+        if (! empty($filters['search']) && strlen($filters['search']) < 3) {
+            unset($filters['search']);
+        }
+
         // Verifica se o usuário pode ver conteúdo adulto (18+)
         $canViewAdult = false;
         $user = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('clients')->user();
         if ($user && method_exists($user, 'canAccessAdultContent')) {
             $canViewAdult = $user->canAccessAdultContent();
         }
-
+        
         $products = $this->productService->listActiveForStore($filters, $canViewAdult);
 
         // Filtra categorias visíveis: sem "adulto" para menores
@@ -77,7 +82,7 @@ class StoreController extends Controller
             $canViewAdult = $user->canAccessAdultContent();
         }
 
-        $result = $this->productService->paginateActiveForStore($filters, $canViewAdult, $page, 8);
+        $result = $this->productService->paginateActiveForStore($filters, $canViewAdult, $page, 24);
 
         return response()->json([
             'data'     => $result['data'],

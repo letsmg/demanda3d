@@ -13,7 +13,7 @@ import {
     ShoppingBag,
     Ship,
     Wrench,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';

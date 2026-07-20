@@ -6,8 +6,10 @@ export function useShareDialog() {
     const shareTitle = ref('');
     const shareCopied = ref(false);
 
-    function openShare(productName: string): void {
-        shareUrl.value = window.location.href;
+    function openShare(productName: string, productSlug?: string): void {
+        shareUrl.value = productSlug
+            ? `${window.location.origin}/store/${productSlug}`
+            : window.location.href;
         shareTitle.value = productName;
         shareDialogOpen.value = true;
         shareCopied.value = false;

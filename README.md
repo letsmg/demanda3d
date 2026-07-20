@@ -6,8 +6,15 @@
 
 [![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat&logo=php)](https://php.net)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel)](https://laravel.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vuedotjs)](https://vuejs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)](https://postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)](https://docker.com)
+[![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?style=flat&logo=redis)](https://redis.io)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Broker-FF6600?style=flat&logo=rabbitmq)](https://www.rabbitmq.com)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Meilisearch](https://img.shields.io/badge/Meilisearch-Search-FF5722?style=flat&logo=meilisearch)](https://www.meilisearch.com)
+[![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?style=flat&logo=grafana)](https://grafana.com)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
 
 ---
 
@@ -18,16 +25,16 @@ O Demanda3D é uma plataforma SaaS robusta desenvolvida para a gestão de ponta 
 * **Infraestrutura Escalável:** Projetado com containers Docker e preparado para orquestração via Kubernetes.
 * **Alta Disponibilidade:** Estratégia de replicação PostgreSQL (Master/Replica) para garantir resiliência e performance em leitura.
 * **Segurança por Design:** Conformidade com LGPD através de criptografia em repouso (`AES-256`) e hashing de senhas com `Argon2id`.
-* **Performance:** Camada de cache e filas distribuídas via Redis.
-* **Busca Otimizada:** OpenSearch integrado localmente para indexação e consultas de alto desempenho.
+* **Performance e Cache:** Camada de cache de dados, sessões e filas distribuídas via Redis.
+* **Busca Otimizada Híbrida:** Integração com **Meilisearch** para buscas textuais de alta performance e tolerância a erros (fuzzy search), combinada com estratégia de cache em **Redis** com fallback para o PostgreSQL.
 
 ## 🛠️ Stack Tecnológica
 
 | Camada | Tecnologias |
 | :--- | :--- |
-| **Backend** | Laravel 11, PHP 8.3, Go 1.25 (notificações), PostgreSQL, Redis |
-| **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
-| **DevOps** | Docker, Kubernetes, CI/CD Pipeline, OpenSearch |
+| **Backend** | [![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com) [![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat&logo=php&logoColor=white)](https://php.net) [![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org) [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io) [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com) |
+| **Frontend** | [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat&logo=vuedotjs&logoColor=white)](https://vuejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org) Tailwind CSS, Inertia.js |
+| **DevOps** | [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com) Kubernetes, [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)](https://grafana.com), Loki, Promtail, [![Meilisearch](https://img.shields.io/badge/Meilisearch-FF5722?style=flat&logo=meilisearch&logoColor=white)](https://www.meilisearch.com) |
 | **Payments** | Stripe API, Pix, Crédito/Débito |
 
 ---
@@ -37,29 +44,11 @@ O projeto conta com um guia detalhado de infraestrutura.
 > 📖 **[Clique aqui para acessar o Guia de Setup Detalhado (docs/SETUP.md)](docs/SETUP.md)**
 
 ### 📦 Dependências do Sistema (apt)
-
-Os seguintes binários são necessários para o pipeline de otimização de imagens:
-
 ```bash
-sudo apt-get update && sudo apt-get install -y \
-    jpegoptim \
-    optipng \
-    pngquant \
-    webp \
-    gifsicle
+sudo apt-get update && sudo apt-get install -y jpegoptim optipng pngquant webp gifsicle
 ```
 
-O pacote `spatie/image-optimizer` detecta automaticamente esses binários quando instalados.
-
 ### 🖼️ Pipeline de Otimização de Imagens
-
-O projeto inclui um pipeline automático de otimização de imagens com `intervention/image` (redimensionamento/conversão) e `spatie/image-optimizer` (compressão sem perda).
-
-**Estrutura de diretórios:**
-- `storage/app/public/imgs/originais/` — Imagens brutas (originais), **não versionadas no Git**.
-- `storage/app/public/imgs/home/` — Imagens otimizadas (geradas), **não versionadas no Git**.
-
-**Comando de processamento em lote:**
 ```bash
 # Processa todas as imagens de originais/ → home/
 php artisan images:optimize-batch
@@ -68,22 +57,146 @@ php artisan images:optimize-batch
 php artisan images:optimize-batch --force
 ```
 
-> ⚠️ **Importante:** Execute `php artisan images:optimize-batch` como passo de setup inicial e após restaurar backups. As pastas `originais/` e `home/` são ignoradas pelo Git — apenas os `.gitkeep` são versionados para manter a estrutura.
+---
 
-**Fluxo de upload de produtos:**
-Toda imagem enviada via formulário de produto é automaticamente:
-1. Validada (máx. 2MB, formatos JPG/PNG/WEBP — backend + frontend)
-2. Salva como original em `imgs/originais/`
-3. Redimensionada (máx. 1600px largura, sem upscale) e convertida para WebP
-4. Comprimida sem perda visual via `spatie/image-optimizer`
-5. Salva como otimizada em `imgs/home/`
-6. Persistida no banco com path relativo da versão otimizada + referência ao original
+## 🔍 Meilisearch & Estratégia de Busca Híbrida
+
+O projeto utiliza o **Meilisearch** como motor de busca principal para catálogos, produtos e termos textuais, oferecendo alta velocidade e tolerância a erros (fuzzy search).
+
+### Fluxo de Busca Inteligente (Redis + PostgreSQL + Meilisearch)
+1. **Cache em Redis**: As consultas de produtos verificam primeiramente o Redis.
+2. **Fallback para PostgreSQL**: Se não encontrado no Redis, a busca recorre ao PostgreSQL e o resultado é escrito no Redis para otimizar acessos futuros.
+3. **Indexação**: O Meilisearch atua em paralelo mantendo o catálogo indexado para buscas complexas de texto completo.
+
+| Variável | Valor Local | Descrição |
+| :--- | :--- | :--- |
+| `MEILISEARCH_HOST` | `http://127.0.0.1:7700` | URL da API do Meilisearch |
+| `MEILISEARCH_KEY` | `masterKey` | Chave mestre de autenticação |
+
+### Container Docker
+```bash
+# Iniciar Meilisearch via Docker Compose
+docker compose up -d demanda-meilisearch
+
+# Verificar saúde do serviço
+curl http://localhost:7700/health
+```
+
+---
+
+## 🎭 Testes E2E — Playwright
+
+O projeto utiliza **Playwright** para testes ponta a ponta (E2E), validando fluxos críticos como login de múltiplos perfis, registro progressivo, checkout e restrições de permissões.
+
+### Configuração
+
+O arquivo `playwright.config.ts` na raiz do projeto define:
+- **Diretório de testes:** `./e2e`
+- **Navegadores:** Chromium, Firefox, WebKit
+- **Base URL:** `http://127.0.0.1:8000` (servidor Laravel local)
+- **Web Server:** Inicia automaticamente `php artisan serve --port=8000` antes dos testes
+- **Timeout:** 120 segundos para o servidor iniciar
+
+### Pré-requisitos
+
+Os containers Docker (PostgreSQL, Redis) devem estar em execução antes de rodar os testes:
+
+```bash
+# Subir os containers essenciais
+docker compose up -d demanda-psql-dev demanda-redis-dev
+```
+
+### Instalação e Execução
+
+```bash
+# Instalar navegadores do Playwright (apenas na primeira vez)
+npx playwright install
+
+# Executar todos os testes E2E
+npx playwright test
+
+# Executar um arquivo específico
+npx playwright test e2e/nome-do-teste.spec.ts
+
+# Modo interativo (UI) para depuração
+npx playwright test --ui
+
+# Gerar relatório HTML após execução
+npx playwright show-report
+```
+
+> ⚠️ **Importante:** Certifique-se de que o arquivo `.env` esteja configurado corretamente e que as migrations tenham sido executadas (`php artisan migrate`) antes de rodar os testes.
+
+---
+
+## 📊 Grafana + Loki + Promtail (Monitoramento Local)
+
+Stack de observabilidade 100% local para desenvolvimento:
+- **Loki**: agregação de logs (datasource principal).
+- **Promtail**: agente que coleta logs do Laravel (`storage/logs/*.log`) e envia para o Loki.
+- **Grafana**: dashboards interativos (erros, severidade, live tail) + **Grafana Alerting** nativo.
+
+---
+
+## 🗄️ PostgreSQL — Master/Replica (DEV)
+
+O ambiente de desenvolvimento simula a arquitetura real de produção com dois containers PostgreSQL independentes:
+
+| Container | Porta | Função |
+| :--- | :--- | :--- |
+| `demanda-psql-dev` | `5434` | Master (escrita + leitura) |
+| `demanda-psql-rep-dev` | `5435` | Réplica (leitura dedicada) |
+
+---
+
+## 🐇 RabbitMQ — Message Broker Assíncrono
+
+Message broker utilizado para processamento assíncrono de jobs pesados e filas robustas, totalmente independente do Redis.
+
+```bash
+# Iniciar RabbitMQ
+docker compose up -d demanda-rabbitmq-dev
+```
+
+---
+
+## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
+
+Sistema híbrido Laravel + Go para processamento assíncrono de notificações via Redis List (`notifications_queue`) consumidas por workers em Go utilizando Goroutines para máxima performance e baixo consumo de RAM.
+
+---
+
+## 📝 Roadmap
+- [ ] Rate Limiting avançado para endpoints da API.
+- [x] RabbitMQ — Message Broker para processamento assíncrono.
+- [x] Audit Logs — Sistema de logs de auditoria polimórfico e multi-tenant.
+- [x] Meilisearch — Motor de busca full-text integrado.
+
+---
+
+## ✒️ Autor
+**Luiz** — Fullstack PHP/Laravel Developer.
+[LinkedIn](https://www.linkedin.com/in/letsmg/) | [Portfolio](https://www.hierarca.com)
 
 ---
 
 <a id="english"></a>
 # 🚀 Demanda3D (English Version)
 *SaaS platform specialized in operational, financial, and production management for 3D printing businesses.*
+
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat&logo=php)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel)](https://laravel.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat&logo=vuedotjs)](https://vuejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)](https://postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)](https://docker.com)
+[![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?style=flat&logo=redis)](https://redis.io)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Broker-FF6600?style=flat&logo=rabbitmq)](https://www.rabbitmq.com)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Meilisearch](https://img.shields.io/badge/Meilisearch-Search-FF5722?style=flat&logo=meilisearch)](https://www.meilisearch.com)
+[![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?style=flat&logo=grafana)](https://grafana.com)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?style=flat&logo=playwright)](https://playwright.dev)
+
+---
 
 ## 🎯 About the Project
 Demanda3D is a robust SaaS platform built for end-to-end management of 3D printing businesses. The system handles everything from raw material inventory and production costs to recurring subscriptions and final delivery, utilizing a **multi-tenant** architecture with strict data isolation.
@@ -93,44 +206,29 @@ Demanda3D is a robust SaaS platform built for end-to-end management of 3D printi
 * **High Availability:** PostgreSQL Master/Replica replication strategy to ensure resilience and read performance.
 * **Security by Design:** Compliance with data protection standards through encryption-at-rest (`AES-256`) and `Argon2id` password hashing.
 * **Performance:** High-performance caching and distributed queues via Redis.
+* **Optimized Search:** **Meilisearch** integrated for high-performance full-text search, typo tolerance, and instant autocomplete.
 
 ## 🛠️ Tech Stack
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Backend** | Laravel 11, PHP 8.3, PostgreSQL, Redis |
-| **Frontend** | Vue 3, TypeScript, Inertia.js, Tailwind CSS |
-| **DevOps** | Docker, Kubernetes, CI/CD Pipeline |
+| **Backend** | [![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com) [![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat&logo=php&logoColor=white)](https://php.net) [![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org) [![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io) [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat&logo=rabbitmq&logoColor=white)](https://www.rabbitmq.com) |
+| **Frontend** | [![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat&logo=vuedotjs&logoColor=white)](https://vuejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org) Tailwind CSS, Inertia.js |
+| **DevOps** | [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com) Kubernetes, [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)](https://grafana.com), Loki, Promtail, [![Meilisearch](https://img.shields.io/badge/Meilisearch-FF5722?style=flat&logo=meilisearch&logoColor=white)](https://www.meilisearch.com) |
 | **Payments** | Stripe API, Pix, Credit/Debit Cards |
+
+---
 
 ## 🚀 Setup and Installation
 The project includes a detailed infrastructure guide.
 > 📖 **[Click here to access the Detailed Setup Guide (docs/SETUP.md)](docs/SETUP.md)**
 
 ### 📦 System Dependencies (apt)
-
-The following binaries are required for the image optimization pipeline:
-
 ```bash
-sudo apt-get update && sudo apt-get install -y \
-    jpegoptim \
-    optipng \
-    pngquant \
-    webp \
-    gifsicle
+sudo apt-get update && sudo apt-get install -y jpegoptim optipng pngquant webp gifsicle
 ```
 
-The `spatie/image-optimizer` package auto-detects these binaries when installed.
-
 ### 🖼️ Image Optimization Pipeline
-
-The project includes an automatic image optimization pipeline using `intervention/image` (resize/conversion) and `spatie/image-optimizer` (lossless compression).
-
-**Directory structure:**
-- `storage/app/public/imgs/originais/` — Raw (original) images, **not versioned in Git**.
-- `storage/app/public/imgs/home/` — Optimized images (generated), **not versioned in Git**.
-
-**Batch processing command:**
 ```bash
 # Process all images from originais/ → home/
 php artisan images:optimize-batch
@@ -139,322 +237,123 @@ php artisan images:optimize-batch
 php artisan images:optimize-batch --force
 ```
 
-> ⚠️ **Important:** Run `php artisan images:optimize-batch` as an initial setup step and after restoring backups. The `originais/` and `home/` folders are Git-ignored — only `.gitkeep` files are versioned to preserve the directory structure.
-
 ---
 
-## 🔍 OpenSearch (Busca Local Otimizada)
+## 🔍 Meilisearch & Hybrid Search Strategy
 
-O projeto utiliza **OpenSearch** como motor de busca complementar ao PostgreSQL, fornecendo buscas full-text rápidas e tolerantes a erros tipográficos (fuzzy search), indexação de documentos e sugestões de autocomplete.
+The project uses **Meilisearch** as the primary search engine for catalogs, products, and text terms, offering high speed and typo tolerance (fuzzy search).
 
-> ⚠️ **Recurso estritamente local:** O OpenSearch está configurado para funcionar **apenas em ambiente de desenvolvimento local** via Docker. Em produção na **Oracle Free Tier**, o container é desabilitado (`OPENSEARCH_ENABLED=false`) e as buscas utilizam o PostgreSQL nativamente, pois a instância gratuita da Oracle possui limitações de hardware (1 GB de RAM, 1 OCPU) que não suportam o OpenSearch. O container usa `profiles: [opensearch]` e não é iniciado por padrão.
+### Smart Search Flow (Redis + PostgreSQL + Meilisearch)
+1. **Redis Cache**: Product queries first check Redis.
+2. **PostgreSQL Fallback**: If not found in Redis, the search falls back to PostgreSQL and the result is written to Redis for faster future access.
+3. **Indexing**: Meilisearch operates in parallel, keeping the catalog indexed for complex full-text searches.
 
-| Variável | Valor Local | Produção |
+| Variable | Local Value | Description |
 | :--- | :--- | :--- |
-| `OPENSEARCH_ENABLED` | `true` | `false` |
-| `OPENSEARCH_HOST` | `127.0.0.1` | — |
-| `OPENSEARCH_PORT` | `9201` | — |
+| `MEILISEARCH_HOST` | `http://127.0.0.1:7700` | Meilisearch API URL |
+| `MEILISEARCH_KEY` | `masterKey` | Master authentication key |
 
-### Container Docker
-
+### Docker Container
 ```bash
-# Iniciar OpenSearch via profile dedicado
-docker compose --profile opensearch up -d
+# Start Meilisearch via Docker Compose
+docker compose up -d demanda-meilisearch
 
-# Verificar saúde do cluster
-curl http://localhost:9201/_cluster/health
+# Check service health
+curl http://localhost:7700/health
 ```
 
 ---
 
-## 📊 Grafana + Loki + Promtail (Monitoramento Local)
+## 🎭 E2E Testing — Playwright
 
-Stack de observabilidade 100% local para desenvolvimento:
-- **Loki**: agregação de logs (datasource principal).
-- **Promtail**: agente que coleta logs do Laravel (`storage/logs/*.log`) e envia para o Loki.
-- **Grafana**: dashboards interativos (erros, severidade, live tail) + **Grafana Alerting** nativo para disparar e-mails de alerta em anomalias locais.
+The project uses **Playwright** for end-to-end (E2E) testing, validating critical flows such as multi-profile login, progressive registration, checkout, and permission restrictions.
 
-> ⚠️ **Recurso estritamente local:** O Grafana e o pipeline Loki+Promtail são exclusivos do ambiente de desenvolvimento local. Em produção na Oracle Free Tier, esses containers **não sobem** (`GRAFANA_ENABLED=false`). O monitoramento de produção é delegado ao Sentry e a serviços externos. Os containers usam `profiles: [grafana]` e não são iniciados por padrão.
+### Configuration
 
-| Variável | Valor Local | Produção |
-| :--- | :--- | :--- |
-| `GRAFANA_ENABLED` | `true` | `false` |
+The `playwright.config.ts` file at the project root defines:
+- **Test directory:** `./e2e`
+- **Browsers:** Chromium, Firefox, WebKit
+- **Base URL:** `http://127.0.0.1:8000` (local Laravel server)
+- **Web Server:** Automatically starts `php artisan serve --port=8000` before tests
+- **Timeout:** 120 seconds for the server to start
 
-### Containers Docker
+### Prerequisites
+
+Docker containers (PostgreSQL, Redis) must be running before executing tests:
 
 ```bash
-# Iniciar stack Grafana via profile dedicado
-docker compose --profile grafana up -d
-
-# Acessar dashboards
-open http://localhost:3001   # admin / admin
-
-# Verificar saúde
-curl http://localhost:3001/api/health
-curl http://localhost:3101/ready
+# Start essential containers
+docker compose up -d demanda-psql-dev demanda-redis-dev
 ```
 
-### Dashboard Padrão
+### Setup and Execution
 
-O dashboard **"Demanda3D — Logs & Erros"** é provisionado automaticamente e inclui:
-- Contador de erros críticos (últimos 5 min)
-- Gráfico de logs por severidade (error, warning, critical)
-- Stream de erros em tempo real (Live Tail)
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install
+
+# Run all E2E tests
+npx playwright test
+
+# Run a specific test file
+npx playwright test e2e/test-name.spec.ts
+
+# Interactive UI mode for debugging
+npx playwright test --ui
+
+# Generate HTML report after execution
+npx playwright show-report
+```
+
+> ⚠️ **Important:** Make sure the `.env` file is properly configured and migrations have been executed (`php artisan migrate`) before running tests.
+
+---
+
+## 📊 Grafana + Loki + Promtail (Local Monitoring)
+
+100% local observability stack for development:
+- **Loki**: log aggregation (primary datasource).
+- **Promtail**: agent that collects Laravel logs (`storage/logs/*.log`) and sends them to Loki.
+- **Grafana**: interactive dashboards (errors, severity, live tail) + native **Grafana Alerting**.
 
 ---
 
 ## 🗄️ PostgreSQL — Master/Replica (DEV)
 
-O ambiente de desenvolvimento simula a arquitetura real de produção com **dois containers PostgreSQL independentes** (sem replicação física, para economia de RAM):
+The development environment simulates the real production architecture with two independent PostgreSQL containers:
 
-| Container | Porta | Banco | Função |
-| :--- | :--- | :--- | :--- |
-| `demanda-psql-dev` | `5434` | `demanda_db_dev` | Master (escrita + leitura) |
-| `demanda-psql-rep-dev` | `5435` | `demanda_db_dev_repl` | Réplica (leitura dedicada) |
-
-O Laravel direciona consultas `SELECT` para a réplica e operações de escrita para o master através da flag `DB_READ_WRITE_SPLIT=true` em `config/database.php`. A réplica é populada via `pg_dump` do master.
-
-| Variável | DEV | PROD / HOM |
+| Container | Port | Role |
 | :--- | :--- | :--- |
-| `DB_READ_WRITE_SPLIT` | `true` | `true` |
-| `DB_HOST` / `DB_PORT` | `127.0.0.1` / `5434` | master host |
-| `DB_REPLICA_HOST` / `DB_REPLICA_PORT` | `127.0.0.1` / `5435` | replica host |
-| `DB_DATABASE` | `demanda_db_dev` | — |
-| `DB_REPLICA_DATABASE` | `demanda_db_dev_repl` | — |
+| `demanda-psql-dev` | `5434` | Master (write + read) |
+| `demanda-psql-rep-dev` | `5435` | Replica (read-only) |
 
 ---
 
-## 🛡️ Moderação de Conteúdo — Mensagens e Disputas
+## 🐇 RabbitMQ — Async Message Broker
 
-O sistema aplica validação automática e dedutiva em **messages** e **disputes** antes de qualquer inserção no banco de dados, utilizando Custom Validation Rules do Laravel.
-
-### Regras Aplicadas
-
-| Regra | Classe | Comportamento |
-| :--- | :--- | :--- |
-| **Dados de Contato** | `NoContactDataRule` | Bloqueia e-mails e telefones (formato brasileiro com/sem DDD). Exibe o termo suspeito detectado. Retorna HTTP 422. |
-| **Palavras Ofensivas** | `NoOffensiveContentRule` | Utiliza `snipe/banbuilder` + algoritmo próprio de normalização dedutiva. Bloqueia completamente (sem censura ou salvamento). Lista os termos detectados. |
-
-### Algoritmo de Dedução (Anti-Ofuscação)
-
-A regra `NoOffensiveContentRule` aplica um pipeline de normalização que deduz palavrões mesmo quando o usuário tenta burlar o filtro:
-
-| Técnica de Ofuscação | Exemplo | Resultado Deduzido |
-| :--- | :--- | :--- |
-| Letras espaçadas | `c a r a l h o` | `caralho` |
-| Letras repetidas/esticadas | `caralhoooo` | `caralho` |
-| Substituição por números/símbolos (leet) | `c4r4lh0` / `c@r@lho` | `caralho` |
-| Variações de gênero/sufixo | `caralha` / `caralhas` | `caralho` |
-
-### Permissões de Administrador
-
-Os usuários com nível **Admin** (`access_level = 10`) têm permissão total de visualização em todas as conversas (`threads`/`messages`) e disputas (`disputes`) para fins de moderação, conforme definido nas Policies:
-
-- `MessagePolicy` — Admin acessa todas as mensagens
-- `ThreadPolicy` — Admin acessa todas as threads
-- `DisputePolicy` — Admin acessa todas as disputas
-
-Staff (Management e Operational) também possui acesso de leitura, mas clientes só visualizam seus próprios registros.
-
----
-
-## 📋 Dicionário de Dados
-
-O arquivo **[docs/tables.md](docs/tables.md)** contém um dicionário completo de todas as tabelas do sistema, baseado nas migrations existentes. Consulte-o para entender o propósito e as relações de cada entidade.
-
----
-
-## 🐇 RabbitMQ — Message Broker Assíncrono
-
-O projeto utiliza **RabbitMQ** como message broker para processamento assíncrono de jobs pesados, permitindo que o Laravel delegue tarefas de longa duração (notificações em lote, processamento de imagens, geração de relatórios) para filas robustas e independentes do Redis.
-
-### Motivação
-- **Resiliência**: Mensagens persistem em disco e sobrevivem a reinicializações do container.
-- **Roteamento avançado**: Suporte a exchanges (direct, topic, fanout) para roteamento inteligente de mensagens.
-- **Interface de gestão**: Painel web de administração na porta `15672` para monitorar filas, conexões e throughput.
-- **Separação de responsabilidades**: O Redis permanece dedicado a cache e sessões; o RabbitMQ gerencia filas de longa duração.
-
-### Configuração
-
-| Variável | Valor Local | Descrição |
-| :--- | :--- | :--- |
-| `QUEUE_CONNECTION` | `rabbitmq` (ou `redis`) | Driver de fila padrão |
-| `RABBITMQ_HOST` | `127.0.0.1` | Host do broker |
-| `RABBITMQ_PORT` | `5672` | Porta AMQP |
-| `RABBITMQ_USER` | `guest` | Usuário (padrão) |
-| `RABBITMQ_PASSWORD` | `guest` | Senha (padrão) |
-| `RABBITMQ_VHOST` | `/` | Virtual host |
-| `RABBITMQ_QUEUE` | `default` | Nome da fila padrão |
-
-### Container Docker
+Message broker used for asynchronous heavy job processing and robust queues, completely independent of Redis.
 
 ```bash
-# O container sobe automaticamente com docker compose up
+# Start RabbitMQ
 docker compose up -d demanda-rabbitmq-dev
-
-# Acessar painel de gestão
-# http://localhost:15672  (guest / guest)
-
-# Verificar saúde
-docker inspect --format='{{json .State.Health}}' demanda-rabbitmq-dev
-```
-
-### Worker (Consumer)
-
-```bash
-# Iniciar o worker para processar jobs da fila RabbitMQ
-php artisan queue:work rabbitmq --queue=default --tries=3 --timeout=60
-
-# Para desenvolvimento, usar:
-php artisan queue:listen rabbitmq --tries=1 --timeout=0
-```
-
-### Job de Exemplo
-
-```php
-// Teste rápido via Tinker:
-ProcessNotificationJob::dispatch('42', 'Teste RabbitMQ', 'Mensagem processada com sucesso!');
 ```
 
 ---
 
-## 🔔 Notificações — Microsserviço Go (Arquitetura Híbrida)
+## 🔔 Notifications — Go Microservice (Hybrid Architecture)
 
-O sistema utiliza uma arquitetura **híbrida Laravel + Go** para processamento assíncrono de notificações:
-
-```
-┌──────────────┐     RPUSH      ┌──────────────┐     BLPOP      ┌──────────────────────┐
-│   Laravel    │ ──────────────> │    Redis     │ ─────────────> │  Go Notification      │
-│  (Core)      │  notifications │  (Queue)     │  notifications │  Service (Worker)     │
-│              │  _queue        │              │  _queue        │                       │
-│ SendNotifi-  │                │              │                │ Goroutines → Mock      │
-│ cation Job   │                │              │                │ (push/email/sms)       │
-└──────────────┘                └──────────────┘                └──────────────────────┘
-```
-
-### Motivação
-- **Economia de RAM**: O container Go compilado (`scratch`) ocupa ~8 MB em memória, contra 40-80 MB de um worker PHP adicional.
-- **Concorrência nativa**: Goroutines processam múltiplas notificações simultaneamente sem overhead de processo.
-- **Separação de responsabilidades**: O Laravel publica o payload e continua executando; o Go consome e dispara push, e-mail e SMS de forma isolada.
-
-### Fluxo de Uso
-
-```php
-// No Laravel: dispatch o job e o Go processa em background
-SendNotification::dispatch(
-    userId: '42',
-    title: 'Novo pedido recebido!',
-    message: 'Seu pedido #1234 foi confirmado.',
-    channel: 'push',
-    tenantId: '1',
-);
-```
-
-### Container Docker
-
-```bash
-# O container sobe automaticamente com docker compose up
-docker compose up -d go-notification-service
-
-# Verificar logs
-docker logs -f go-notification-service
-```
-
-| Componente | Tecnologia | Propósito |
-| :--- | :--- | :--- |
-| `go-service/main.go` | Go 1.25 + go-redis | Worker que escuta `notifications_queue` via BLPOP com 5 goroutines |
-| `app/Jobs/SendNotification.php` | Laravel | Job que serializa o payload e publica via RPUSH no Redis |
-| `notifications_queue` | Redis List | Fila FIFO compartilhada entre Laravel (produtor) e Go (consumidor) |
-
----
-
----
-
-## 🏷️ Geração de Etiquetas (Order Labels)
-
-O sistema inclui um módulo de geração de etiquetas de envio para pedidos confirmados, acessível exclusivamente por **vendedores/lojas** (Staff Operational e Management).
-
-### Funcionalidades
-- Selecionar pedido confirmado e gerar etiqueta de postagem
-- Vincular transportadora e código de rastreio
-- Visualizar status da etiqueta: `pending → generated → shipped → delivered`
-
-### Modelo de Dados
-| Tabela | Model | Propósito |
-| :--- | :--- | :--- |
-| `order_labels` | `OrderLabel` | Etiquetas de envio vinculadas a pedidos, com nome do destinatário e endereço de entrega |
-
-### Restrições de Acesso — Vendedor vs. Cliente
-
-Os vendedores (Operational) têm acesso **estritamente limitado** aos dados do cliente:
-
-| Nível | Permissão |
-| :--- | :--- |
-| **Admin (10)** | Acesso total a todos os dados dos clientes |
-| **Management (1)** | Acesso total a todos os dados dos clientes |
-| **Operational (0)** | Visualiza apenas `display_name` e endereço de entrega (necessários para etiqueta). **Proibido** acessar menu de dados completos dos clientes. |
-| **Customer (5)** | Acesso apenas aos próprios pedidos |
-
-A restrição é aplicada via `OrderPolicy` (métodos `viewClientDetails` e `viewClientFullData`) e reforçada na camada de Controller/Resource do Laravel.
-
----
-
-## 📝 Logs de Auditoria (Activity Logs)
-
-O sistema conta com um módulo completo de **logs de auditoria polimórfico** que registra todas as ações críticas realizadas na plataforma, permitindo rastreabilidade total para administradores e vendedores.
-
-### Arquitetura
-
-| Componente | Tecnologia | Propósito |
-| :--- | :--- | :--- |
-| `activity_logs` (tabela) | PostgreSQL + JSONB | Armazena logs imutáveis com payload de mudanças (`old` e `attributes`) |
-| `ActivityLog` (Model) | Laravel Eloquent | Model polimórfico com relacionamentos `causer` (quem) e `subject` (recurso afetado) |
-| `AuditLogController` | Laravel + Inertia | Controller com filtros, paginação (10/página) e isolamento multi-tenant |
-| `AuditLogs/Index.vue` | Vue 3 + TypeScript | Interface dinâmica com cores por tipo de ação, filtros e "Load More" |
-
-### Regras de Visibilidade (Multi-Tenant)
-
-| Nível de Acesso | Visibilidade |
-| :--- | :--- |
-| **ADMIN (10, 11)** | Visualiza **todos** os logs de todos os tenants, transportadoras e ações globais do sistema. |
-| **SELLER (1, 2)** | Visualiza **apenas** os logs do seu próprio tenant (`tenant_id`). Isolamento estrito no backend via Query Scope. |
-| **CARRIER (5, 6)** | Visualiza logs relacionados à sua transportadora. |
-| **CUSTOMER (15)** | **Sem acesso** à página de auditoria (rota protegida por `ensure.staff` middleware). |
-
-### Funcionalidades da Interface
-
-- **Cores por tipo de ação**: Verde (criação), Laranja (edição), Vermelho (exclusão/bloqueio), Azul (outros).
-- **Ícones contextuais**: `+` para criação, lápis para edição, lixeira para exclusão, bloqueio para bans.
-- **Filtros combináveis**: Por tipo de evento, recurso afetado, ID do usuário e range de data.
-- **"Mostrar Mais" (Load More)**: Carrega incrementalmente os próximos 10 registros sem reload da página.
-
-### Campos do Registro de Auditoria
-
-| Campo | Tipo | Descrição |
-| :--- | :--- | :--- |
-| `event` | VARCHAR(200) | Tipo legível da ação (ex: "Criou Produto", "Bloqueou Usuário") |
-| `description` | TEXT | Descrição detalhada (ex: "João atualizou o preço de R$ 300 para R$ 250") |
-| `properties` | JSONB | Payload com `old` (estado anterior) e `attributes` (novo estado) |
-| `causer` | MorphTo | Quem executou a ação (User ou Client) |
-| `subject` | MorphTo | Recurso afetado (Product, Order, User, etc.) |
-| `tenant_id` | FK nullable | Tenant da ação (nulo para ações globais de admin) |
-
-### Rota
-
-```
-/audit-logs → AuditLogController@index  (acessível apenas para staff autenticado)
-```
+Hybrid Laravel + Go system for asynchronous notification processing via Redis List (`notifications_queue`) consumed by Go workers using Goroutines for maximum performance and low RAM consumption.
 
 ---
 
 ## 📝 Roadmap
 - [ ] Advanced Rate Limiting for API endpoints.
-- [x] RabbitMQ — Message Broker para processamento assíncrono.
-- [x] Audit Logs — Sistema de logs de auditoria polimórfico e multi-tenant.
-- [ ] 2FA support for administrative accounts.
+- [x] RabbitMQ — Async message broker.
+- [x] Audit Logs — Polymorphic and multi-tenant audit logging system.
+- [x] Meilisearch — Integrated full-text search engine.
 
 ---
 
 ## ✒️ Author
 **Luiz** — Fullstack PHP/Laravel Developer.
-[LinkedIn](https://linkedin.com/in/seu-perfil) | [Portfolio](https://www.hierarca.com)
+[LinkedIn](https://www.linkedin.com/in/letsmg/) | [Portfolio](https://www.hierarca.com)

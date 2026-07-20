@@ -8,7 +8,7 @@ import {
     DollarSign,
     Gauge,
     Search,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

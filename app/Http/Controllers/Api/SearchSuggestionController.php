@@ -22,7 +22,8 @@ class SearchSuggestionController extends Controller
     {
         $term = trim($request->get('q', ''));
 
-        if (mb_strlen($term) < 1) {
+        // Ignora termos muito curtos para não poluir Redis
+        if (mb_strlen($term) < 2) {
             return response()->json(['suggestions' => []]);
         }
 
@@ -39,8 +40,8 @@ class SearchSuggestionController extends Controller
         // ── B. PostgreSQL fallback ────────────────────────────
         $suggestions = $this->queryPostgres($normalized);
 
-        // ── C. Store in Redis ─────────────────────────────────
-        Cache::put($cacheKey, $suggestions, now()->addMinutes(30));
+        // ── C. Store in Redis (TTL: 1 hora) ──────────────────
+        Cache::put($cacheKey, $suggestions, now()->addHour());
 
         return response()->json(['suggestions' => $suggestions]);
     }
@@ -51,7 +52,7 @@ class SearchSuggestionController extends Controller
      */
     private function queryPostgres(string $term): array
     {
-        $likeTerm = DB::connection()->getPdo()->quote('%' . $term . '%');
+        $likeTerm = '%' . $term . '%';
 
         // Busca em produtos ativos (nomes distintos, até 6)
         $productNames = DB::select("
@@ -62,9 +63,9 @@ class SearchSuggestionController extends Controller
                 AND t.is_profile_complete = true
             WHERE p.is_active = true
               AND p.deleted_at IS NULL
-              AND LOWER(p.name) LIKE LOWER({$likeTerm})
+              AND LOWER(p.name) LIKE LOWER(?)
             LIMIT 6
-        ");
+        ", [$likeTerm]);
 
         // Busca em categorias (nomes distintos, até 3)
         $categoryNames = DB::select("
@@ -77,9 +78,9 @@ class SearchSuggestionController extends Controller
             INNER JOIN tenants t ON t.id = p.tenant_id
                 AND t.active = true
                 AND t.is_profile_complete = true
-            WHERE LOWER(c.name) LIKE LOWER({$likeTerm})
+            WHERE LOWER(c.name) LIKE LOWER(?)
             LIMIT 3
-        ");
+        ", [$likeTerm]);
 
         // Merge: prioriza produtos, depois categorias
         $all = array_merge(

@@ -189,7 +189,7 @@ class ProductService
         // ── C. Cache miss — query PostgreSQL ─────────────────
         $query = $this->buildActiveStoreQuery($filters, $canViewAdult);
 
-        $results = $query->take(8)->get();
+        $results = $query->take(24)->get();
 
         // Diagnóstico: se a vitrine está vazia, logar o motivo
         if ($results->isEmpty()) {
@@ -277,13 +277,12 @@ class ProductService
             $query->where('sale_price', '<=', (float) $filters['max_price']);
         }
 
-        // Filtro multi-categorias (comma-separated slugs)
-        $categoriesRaw = $filters['categories'] ?? '';
-        if (!empty($categoriesRaw)) {
-            $categorySlugs = array_filter(
-                array_map('trim', explode(',', $categoriesRaw)),
-                fn ($s) => !empty($s),
-            );
+        // Filtro multi-categorias (suporta Array ou String)
+        $categoriesInput = $filters['categories'] ?? null;
+        if (!empty($categoriesInput)) {
+            $categorySlugs = is_array($categoriesInput) 
+                ? $categoriesInput 
+                : array_filter(array_map('trim', explode(',', $categoriesInput)));
 
             if (!empty($categorySlugs)) {
                 $query->whereHas('categories', function ($q) use ($categorySlugs) {

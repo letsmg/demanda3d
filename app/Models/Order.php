@@ -19,6 +19,13 @@ class Order extends Model
         'delivery_date',
         'delivered_at',
         'stripe_session_id',
+        'stripe_payment_intent_id',
+        'stripe_transfer_seller_id',
+        'stripe_transfer_carrier_id',
+        'platform_fee_amount',
+        'seller_amount',
+        'carrier_amount',
+        'payment_split_status',
         'amount_total',
         'currency',
         'status',
@@ -34,6 +41,9 @@ class Order extends Model
             'delivery_date'         => 'date',
             'delivered_at'          => 'datetime',
             'amount_total'          => 'decimal:2',
+            'platform_fee_amount'   => 'decimal:2',
+            'seller_amount'         => 'decimal:2',
+            'carrier_amount'        => 'decimal:2',
             'snapshot_product_price'=> 'decimal:2',
         ];
     }

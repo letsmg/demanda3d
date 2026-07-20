@@ -6,7 +6,7 @@ import {
     ShoppingBag,
     BarChart3,
     Calendar,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

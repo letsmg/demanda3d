@@ -15,25 +15,24 @@ use Spatie\ImageOptimizer\OptimizerChainFactory;
  * Responsável por redimensionar, converter formato e comprimir imagens
  * sem perda visual perceptível. Utilizado tanto pelo fluxo de upload
  * de produtos quanto pelo Artisan Command de processamento em lote.
+ *
+ * Todos os paths de armazenamento são delegados ao ImageStorageService.
  */
 class ImageOptimizationService
 {
     private const MAX_WIDTH = 1600;
-    private const ORIGINAL_DISK = 'public';
-    private const OPTIMIZED_DISK = 'public';
-    private const ORIGINAL_DIR = 'imgs/originals';
-    private const OPTIMIZED_DIR = 'imgs/home';
-    private const PRODUCTS_DIR = 'imgs/{tenant_id}/products/{product_id}';
-    private const PROFILE_DIR = 'imgs/{tenant_id}/profile';
 
+    // ──────────────────────────────────────────────────────────
+    //  Upload de Produto (tenant)
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Processa upload de imagem de produto com paths por tenant e ID.
      *
      * Gera três versões:
-     *   - original  ({tenant_id}/products/{product_id}/original/)
-     *   - thumbnail ({tenant_id}/products/{product_id}/thumbnail/) 200x200
-     *   - optimized ({tenant_id}/products/{product_id}/optimized/) webp 85%
+     *   - original  (tenants/{tenant_id}/products/{product_id}/original/)
+     *   - thumbnail (tenants/{tenant_id}/products/{product_id}/thumbnail/) 200x200
+     *   - optimized (tenants/{tenant_id}/products/{product_id}/optimized/) webp 85%
      *
      * @return array{original_path: string, thumbnail_path: string, optimized_path: string}
      */
@@ -43,25 +42,35 @@ class ImageOptimizationService
         $namePrefix = $slug ?: \Illuminate\Support\Str::uuid()->toString();
         $baseName = $namePrefix . '.' . $extension;
 
-        $basePath = str_replace(['{tenant_id}', '{product_id}'], [$tenantId, $productId], self::PRODUCTS_DIR);
+        $basePath   = ImageStorageService::tenantProductBase($tenantId, $productId);
+        $originalDir = ImageStorageService::tenantProductDir($tenantId, $productId, ImageStorageService::QUALITY_ORIGINAL);
+        $thumbDir    = ImageStorageService::tenantProductDir($tenantId, $productId, ImageStorageService::QUALITY_THUMBNAIL);
+        $optimizedDir = ImageStorageService::tenantProductDir($tenantId, $productId, ImageStorageService::QUALITY_OPTIMIZED);
+
+        // Garante que os diretórios existem
+        ImageStorageService::ensureDirectories([$originalDir, $thumbDir, $optimizedDir]);
 
         // 1. Salva original
-        $originalPath = "{$basePath}/original/{$baseName}";
-        Storage::disk('public')->put($originalPath, file_get_contents($file->getRealPath()));
+        $originalPath = "{$originalDir}/{$baseName}";
+        Storage::disk(ImageStorageService::DISK)->put($originalPath, file_get_contents($file->getRealPath()));
 
         // 2. Gera thumbnail (200x200)
-        $thumbnailPath = "{$basePath}/thumbnail/{$baseName}";
+        $thumbnailPath = "{$thumbDir}/{$baseName}";
         $this->generateThumbnail($file, $thumbnailPath);
 
         // 3. Gera versão otimizada
-        $optimizedPath = $this->optimizeAndSaveProduct($file, "{$basePath}/optimized", $baseName);
+        $optimizedPath = $this->optimizeAndSaveTo($file, $optimizedDir, $baseName);
 
         return [
-            'original_path' => $originalPath,
+            'original_path'  => $originalPath,
             'thumbnail_path' => $thumbnailPath,
             'optimized_path' => $optimizedPath,
         ];
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Upload de Perfil do Tenant
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Processa upload de logo ou banner para perfil do tenant.
@@ -74,66 +83,19 @@ class ImageOptimizationService
      */
     public function processTenantProfileUpload(UploadedFile $file, int $tenantId, string $type): string
     {
-        $basePath = str_replace('{tenant_id}', $tenantId, self::PROFILE_DIR);
         $extension = $this->resolveExtension($file);
-        $baseName = $type . '.' . $extension;
+        $baseName  = $type . '.' . $extension;
 
-        return $this->optimizeAndSaveProduct($file, $basePath, $baseName);
+        $targetDir = ImageStorageService::tenantProfileDir($tenantId, ImageStorageService::QUALITY_OPTIMIZED);
+
+        ImageStorageService::ensureDirectories([$targetDir]);
+
+        return $this->optimizeAndSaveTo($file, $targetDir, $baseName);
     }
 
-    /**
-     * Gera uma miniatura 200x200 da imagem.
-     */
-    private function generateThumbnail(UploadedFile $file, string $targetPath): void
-    {
-        $manager = ImageManager::gd();
-        $image = $manager->read($file->getRealPath());
-        $image->cover(200, 200);
-
-        $absoluteTarget = Storage::disk('public')->path($targetPath);
-        $targetDir = dirname($absoluteTarget);
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
-        $tmpThumb = tempnam(sys_get_temp_dir(), 'thumb_') . '.webp';
-        $image->toWebp(quality: 80)->save($tmpThumb);
-
-        rename($tmpThumb, $absoluteTarget);
-    }
-
-    /**
-     * Otimiza e salva a imagem de produto no diretório de destino.
-     */
-    private function optimizeAndSaveProduct(UploadedFile $file, string $basePath, string $filename): string
-    {
-        $manager = ImageManager::gd();
-        $image = $manager->read($file->getRealPath());
-
-        if ($image->width() > self::MAX_WIDTH) {
-            $image->scale(width: self::MAX_WIDTH);
-        }
-
-        $targetFormat = 'webp';
-        $outputFilename = pathinfo($filename, PATHINFO_FILENAME) . '.' . $targetFormat;
-        $targetPath = "{$basePath}/{$outputFilename}";
-        $absoluteTarget = Storage::disk('public')->path($targetPath);
-
-        $targetDir = dirname($absoluteTarget);
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
-        $tmpOptimized = tempnam(sys_get_temp_dir(), 'opt_') . '.' . $targetFormat;
-        $image->toWebp(quality: 85)->save($tmpOptimized);
-
-        $optimizerChain = OptimizerChainFactory::create();
-        $optimizerChain->optimize($tmpOptimized);
-
-        rename($tmpOptimized, $absoluteTarget);
-
-        return $targetPath;
-    }
+    // ──────────────────────────────────────────────────────────
+    //  Upload Genérico (Site Home — carrossel)
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Processa um UploadedFile: salva original e gera versão otimizada.
@@ -144,40 +106,49 @@ class ImageOptimizationService
      */
     public function processUpload(UploadedFile $file, ?string $filename = null): array
     {
-        $name = $filename ?? \Illuminate\Support\Str::uuid()->toString();
+        $name      = $filename ?? \Illuminate\Support\Str::uuid()->toString();
         $extension = $this->resolveExtension($file);
-        $baseName = "{$name}.{$extension}";
+        $baseName  = "{$name}.{$extension}";
+
+        $originalDir  = ImageStorageService::siteHomeOriginalDir();
+        $optimizedDir = ImageStorageService::siteHomeOptimizedDir();
+
+        ImageStorageService::ensureDirectories([$originalDir, $optimizedDir]);
 
         // Salva original sem tratamento
-        $originalPath = self::ORIGINAL_DIR . '/' . $baseName;
-        Storage::disk(self::ORIGINAL_DISK)->put($originalPath, file_get_contents($file->getRealPath()));
+        $originalPath = $originalDir . '/' . $baseName;
+        Storage::disk(ImageStorageService::DISK)->put($originalPath, file_get_contents($file->getRealPath()));
 
         // Gera versão otimizada
-        $optimizedPath = $this->optimizeAndSave($file, $baseName);
+        $optimizedPath = $this->optimizeAndSaveTo($file, $optimizedDir, $baseName);
 
         return [
-            'original_path' => $originalPath,
+            'original_path'  => $originalPath,
             'optimized_path' => $optimizedPath,
-            'optimized_url' => Storage::disk(self::OPTIMIZED_DISK)->url($optimizedPath),
+            'optimized_url'  => Storage::disk(ImageStorageService::DISK)->url($optimizedPath),
         ];
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Batch: reprocessar existentes
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Otimiza um arquivo já existente em disco (usado pelo batch command).
      *
-     * @param string $relativePath Caminho relativo dentro do disco "public" (ex: imgs/originals/foto.jpg).
+     * @param string $relativePath Caminho relativo dentro do disco "public".
      * @return string Caminho relativo do arquivo otimizado salvo.
      */
     public function optimizeExisting(string $relativePath): string
     {
-        $fullPath = Storage::disk(self::ORIGINAL_DISK)->path($relativePath);
+        $fullPath = Storage::disk(ImageStorageService::DISK)->path($relativePath);
 
         if (!file_exists($fullPath)) {
             throw new \RuntimeException("Arquivo não encontrado: {$fullPath}");
         }
 
         $baseName = basename($relativePath);
-        $content = file_get_contents($fullPath);
+        $content  = file_get_contents($fullPath);
 
         if ($content === false || empty($content)) {
             throw new \RuntimeException("Não foi possível ler o arquivo: {$fullPath}");
@@ -195,13 +166,20 @@ class ImageOptimizationService
             true
         );
 
-        $targetPath = $this->optimizeAndSave($tmpFile, $baseName);
+        $targetDir = ImageStorageService::siteHomeOptimizedDir();
+        ImageStorageService::ensureDirectories([$targetDir]);
+
+        $targetPath = $this->optimizeAndSaveTo($tmpFile, $targetDir, $baseName);
 
         // Limpa o temporário
         @unlink($tmpPath);
 
         return $targetPath;
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Idempotência
+    // ──────────────────────────────────────────────────────────
 
     /**
      * Verifica se um arquivo otimizado correspondente já existe e é mais recente que o original.
@@ -213,13 +191,13 @@ class ImageOptimizationService
     {
         $baseNameWithoutExt = pathinfo(basename($relativePath), PATHINFO_FILENAME);
 
-        // Busca qualquer arquivo com o mesmo nome base em home/ (jpg, jpeg, png, webp, gif)
+        $optimizedDir     = ImageStorageService::siteHomeOptimizedDir();
         $possibleExtensions = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
-        $foundPath = null;
+        $foundPath          = null;
 
         foreach ($possibleExtensions as $ext) {
-            $candidate = self::OPTIMIZED_DIR . '/' . $baseNameWithoutExt . '.' . $ext;
-            if (Storage::disk(self::OPTIMIZED_DISK)->exists($candidate)) {
+            $candidate = $optimizedDir . '/' . $baseNameWithoutExt . '.' . $ext;
+            if (Storage::disk(ImageStorageService::DISK)->exists($candidate)) {
                 $foundPath = $candidate;
                 break;
             }
@@ -229,29 +207,24 @@ class ImageOptimizationService
             return false;
         }
 
-        $originalTimestamp = Storage::disk(self::ORIGINAL_DISK)->lastModified($relativePath);
-        $optimizedTimestamp = Storage::disk(self::OPTIMIZED_DISK)->lastModified($foundPath);
+        $originalTimestamp  = Storage::disk(ImageStorageService::DISK)->lastModified($relativePath);
+        $optimizedTimestamp = Storage::disk(ImageStorageService::DISK)->lastModified($foundPath);
 
         return $optimizedTimestamp !== false
             && $originalTimestamp !== false
             && $optimizedTimestamp >= $originalTimestamp;
     }
 
+    // ──────────────────────────────────────────────────────────
+    //  Diretórios (compatibilidade com batch command)
+    // ──────────────────────────────────────────────────────────
+
     /**
      * Cria os diretórios necessários se não existirem.
      */
     public function ensureDirectories(): void
     {
-        $originalDir = Storage::disk(self::ORIGINAL_DISK)->path(self::ORIGINAL_DIR);
-        $optimizedDir = Storage::disk(self::OPTIMIZED_DISK)->path(self::OPTIMIZED_DIR);
-
-        if (!is_dir($originalDir)) {
-            mkdir($originalDir, 0755, true);
-        }
-
-        if (!is_dir($optimizedDir)) {
-            mkdir($optimizedDir, 0755, true);
-        }
+        ImageStorageService::ensureDirectories(ImageStorageService::siteHomeAllDirs());
     }
 
     /**
@@ -259,7 +232,7 @@ class ImageOptimizationService
      */
     public function getOriginalDirectory(): string
     {
-        return self::ORIGINAL_DIR;
+        return ImageStorageService::siteHomeOriginalDir();
     }
 
     /**
@@ -267,30 +240,56 @@ class ImageOptimizationService
      */
     public function getOptimizedDirectory(): string
     {
-        return self::OPTIMIZED_DIR;
+        return ImageStorageService::siteHomeOptimizedDir();
+    }
+
+    // ──────────────────────────────────────────────────────────
+    //  Métodos privados de processamento
+    // ──────────────────────────────────────────────────────────
+
+    /**
+     * Gera uma miniatura 200x200 da imagem.
+     */
+    private function generateThumbnail(UploadedFile $file, string $targetPath): void
+    {
+        $manager = ImageManager::gd();
+        $image   = $manager->read($file->getRealPath());
+        $image->cover(200, 200);
+
+        $absoluteTarget = Storage::disk(ImageStorageService::DISK)->path($targetPath);
+        $targetDir      = dirname($absoluteTarget);
+
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $tmpThumb = tempnam(sys_get_temp_dir(), 'thumb_') . '.webp';
+        $image->toWebp(quality: 80)->save($tmpThumb);
+
+        rename($tmpThumb, $absoluteTarget);
     }
 
     /**
-     * Núcleo da otimização: redimensiona e comprime a imagem.
+     * Núcleo da otimização: redimensiona, converte para webp e comprime.
      *
-     * @param UploadedFile $file  Arquivo de imagem.
-     * @param string $outputFilename  Nome do arquivo de saída (com extensão).
+     * @param UploadedFile $file       Arquivo de imagem.
+     * @param string       $targetDir  Diretório de destino relativo ao disco "public".
+     * @param string       $filename   Nome do arquivo de saída (com extensão).
      * @return string Caminho relativo do arquivo otimizado.
      */
-    private function optimizeAndSave(UploadedFile $file, string $outputFilename): string
+    private function optimizeAndSaveTo(UploadedFile $file, string $targetDir, string $filename): string
     {
         $manager = ImageManager::gd();
-
-        $image = $manager->read($file->getRealPath());
+        $image   = $manager->read($file->getRealPath());
 
         // Redimensiona apenas se a largura for maior que MAX_WIDTH (sem upscale)
         if ($image->width() > self::MAX_WIDTH) {
             $image->scale(width: self::MAX_WIDTH);
         }
 
-        // Converte para WebP se não for animação (mantém formato original para GIFs)
-        $extension = strtolower(pathinfo($outputFilename, PATHINFO_EXTENSION));
-        $targetFormat = $extension;
+        // Converte para WebP se não for animação
+        $extension     = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $targetFormat  = $extension;
 
         // WebP é mais eficiente; converte jpg/png para webp
         if (in_array($extension, ['jpg', 'jpeg', 'png'], true)) {
@@ -299,16 +298,16 @@ class ImageOptimizationService
 
         // Se o formato de destino difere, ajusta o nome do arquivo
         if ($targetFormat !== $extension) {
-            $outputFilename = pathinfo($outputFilename, PATHINFO_FILENAME) . '.' . $targetFormat;
+            $filename = pathinfo($filename, PATHINFO_FILENAME) . '.' . $targetFormat;
         }
 
-        $targetPath = self::OPTIMIZED_DIR . '/' . $outputFilename;
-        $absoluteTarget = Storage::disk(self::OPTIMIZED_DISK)->path($targetPath);
+        $targetPath     = $targetDir . '/' . $filename;
+        $absoluteTarget = Storage::disk(ImageStorageService::DISK)->path($targetPath);
 
         // Garante que o diretório de destino existe
-        $targetDir = dirname($absoluteTarget);
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
+        $targetDirAbsolute = dirname($absoluteTarget);
+        if (!is_dir($targetDirAbsolute)) {
+            mkdir($targetDirAbsolute, 0755, true);
         }
 
         // Salva a imagem redimensionada em um arquivo temporário primeiro
@@ -333,10 +332,10 @@ class ImageOptimizationService
         rename($tmpOptimized, $absoluteTarget);
 
         Log::info('Imagem otimizada com sucesso.', [
-            'original' => $file->getClientOriginalName(),
-            'target' => $outputFilename,
+            'original'    => $file->getClientOriginalName(),
+            'target'      => $filename,
             'size_before' => $file->getSize(),
-            'size_after' => filesize($absoluteTarget),
+            'size_after'  => filesize($absoluteTarget),
         ]);
 
         return $targetPath;
@@ -348,7 +347,7 @@ class ImageOptimizationService
      */
     private function resolveExtension(UploadedFile $file): string
     {
-        $mime = $file->getMimeType();
+        $mime        = $file->getMimeType();
         $originalExt = strtolower($file->getClientOriginalExtension());
 
         // Mantém GIF como está (possível animação)

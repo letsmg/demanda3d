@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ShoppingBag, RotateCw } from '@lucide/vue';
+import { ShoppingBag, RotateCw } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import StoreProductCard from './StoreProductCard.vue';
 
@@ -16,7 +16,7 @@ defineProps<{
 
 const emit = defineEmits<{
     'open-gallery': [product: any, index: number];
-    'open-share': [productName: string];
+    'open-share': [productName: string, productSlug: string];
     'remove-from-cart': [cartItemId: number];
     'add-to-cart': [productId: number];
     'load-more': [];
@@ -27,8 +27,8 @@ function onOpenGallery(product: any, index: number): void {
     emit('open-gallery', product, index);
 }
 
-function onOpenShare(name: string): void {
-    emit('open-share', name);
+function onOpenShare(name: string, slug: string): void {
+    emit('open-share', name, slug);
 }
 
 function onRemoveFromCart(id: number): void {

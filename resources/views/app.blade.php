@@ -17,7 +17,7 @@
         <meta property="og:description" content="Sistema completo para gerenciar sua produção de impressões 3D. Controle clientes, pedidos, insumos e métricas em um só lugar.">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ config('app.url') }}">
-        <meta property="og:image" content="{{ config('app.url') }}/logo.jpg">
+        <meta property="og:image" content="{{ config('app.url') }}/storage/imgs/site/logo.jpg">
         <meta property="og:locale" content="pt_BR">
         <meta property="og:site_name" content="Demanda 3D">
 
@@ -25,7 +25,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="Demanda 3D - Gerenciamento de Impressão 3D">
         <meta name="twitter:description" content="Sistema completo para gerenciar sua produção de impressões 3D.">
-        <meta name="twitter:image" content="{{ config('app.url') }}/logo.jpg">
+        <meta name="twitter:image" content="{{ config('app.url') }}/storage/imgs/site/logo.jpg">
 
         {{-- Schema.org JSON-LD --}}
         @verbatim
@@ -59,7 +59,7 @@
             "name": "Demanda 3D",
             "description": "Sistema de gerenciamento de produção e vendas de impressões 3D",
             "url": "{{ config('app.url') }}",
-            "logo": "{{ config('app.url') }}/logo.jpg",
+            "logo": "{{ config('app.url') }}/storage/imgs/site/logo.jpg",
             "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "technical support",
@@ -95,11 +95,12 @@
             }
         </style>
 
-        <link rel="icon" href="/logo.jpg" sizes="any">
-        <link rel="apple-touch-icon" href="/logo.jpg">
+        <link rel="icon" href="/storage/imgs/site/logo.jpg" sizes="any">
+        <link rel="apple-touch-icon" href="/storage/imgs/site/logo.jpg">
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <x-inertia::head>
             <title>{{ config('app.name', 'Demanda 3D') }}</title>
         </x-inertia::head>

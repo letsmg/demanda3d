@@ -11,7 +11,7 @@ import {
     ExternalLink,
     ImageIcon,
     Star,
-} from '@lucide/vue';
+} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { setCartCount } from '@/stores/cartStore';
 import { Input } from '@/components/ui/input';

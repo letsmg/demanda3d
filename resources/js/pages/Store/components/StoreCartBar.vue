@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ShoppingBag } from '@lucide/vue';
+import { ShoppingBag } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
 defineProps<{

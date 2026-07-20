@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { XCircle, ArrowLeft } from '@lucide/vue';
+import { XCircle, ArrowLeft } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
 defineOptions({
