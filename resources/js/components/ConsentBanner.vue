@@ -12,8 +12,8 @@ const title = computed(() => {
     const doc = legal.value;
 
     if (!doc) {
-return 'Documentos Legais atualizados';
-}
+        return 'Documentos Legais atualizados';
+    }
 
     return doc.document_title || 'Documentos Legais atualizados';
 });

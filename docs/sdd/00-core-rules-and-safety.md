@@ -197,19 +197,44 @@ Todos os scripts de deploy, migrations e comandos auxiliares devem ser **estrita
 
 ---
 
-## 15. Marcas Forenses e Licenciamento
+## 15. Versionamento de Arquivos Estáticos (Storage)
 
-### 15.1 Arquivo LICENSE
+### 15.1 Regra de Versionamento
+
+> **Apenas** a pasta `storage/app/public/imgs/site/` deve ser versionada no Git.
+> **Nenhuma outra** imagem ou upload de usuário pode ser versionada.
+
+### 15.2 Configuração no `.gitignore`
+
+```gitignore
+# Ignora todo o conteúdo da pasta imgs
+/storage/app/public/imgs/*
+
+# Permite a pasta site e todo o conteúdo dentro dela recursivamente
+!/storage/app/public/imgs/site/
+!/storage/app/public/imgs/site/**
+```
+
+### 15.3 Justificativa
+
+- `imgs/site/` contém assets estáticos do layout (logo, banners, hero images) que fazem parte do código-fonte.
+- Uploads dinâmicos de usuários (produtos, avatares) são armazenados em `shared/storage` fora do repositório e linkados simbolicamente via deploy atômico.
+
+---
+
+## 16. Marcas Forenses e Licenciamento
+
+### 16.1 Arquivo LICENSE
 
 Projeto licenciado sob **CC BY-NC-SA 4.0**. O arquivo `LICENSE` deve existir na raiz.
 
-### 15.2 Footer de Direitos Autorais
+### 16.2 Footer de Direitos Autorais
 
 O rodapé do painel público e privado (`Footer.vue`) deve conter exatamente:
 
 > Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.
 
-### 15.3 Marcas Forenses no Código
+### 16.3 Marcas Forenses no Código
 
 Inserir a linha de comentário abaixo no cabeçalho ou rodapé de **pelo menos dois arquivos críticos** de backend:
 
@@ -226,7 +251,7 @@ O assistente deve **verificar e preservar** essa linha em cada alteração desse
 
 ---
 
-## 16. Rate Limiting em Autenticação
+## 17. Rate Limiting em Autenticação
 
 Configurar limitadores de requisições **extremamente agressivos** em todas as rotas de:
 - Login
@@ -238,7 +263,7 @@ Mitigação de ataques de força bruta e timing attacks.
 
 ---
 
-## 17. Documentação Viva
+## 18. Documentação Viva
 
 ### 17.1 README.md
 
@@ -258,7 +283,7 @@ Documentos de Design de Software modulares — este diretório.
 
 ---
 
-## 18. Mapeamento Rápido para SDDs Específicos
+## 19. Mapeamento Rápido para SDDs Específicos
 
 | Escopo da Solicitação | Arquivo SDD |
 | :--- | :--- |

@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, Save } from 'lucide-vue-next';
 import { ref, watch, nextTick } from 'vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -96,14 +96,14 @@ function generateValidCpf(): string {
     const digits: number[] = [];
 
     for (let i = 0; i < 9; i++) {
-digits.push(Math.floor(Math.random() * 10));
-}
+        digits.push(Math.floor(Math.random() * 10));
+    }
 
     let sum = 0;
 
     for (let i = 0; i < 9; i++) {
-sum += digits[i] * (10 - i);
-}
+        sum += digits[i] * (10 - i);
+    }
 
     let d1 = sum % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
@@ -111,8 +111,8 @@ sum += digits[i] * (10 - i);
     sum = 0;
 
     for (let i = 0; i < 10; i++) {
-sum += digits[i] * (11 - i);
-}
+        sum += digits[i] * (11 - i);
+    }
 
     let d2 = sum % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
@@ -165,8 +165,8 @@ function handleFill() {
 function handleClear(fields: TestField[]) {
     for (const f of fields) {
         if (f.key in form) {
-(form as any)[f.key] = '';
-}
+            (form as any)[f.key] = '';
+        }
     }
 
     docError.value = '';
@@ -187,14 +187,14 @@ function applyMask(raw: string, type: string): string {
     const digits = raw.replace(/\D/g, '');
 
     if (!digits) {
-return '';
-}
+        return '';
+    }
 
     if (type === 'CPF') {
         let m = digits;
 
         if (m.length > 9) {
-m =
+            m =
                 m.slice(0, 3) +
                 '.' +
                 m.slice(3, 6) +
@@ -202,11 +202,11 @@ m =
                 m.slice(6, 9) +
                 '-' +
                 m.slice(9, 11);
-} else if (m.length > 6) {
-m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
-} else if (m.length > 3) {
-m = m.slice(0, 3) + '.' + m.slice(3);
-}
+        } else if (m.length > 6) {
+            m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
+        } else if (m.length > 3) {
+            m = m.slice(0, 3) + '.' + m.slice(3);
+        }
 
         return m.slice(0, 14);
     }
@@ -214,7 +214,7 @@ m = m.slice(0, 3) + '.' + m.slice(3);
     let m = digits;
 
     if (m.length > 12) {
-m =
+        m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -224,8 +224,8 @@ m =
             m.slice(8, 12) +
             '-' +
             m.slice(12, 14);
-} else if (m.length > 8) {
-m =
+    } else if (m.length > 8) {
+        m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -233,11 +233,11 @@ m =
             m.slice(5, 8) +
             '/' +
             m.slice(8);
-} else if (m.length > 5) {
-m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
-} else if (m.length > 2) {
-m = m.slice(0, 2) + '.' + m.slice(2);
-}
+    } else if (m.length > 5) {
+        m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
+    } else if (m.length > 2) {
+        m = m.slice(0, 2) + '.' + m.slice(2);
+    }
 
     return m.slice(0, 18);
 }
@@ -246,16 +246,16 @@ watch(
     () => form.doc,
     (val: string) => {
         if (!val) {
-return;
-}
+            return;
+        }
 
         const masked = applyMask(val, form.doc_type);
 
         if (masked !== val) {
-nextTick(() => {
+            nextTick(() => {
                 form.doc = masked;
             });
-}
+        }
     },
 );
 
@@ -321,21 +321,21 @@ function isValidCpf(d: string): boolean {
     let s = 0;
 
     for (let i = 0; i < 9; i++) {
-s += parseInt(d[i]) * (10 - i);
-}
+        s += parseInt(d[i]) * (10 - i);
+    }
 
     let d1 = s % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
 
     if (d1 !== parseInt(d[9])) {
-return false;
-}
+        return false;
+    }
 
     s = 0;
 
     for (let i = 0; i < 10; i++) {
-s += parseInt(d[i]) * (11 - i);
-}
+        s += parseInt(d[i]) * (11 - i);
+    }
 
     let d2 = s % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
@@ -349,21 +349,21 @@ function isValidCnpj(d: string): boolean {
     let s = 0;
 
     for (let i = 0; i < 12; i++) {
-s += parseInt(d[i]) * w1[i];
-}
+        s += parseInt(d[i]) * w1[i];
+    }
 
     let d1 = s % 11;
     d1 = d1 < 2 ? 0 : 11 - d1;
 
     if (d1 !== parseInt(d[12])) {
-return false;
-}
+        return false;
+    }
 
     s = 0;
 
     for (let i = 0; i < 13; i++) {
-s += parseInt(d[i]) * w2[i];
-}
+        s += parseInt(d[i]) * w2[i];
+    }
 
     let d2 = s % 11;
     d2 = d2 < 2 ? 0 : 11 - d2;
@@ -376,8 +376,8 @@ const submit = () => {
     typeMismatchWarning.value = '';
 
     if (!validateDoc()) {
-return;
-}
+        return;
+    }
 
     form.put(`/clients/${props.client.id}`, { preserveScroll: true });
 };

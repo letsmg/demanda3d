@@ -4,7 +4,7 @@ import { ref } from 'vue';
 
 const showPassword = ref(false);
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';

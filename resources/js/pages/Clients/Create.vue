@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, Lock, Save } from 'lucide-vue-next';
 import { ref, watch, nextTick } from 'vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {

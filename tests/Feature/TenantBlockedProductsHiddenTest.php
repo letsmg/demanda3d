@@ -14,14 +14,17 @@ use App\Services\ProductService;
  */
 it('hides products from blocked tenants in the store', function () {
     // Arrange: criar tenant ativo com usuário, transportadora ativa e contrato
+    $makeEncr = fn ($v) => \App\Services\EncryptionService::encryptWithHash($v);
+
     $seller = User::factory()->create([
         'access_level'      => \App\Enums\UserAccessLevel::SELLER_2,
         'email_verified_at' => now(),
     ]);
 
     $tenant = Tenant::factory()->create([
-        'user_id' => $seller->id,
-        'active'  => true,
+        'user_id'             => $seller->id,
+        'active'              => true,
+        'is_profile_complete' => true,
     ]);
 
     $carrierUser = User::factory()->carrier1()->create([
@@ -29,12 +32,12 @@ it('hides products from blocked tenants in the store', function () {
     ]);
 
     $carrier = Carrier::factory()->create([
-        'user_id'             => $carrierUser->id,
-        'fantasy_name'        => 'Express Transportes',
-        'is_active'           => true,
-        'company_name_encrypted' => makeEncr('Express Ltda')['encrypted'],
-        'company_name_hash'     => makeEncr('Express Ltda')['hash'],
-        'slug'                => Carrier::generateUniqueSlug('Express Transportes'),
+        'user_id'                => $carrierUser->id,
+        'fantasy_name'           => 'Express Transportes',
+        'is_active'              => true,
+        'company_name_encrypted' => $makeEncr('Express Ltda')['encrypted'],
+        'company_name_hash'      => $makeEncr('Express Ltda')['hash'],
+        'slug'                   => Carrier::generateUniqueSlug('Express Transportes'),
     ]);
 
     CarrierTenantAgreement::create([

@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { Save } from 'lucide-vue-next';
 import AddressCepBlock from '@/components/AddressCepBlock.vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,

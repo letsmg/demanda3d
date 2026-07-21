@@ -64,12 +64,17 @@ storage/debugbar/
 gcloud-api-7bbd403db8e7*
 public/fonts*
 
-# Ignora todo o conteúdo da pasta imgs
+# Ignora todo o conteúdo de storage/app/public
+/storage/app/public/*
+
+# Permite apenas a pasta imgs (diretório em si)
+!/storage/app/public/imgs/
+
+# Ignora todo o conteúdo de imgs
 /storage/app/public/imgs/*
 
-# Permite a pasta site e todo o conteúdo dentro dela recursivamente
+# Permite apenas a pasta site dentro de imgs (e todo seu conteúdo recursivamente)
 !/storage/app/public/imgs/site/
-!/storage/app/public/imgs/site/**
 
 # Playwright
 /test-results/

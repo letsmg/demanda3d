@@ -73,8 +73,8 @@ const loadingMore = ref(false);
 
 async function loadMoreProducts(): Promise<void> {
     if (loadingMore.value || !hasMore.value) {
-return;
-}
+        return;
+    }
 
     loadingMore.value = true;
     const nextPage = currentPage.value + 1;
@@ -84,20 +84,20 @@ return;
         qs.set('page', String(nextPage));
 
         if (searchTerm.value) {
-qs.set('search', searchTerm.value);
-}
+            qs.set('search', searchTerm.value);
+        }
 
         if (priceMin.value) {
-qs.set('min_price', priceMin.value);
-}
+            qs.set('min_price', priceMin.value);
+        }
 
         if (priceMax.value) {
-qs.set('max_price', priceMax.value);
-}
+            qs.set('max_price', priceMax.value);
+        }
 
         if (activeCategory.value) {
-qs.set('category', activeCategory.value);
-}
+            qs.set('category', activeCategory.value);
+        }
 
         qs.set('sort', sortBy.value);
         qs.set('sort_dir', sortOrder.value);
@@ -169,8 +169,8 @@ const authClient = computed(() => {
 
 async function fetchCartData() {
     if (!authClient.value) {
-return;
-}
+        return;
+    }
 
     try {
         const res = await fetch('/cart/items', { credentials: 'include' });
@@ -223,8 +223,8 @@ async function removeFromCart(cartItemId: number) {
     const item = cartItems.value.find((i) => i.id === cartItemId);
 
     if (!item) {
-return;
-}
+        return;
+    }
 
     if (item.quantity <= 1) {
         await removeCartItem(cartItemId);
@@ -332,8 +332,8 @@ function closeGallery(): void {
 
 function prevImage(): void {
     if (!selectedProduct.value?.images?.length) {
-return;
-}
+        return;
+    }
 
     currentImageIndex.value =
         (currentImageIndex.value - 1 + selectedProduct.value.images.length) %
@@ -342,8 +342,8 @@ return;
 
 function nextImage(): void {
     if (!selectedProduct.value?.images?.length) {
-return;
-}
+        return;
+    }
 
     currentImageIndex.value =
         (currentImageIndex.value + 1) % selectedProduct.value.images.length;
@@ -353,20 +353,20 @@ function applyTenantFilters(): void {
     const params: Record<string, any> = {};
 
     if (searchTerm.value) {
-params.search = searchTerm.value;
-}
+        params.search = searchTerm.value;
+    }
 
     if (priceMin.value) {
-params.min_price = priceMin.value;
-}
+        params.min_price = priceMin.value;
+    }
 
     if (priceMax.value) {
-params.max_price = priceMax.value;
-}
+        params.max_price = priceMax.value;
+    }
 
     if (activeCategory.value) {
-params.category = activeCategory.value;
-}
+        params.category = activeCategory.value;
+    }
 
     params.sort = sortBy.value;
     params.sort_dir = sortOrder.value;

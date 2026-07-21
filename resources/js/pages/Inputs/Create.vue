@@ -2,7 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from 'lucide-vue-next';
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,8 +60,8 @@ function handleFill() {
 
     for (const f of fresh) {
         if (f.key in form) {
-(form as any)[f.key] = f.value;
-}
+            (form as any)[f.key] = f.value;
+        }
     }
 }
 

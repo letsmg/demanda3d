@@ -4,7 +4,7 @@ import { ref } from 'vue';
 
 const showPassword = ref(false);
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
@@ -54,16 +54,16 @@ function handleFill() {
     );
 
     if (emailInput) {
-emailInput.value = 'vendedor@loja.com.br';
-}
+        emailInput.value = 'vendedor@loja.com.br';
+    }
 
     if (passwordInput) {
-passwordInput.value = 'Senha@123';
-}
+        passwordInput.value = 'Senha@123';
+    }
 
     if (passwordConfInput) {
-passwordConfInput.value = 'Senha@123';
-}
+        passwordConfInput.value = 'Senha@123';
+    }
 }
 
 function handleClear() {
@@ -78,16 +78,16 @@ function handleClear() {
     );
 
     if (emailInput) {
-emailInput.value = '';
-}
+        emailInput.value = '';
+    }
 
     if (passwordInput) {
-passwordInput.value = '';
-}
+        passwordInput.value = '';
+    }
 
     if (passwordConfInput) {
-passwordConfInput.value = '';
-}
+        passwordConfInput.value = '';
+    }
 }
 </script>
 
