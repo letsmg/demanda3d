@@ -64,21 +64,16 @@ storage/debugbar/
 gcloud-api-7bbd403db8e7*
 public/fonts*
 
-# Ignora todo o conteúdo de storage/app/public
-/storage/app/public/*
-
-# Permite apenas a pasta imgs (diretório em si)
-!/storage/app/public/imgs/
-
-# Ignora todo o conteúdo de imgs
-/storage/app/public/imgs/*
-
-# Permite apenas a pasta site dentro de imgs (e todo seu conteúdo recursivamente)
-!/storage/app/public/imgs/site/
-
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Ignora tudo dentro de storage/app/public, exceto a pasta imgs/site
+# Ignora conteúdos internos do storage público individualmente, mantendo a árvore acessível para exceções
+/storage/app/public/tenants/
+/storage/app/public/products/
+/storage/app/public/uploads/
+/storage/app/public/cache/
