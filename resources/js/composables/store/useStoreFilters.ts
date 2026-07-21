@@ -61,7 +61,7 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
             fieldSort.value = forceString(newFilters.sort, 'name');
             dirSort.value = forceString(newFilters.sort_dir, 'asc');
         },
-        { deep: true }
+        { deep: true },
     );
 
     // ── Core: Aplicação de Filtros ─────────────────────────
