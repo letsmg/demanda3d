@@ -46,6 +46,17 @@ on:
     branches:
       - main
       - hom
+    paths:
+      - 'app/**'
+      - 'database/**'
+      - 'resources/**'
+      - 'routes/**'
+      - 'public/**'
+      - 'composer.json'
+      - 'package.json'
+      - 'vite.config.js'
+      - 'docker-compose*.yml'
+      - '.github/workflows/deploy.yml'
 
   workflow_dispatch:
 
