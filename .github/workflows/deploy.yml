@@ -238,7 +238,7 @@ jobs:
 
             echo "📦 Extraindo arquivos..."
             unzip -oq "/tmp/$PROJECT_NAME.zip" -d "$NEW_RELEASE"
-
+            
             # Corrige dono/grupo de TODO o conteúdo recém-extraído (o unzip
             # criava arquivos com grupo do processo, não www-data).
             sudo chown -R ubuntu:www-data "$NEW_RELEASE"
