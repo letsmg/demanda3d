@@ -207,8 +207,7 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             ubuntu@${{ secrets.SERVER_IP }} \
             "PROJECT_NAME='$PROJECT_NAME' ROOT='$ROOT' COMPOSE_FILE='$COMPOSE_FILE' MIGRATION_STRATEGY='$MIGRATION_STRATEGY' DB_CONTAINER_TARGET='$DB_CONTAINER_TARGET' RUN_NUMBER='${{ github.run_number }}'" \
-            'bash -s' << 'DEPLOY_SCRIPT'
-
+            'bash -s' <<-'DEPLOY_SCRIPT'
             set -Eeuo pipefail
 
             RELEASES="$ROOT/releases"
