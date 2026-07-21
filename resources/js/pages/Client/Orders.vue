@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Package, ChevronRight, ShoppingBag } from 'lucide-vue-next';
+import { Badge } from '@/components/ui/badge';
 import {
     Card,
     CardContent,
@@ -8,7 +9,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 defineProps<{
     client: any;
@@ -38,6 +38,7 @@ function statusLabel(status: string): string {
         delivered: 'Entregue',
         canceled: 'Cancelado',
     };
+
     return map[status] || status;
 }
 
@@ -49,6 +50,7 @@ function statusColor(status: string): string {
         delivered: 'bg-green-100 text-green-800 border-green-300',
         canceled: 'bg-red-100 text-red-800 border-red-300',
     };
+
     return map[status] || 'bg-gray-100 text-gray-800 border-gray-300';
 }
 </script>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import {
     CreditCard,
@@ -15,6 +14,7 @@ import {
     ChevronUp,
     Copy,
 } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -169,7 +169,9 @@ async function validateCoupon() {
     couponMessage.value = '';
     couponData.value = null;
 
-    if (!couponCode.value.trim()) return;
+    if (!couponCode.value.trim()) {
+return;
+}
 
     couponLoading.value = true;
 
@@ -204,11 +206,13 @@ async function validateCoupon() {
 function submitCheckout() {
     if (!selectedAddressId.value && !newAddress.value) {
         alert('Selecione ou cadastre um endereço de entrega.');
+
         return;
     }
 
     if (!selectedCarrierId.value) {
         alert('Selecione uma transportadora.');
+
         return;
     }
 
@@ -220,6 +224,7 @@ function submitCheckout() {
             alert(
                 '⚠️ Cartão não autorizado para o ambiente de desenvolvimento! Utilize apenas cartões de teste da Stripe no painel "Stripe Test Cards Helper".',
             );
+
             return;
         }
     }

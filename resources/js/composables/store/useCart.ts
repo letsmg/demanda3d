@@ -1,5 +1,5 @@
-import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { setCartCount } from '@/stores/cartStore';
 
 function csrfToken(): string {
@@ -17,6 +17,7 @@ export function useCart() {
     function isAuthenticated(): boolean {
         // Verifica nos props do Inertia (fonte primária)
         const page = (window as any).__inertia_page?.props;
+
         if (page?.auth_client?.user) {
             return true;
         }

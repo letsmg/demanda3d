@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch, onMounted } from 'vue';
 import {
     ShoppingBag,
     Search,
@@ -12,9 +11,8 @@ import {
     ImageIcon,
     Star,
 } from 'lucide-vue-next';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
-import { setCartCount } from '@/stores/cartStore';
-import { Input } from '@/components/ui/input';
 import {
     Card,
     CardContent,
@@ -24,20 +22,22 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
+import { setCartCount } from '@/stores/cartStore';
 
 defineOptions({
     layout: WelcomeLayout,
@@ -72,7 +72,9 @@ const currentPage = ref(1);
 const loadingMore = ref(false);
 
 async function loadMoreProducts(): Promise<void> {
-    if (loadingMore.value || !hasMore.value) return;
+    if (loadingMore.value || !hasMore.value) {
+return;
+}
 
     loadingMore.value = true;
     const nextPage = currentPage.value + 1;
@@ -80,10 +82,23 @@ async function loadMoreProducts(): Promise<void> {
     try {
         const qs = new URLSearchParams();
         qs.set('page', String(nextPage));
-        if (searchTerm.value) qs.set('search', searchTerm.value);
-        if (priceMin.value) qs.set('min_price', priceMin.value);
-        if (priceMax.value) qs.set('max_price', priceMax.value);
-        if (activeCategory.value) qs.set('category', activeCategory.value);
+
+        if (searchTerm.value) {
+qs.set('search', searchTerm.value);
+}
+
+        if (priceMin.value) {
+qs.set('min_price', priceMin.value);
+}
+
+        if (priceMax.value) {
+qs.set('max_price', priceMax.value);
+}
+
+        if (activeCategory.value) {
+qs.set('category', activeCategory.value);
+}
+
         qs.set('sort', sortBy.value);
         qs.set('sort_dir', sortOrder.value);
 
@@ -121,6 +136,7 @@ watch(
         if (!newList || !Array.isArray(newList)) {
             return;
         }
+
         visibleProducts.value = [...newList];
         hasMore.value = newList.length >= 8;
         currentPage.value = 1;
@@ -131,6 +147,7 @@ watch(searchTerm, (newVal) => {
     if (searchTimer) {
         clearTimeout(searchTimer);
     }
+
     if (newVal.length >= 3) {
         searchTimer = setTimeout(() => applyTenantFilters(), 500);
     } else if (newVal.length === 0) {
@@ -146,13 +163,18 @@ const cartLoading = ref(false);
 
 const authClient = computed(() => {
     const pageProps = (window as any).$page?.props;
+
     return pageProps?.auth_client?.user || null;
 });
 
 async function fetchCartData() {
-    if (!authClient.value) return;
+    if (!authClient.value) {
+return;
+}
+
     try {
         const res = await fetch('/cart/items', { credentials: 'include' });
+
         if (res.ok) {
             const data = await res.json();
             cartItems.value = data.items || [];
@@ -168,9 +190,12 @@ async function fetchCartData() {
 async function addToCart(productId: number) {
     if (!authClient.value) {
         window.location.href = '/login_cli';
+
         return;
     }
+
     cartLoading.value = true;
+
     try {
         const res = await fetch('/cart', {
             method: 'POST',
@@ -181,6 +206,7 @@ async function addToCart(productId: number) {
             },
             body: JSON.stringify({ product_id: productId, quantity: 1 }),
         });
+
         if (res.ok) {
             const data = await res.json();
             cartItems.value = data.items || [];
@@ -195,11 +221,17 @@ async function addToCart(productId: number) {
 
 async function removeFromCart(cartItemId: number) {
     const item = cartItems.value.find((i) => i.id === cartItemId);
-    if (!item) return;
+
+    if (!item) {
+return;
+}
+
     if (item.quantity <= 1) {
         await removeCartItem(cartItemId);
+
         return;
     }
+
     try {
         const res = await fetch('/cart/' + cartItemId, {
             method: 'PUT',
@@ -210,6 +242,7 @@ async function removeFromCart(cartItemId: number) {
             },
             body: JSON.stringify({ quantity: item.quantity - 1 }),
         });
+
         if (res.ok) {
             const data = await res.json();
             cartItems.value = data.items || [];
@@ -229,6 +262,7 @@ async function removeCartItem(cartItemId: number) {
             credentials: 'include',
             headers: { 'X-CSRF-TOKEN': csrfToken() },
         });
+
         if (res.ok) {
             const data = await res.json();
             cartItems.value = data.items || [];
@@ -248,6 +282,7 @@ async function clearCart() {
             credentials: 'include',
             headers: { 'X-CSRF-TOKEN': csrfToken() },
         });
+
         if (res.ok) {
             cartItems.value = [];
             cartTotal.value = 0;
@@ -261,16 +296,19 @@ async function clearCart() {
 
 function getCartQty(productId: number): number {
     const item = cartItems.value.find((i) => i.product_id === productId);
+
     return item ? item.quantity : 0;
 }
 
 function getCartItemId(productId: number): number | null {
     const item = cartItems.value.find((i) => i.product_id === productId);
+
     return item ? item.id : null;
 }
 
 function csrfToken(): string {
     const meta = document.querySelector('meta[name="csrf-token"]');
+
     return meta ? (meta as HTMLMetaElement).content : '';
 }
 
@@ -293,24 +331,43 @@ function closeGallery(): void {
 }
 
 function prevImage(): void {
-    if (!selectedProduct.value?.images?.length) return;
+    if (!selectedProduct.value?.images?.length) {
+return;
+}
+
     currentImageIndex.value =
         (currentImageIndex.value - 1 + selectedProduct.value.images.length) %
         selectedProduct.value.images.length;
 }
 
 function nextImage(): void {
-    if (!selectedProduct.value?.images?.length) return;
+    if (!selectedProduct.value?.images?.length) {
+return;
+}
+
     currentImageIndex.value =
         (currentImageIndex.value + 1) % selectedProduct.value.images.length;
 }
 
 function applyTenantFilters(): void {
     const params: Record<string, any> = {};
-    if (searchTerm.value) params.search = searchTerm.value;
-    if (priceMin.value) params.min_price = priceMin.value;
-    if (priceMax.value) params.max_price = priceMax.value;
-    if (activeCategory.value) params.category = activeCategory.value;
+
+    if (searchTerm.value) {
+params.search = searchTerm.value;
+}
+
+    if (priceMin.value) {
+params.min_price = priceMin.value;
+}
+
+    if (priceMax.value) {
+params.max_price = priceMax.value;
+}
+
+    if (activeCategory.value) {
+params.category = activeCategory.value;
+}
+
     params.sort = sortBy.value;
     params.sort_dir = sortOrder.value;
 
@@ -374,6 +431,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
     if (product.images && product.images.length > 0 && product.images[index]) {
         return product.images[index].url;
     }
+
     return undefined;
 }
 </script>

@@ -44,11 +44,15 @@ function maskDoc(doc: string): string {
             '$1.$2.$3/$4-$5',
         );
     }
+
     return doc;
 }
 
 function formatDate(date: string | null): string {
-    if (!date) return '—';
+    if (!date) {
+return '—';
+}
+
     return new Date(date).toLocaleDateString('pt-BR');
 }
 </script>

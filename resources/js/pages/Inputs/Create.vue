@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from 'lucide-vue-next';
+import FormTestHelper from '@/components/FormTestHelper.vue';
+import type {TestField} from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,11 +21,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { index as inputsIndex } from '@/routes/inputs';
-import FormTestHelper, {
-    type TestField,
-} from '@/components/FormTestHelper.vue';
 import { useTestData } from '@/composables/useTestData';
+import { index as inputsIndex } from '@/routes/inputs';
 
 const {
     randomInputDescription,
@@ -58,8 +57,11 @@ function buildTestFields(): TestField[] {
 
 function handleFill() {
     const fresh = buildTestFields();
+
     for (const f of fresh) {
-        if (f.key in form) (form as any)[f.key] = f.value;
+        if (f.key in form) {
+(form as any)[f.key] = f.value;
+}
     }
 }
 

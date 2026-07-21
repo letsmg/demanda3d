@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import {
+    Shield,
+    UserCog,
+    UserCheck,
+    Pencil,
+    KeyRound,
+    X,
+} from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 import { toast } from 'vue-sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -9,8 +19,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,14 +28,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Shield,
-    UserCog,
-    UserCheck,
-    Pencil,
-    KeyRound,
-    X,
-} from 'lucide-vue-next';
 
 defineOptions({
     layout: {
@@ -82,7 +82,10 @@ function closeEditModal() {
 }
 
 function submitEdit() {
-    if (!editingUser.value) return;
+    if (!editingUser.value) {
+return;
+}
+
     editForm.put(`/admin/users/${editingUser.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
@@ -96,6 +99,7 @@ function toggleUser(user: UserItem) {
     // Admin não pode ser bloqueado
     if (user.access_level >= 10) {
         toast.error('Não é possível bloquear um Administrador.');
+
         return;
     }
 
@@ -138,14 +142,18 @@ function copyPassword() {
 }
 
 function accessBadge(level: number) {
-    if (level >= 10)
-        return { variant: 'default' as const, label: 'Admin', icon: Shield };
-    if (level >= 1)
-        return {
+    if (level >= 10) {
+return { variant: 'default' as const, label: 'Admin', icon: Shield };
+}
+
+    if (level >= 1) {
+return {
             variant: 'secondary' as const,
             label: 'Gestor',
             icon: UserCog,
         };
+}
+
     return {
         variant: 'outline' as const,
         label: 'Operacional',

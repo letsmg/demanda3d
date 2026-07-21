@@ -10,7 +10,11 @@ const legal = computed(() => page.props.legalConsent as any);
 
 const title = computed(() => {
     const doc = legal.value;
-    if (!doc) return 'Documentos Legais atualizados';
+
+    if (!doc) {
+return 'Documentos Legais atualizados';
+}
+
     return doc.document_title || 'Documentos Legais atualizados';
 });
 
@@ -18,6 +22,7 @@ const graceDays = computed(() => legal.value?.grace_days ?? 7);
 
 const visible = computed(() => {
     const doc = legal.value;
+
     return (
         doc?.needs_acceptance &&
         doc?.show_banner === true &&

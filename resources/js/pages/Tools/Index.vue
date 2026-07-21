@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import {
     Wrench,
@@ -11,6 +10,8 @@ import {
     Trash2,
     AlertCircle,
 } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,7 +21,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -51,21 +51,30 @@ const generateSitemap = () => {
 
 const onFilesSelected = (e: Event) => {
     const target = e.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
+
+    if (!target.files || target.files.length === 0) {
+return;
+}
+
     const files = Array.from(target.files);
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
     for (const file of files) {
         if (!allowedTypes.includes(file.type)) {
             imageError.value = `Formato não aceito: ${file.name}`;
             target.value = '';
+
             return;
         }
+
         if (file.size > MAX_IMAGE_SIZE) {
             imageError.value = `${file.name} excede 2MB.`;
             target.value = '';
+
             return;
         }
     }
+
     imageError.value = null;
     uploadForm.images = files;
     submitUpload();
@@ -83,12 +92,16 @@ const sanitizeSeoName = (value: string) => {
 const submitUpload = () => {
     if (!uploadForm.image_name.trim()) {
         seoFormatError.value = 'Informe um nome SEO para a imagem.';
+
         return;
     }
+
     if (uploadForm.images.length === 0) {
         imageError.value = 'Selecione pelo menos uma imagem.';
+
         return;
     }
+
     uploading.value = true;
     uploadForm.post('/tools/hero-images', {
         preserveScroll: true,
@@ -101,7 +114,10 @@ const submitUpload = () => {
             const input = document.getElementById(
                 'hero-image-input',
             ) as HTMLInputElement;
-            if (input) input.value = '';
+
+            if (input) {
+input.value = '';
+}
         },
         onError: () => {
             uploading.value = false;
@@ -110,7 +126,10 @@ const submitUpload = () => {
 };
 
 const deleteImage = (filename: string) => {
-    if (!confirm(`Remover "${filename}" do carrossel?`)) return;
+    if (!confirm(`Remover "${filename}" do carrossel?`)) {
+return;
+}
+
     // Usa POST com _method=DELETE para compatibilidade com todos os browsers
     const form = useForm({ filename, _method: 'DELETE' });
     form.post(`/tools/hero-images`, { preserveScroll: true });
@@ -123,8 +142,10 @@ const rebuildAllImages = () => {
         !confirm(
             'Isso irá APAGAR todas as imagens otimizadas e recriá-las a partir dos originais. Continuar?',
         )
-    )
-        return;
+    ) {
+return;
+}
+
     rebuildForm.post('/tools/hero-images/rebuild', { preserveScroll: true });
 };
 </script>

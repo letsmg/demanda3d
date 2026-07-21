@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Save, ArrowLeft, AlertCircle } from 'lucide-vue-next';
+import FormTestHelper from '@/components/FormTestHelper.vue';
+import type {TestField} from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,9 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index as inputsIndex } from '@/routes/inputs';
 import type { Input as InputType } from '@/types';
-import FormTestHelper, {
-    type TestField,
-} from '@/components/FormTestHelper.vue';
 
 const props = defineProps<{
     input: InputType;

@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const showPassword = ref(false);
+import FormTestHelper from '@/components/FormTestHelper.vue';
+import type {TestField} from '@/components/FormTestHelper.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
-import FormTestHelper, {
-    type TestField,
-} from '@/components/FormTestHelper.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -20,6 +15,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
 
 defineOptions({ layout: WelcomeLayout });
