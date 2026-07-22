@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
 import { Lock } from 'lucide-vue-next';
-import { useCep } from '@/composables/useCep';
+import { computed, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCep } from '@/composables/useCep';
 
 const props = defineProps<{
     zipcode: string;
@@ -34,10 +34,13 @@ const fieldsEnabled = computed(() => isStateLocked.value && !props.disabled);
 
 async function onCepBlur() {
     const digits = (props.zipcode || '').replace(/\D/g, '');
+
     if (digits.length < 8) {
         return;
     }
+
     const data = await fetchCep(props.zipcode);
+
     if (data.state_id) {
         emit('update:stateId', data.state_id);
         emit('update:state', data.uf || '');

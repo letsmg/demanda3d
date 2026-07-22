@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { ShoppingBag } from 'lucide-vue-next';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -116,7 +116,7 @@ const features = [
     </Head>
 
     <!-- Hero Section -->
-    <section class="relative flex min-h-[600px] items-center overflow-hidden">      
+    <section class="relative flex min-h-[600px] items-center overflow-hidden">
         <!-- Rotating background images with overlay -->
         <div
             v-for="(img, idx) in heroImages"

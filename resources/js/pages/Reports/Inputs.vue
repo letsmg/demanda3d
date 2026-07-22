@@ -16,9 +16,11 @@ const threshold = ref('');
 
 function applyFilter() {
     const params: Record<string, string> = {};
+
     if (threshold.value) {
         params.threshold = threshold.value;
     }
+
     router.get('/reports/inputs', params, {
         preserveState: true,
         replace: true,

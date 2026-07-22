@@ -24,8 +24,15 @@ const dateTo = ref('');
 
 function applyFilter() {
     const params: Record<string, string> = {};
-    if (dateFrom.value) params.date_from = dateFrom.value;
-    if (dateTo.value) params.date_to = dateTo.value;
+
+    if (dateFrom.value) {
+params.date_from = dateFrom.value;
+}
+
+    if (dateTo.value) {
+params.date_to = dateTo.value;
+}
+
     router.get('/reports/sales', params, {
         preserveState: true,
         replace: true,

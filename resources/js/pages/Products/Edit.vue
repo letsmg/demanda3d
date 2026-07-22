@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import Sortable from 'sortablejs';
 import {
     ArrowLeft,
     AlertCircle,
@@ -11,6 +9,8 @@ import {
     Plus,
     Trash2,
 } from 'lucide-vue-next';
+import Sortable from 'sortablejs';
+import { ref, onMounted, nextTick } from 'vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -79,7 +79,10 @@ const form = useForm({
 function initSortable() {
     destroySortable();
     const total = existingImages.value.length + newPreviews.value.length;
-    if (!thumbnailContainer.value || total < 2) return;
+
+    if (!thumbnailContainer.value || total < 2) {
+return;
+}
 
     sortableInstance = Sortable.create(thumbnailContainer.value, {
         animation: 150,
@@ -99,6 +102,7 @@ function initSortable() {
             const reorderedNew = newOrder
                 .map((id) => {
                     const match = id.match(/^new-(\d+)$/);
+
                     return match
                         ? newPreviews.value[parseInt(match[1], 10)]
                         : null;
@@ -137,8 +141,11 @@ function buildTestFields() {
 
 function handleFill() {
     const fresh = buildTestFields();
+
     for (const f of fresh) {
-        if (f.key in form) (form as any)[f.key] = f.value;
+        if (f.key in form) {
+(form as any)[f.key] = f.value;
+}
     }
 }
 
@@ -155,6 +162,7 @@ function handleClear() {
 function addImages(files: FileList) {
     if (totalThumbnails() + files.length > MAX_IMAGES) {
         imageError.value = `Máximo de ${MAX_IMAGES} imagens. Você já tem ${totalThumbnails()}.`;
+
         return;
     }
 
@@ -198,6 +206,7 @@ function removeNewImage(index: number) {
 
 function onFileChange(e: Event) {
     const target = e.target as HTMLInputElement;
+
     if (target.files && target.files.length > 0) {
         addImages(target.files);
         target.value = '';
@@ -210,6 +219,7 @@ function triggerFileInput() {
 
 function onContainerDrop(e: DragEvent) {
     e.preventDefault();
+
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         addImages(e.dataTransfer.files);
     }

@@ -48,6 +48,7 @@ const share = useShareDialog();
 
 onMounted(() => {
     isMounted.value = true;
+
     if (cart.isAuthenticated()) {
         cart.fetchCartData();
     }
@@ -64,6 +65,7 @@ function getImageUrl(product: any, index: number = 0): string | undefined {
     if (product.images && product.images.length > 0 && product.images[index]) {
         return product.images[index].url;
     }
+
     return undefined;
 }
 </script>

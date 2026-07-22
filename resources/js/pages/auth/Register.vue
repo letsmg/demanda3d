@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Form, Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const showPassword = ref(false);
+import FormTestHelper from '@/components/FormTestHelper.vue';
+import type {TestField} from '@/components/FormTestHelper.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
-import FormTestHelper, {
-    type TestField,
-} from '@/components/FormTestHelper.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Card,
     CardContent,
@@ -18,8 +15,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { store } from '@/routes/register';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Spinner } from '@/components/ui/spinner';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
+import { store } from '@/routes/register';
 
 defineOptions({ layout: WelcomeLayout });
 
@@ -53,9 +52,18 @@ function handleFill() {
     const passwordConfInput = document.querySelector<HTMLInputElement>(
         'input[name="password_confirmation"]',
     );
-    if (emailInput) emailInput.value = 'vendedor@loja.com.br';
-    if (passwordInput) passwordInput.value = 'Senha@123';
-    if (passwordConfInput) passwordConfInput.value = 'Senha@123';
+
+    if (emailInput) {
+emailInput.value = 'vendedor@loja.com.br';
+}
+
+    if (passwordInput) {
+passwordInput.value = 'Senha@123';
+}
+
+    if (passwordConfInput) {
+passwordConfInput.value = 'Senha@123';
+}
 }
 
 function handleClear() {
@@ -68,9 +76,18 @@ function handleClear() {
     const passwordConfInput = document.querySelector<HTMLInputElement>(
         'input[name="password_confirmation"]',
     );
-    if (emailInput) emailInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-    if (passwordConfInput) passwordConfInput.value = '';
+
+    if (emailInput) {
+emailInput.value = '';
+}
+
+    if (passwordInput) {
+passwordInput.value = '';
+}
+
+    if (passwordConfInput) {
+passwordConfInput.value = '';
+}
 }
 </script>
 

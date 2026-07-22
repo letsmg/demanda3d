@@ -49,6 +49,7 @@ const onSearchInput = () => {
 
     if (searchQuery.value.length === 0) {
         router.get('/orders', {}, { preserveState: true, replace: true });
+
         return;
     }
 

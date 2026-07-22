@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, Save } from 'lucide-vue-next';
-import FormTestHelper, {
-    type TestField,
-} from '@/components/FormTestHelper.vue';
+import FormTestHelper from '@/components/FormTestHelper.vue';
+import type {TestField} from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

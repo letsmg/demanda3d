@@ -5,9 +5,6 @@ import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -15,8 +12,11 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { request } from '@/routes/password';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import WelcomeLayout from '@/layouts/WelcomeLayout.vue';
+import { request } from '@/routes/password';
 
 defineOptions({ layout: WelcomeLayout });
 defineProps<{ status?: string; canResetPassword: boolean }>();

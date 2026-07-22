@@ -1,15 +1,27 @@
-name: Tests  # Opcional, mas recomendado
+name: Tests
 
 on:
   push:
     branches:
       - hom
       #- main
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'database/**'
+      - 'composer.json'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches:
       - hom
       #- main
-  workflow_dispatch:  # Permite rodar manualmente pelo painel do GitHub
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'database/**'
+      - 'composer.json'
+      - '.github/workflows/tests.yml'
+  workflow_dispatch:
 
 jobs:
   tests:
@@ -36,5 +48,13 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install Composer
+      - name: Install Composer Dependencies
         run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare Environment (.env)
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Tests (Pest)
+        run: vendor/bin/pest tests/Feature

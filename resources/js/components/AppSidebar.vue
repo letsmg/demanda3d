@@ -28,14 +28,14 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as carriersIndex } from '@/routes/carriers';
 import { index as clientsIndex } from '@/routes/clients';
+import { index as freightContractsIndex } from '@/routes/freight-contracts';
 import { index as inputsIndex } from '@/routes/inputs';
 import { index as ordersIndex } from '@/routes/orders';
 import { index as productsIndex } from '@/routes/products';
 import { index as reportsIndex } from '@/routes/reports';
 import { index as suppliersIndex } from '@/routes/suppliers';
-import { index as carriersIndex } from '@/routes/carriers';
-import { index as freightContractsIndex } from '@/routes/freight-contracts';
 import { index as toolsIndex } from '@/routes/tools';
 import type { NavItem } from '@/types';
 

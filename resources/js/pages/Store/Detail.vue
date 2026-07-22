@@ -164,15 +164,20 @@ function csrfToken(): string {
 
 function getCartItemId(productId: number): number | null {
     const item = cartItems.value.find((i: any) => i.product_id === productId);
+
     return item ? item.id : null;
 }
 
 async function removeFromCart(productId: number): Promise<void> {
-    if (!authClient.value) return;
+    if (!authClient.value) {
+return;
+}
 
     const item = cartItems.value.find((i: any) => i.product_id === productId);
+
     if (!item || item.quantity <= 1) {
         await removeCartItem(getCartItemId(productId) ?? 0);
+
         return;
     }
 

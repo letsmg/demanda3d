@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Search, RotateCw, X } from 'lucide-vue-next';
+import { computed } from 'vue';
+import VueSlider from 'vue-slider-component';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -10,7 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import VueSlider from 'vue-slider-component';
 import 'vue-slider-component/dist-css/vue-slider-component.css';
 
 interface Category {

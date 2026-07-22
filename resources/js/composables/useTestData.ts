@@ -125,11 +125,13 @@ export function useTestData() {
             d1 += cnpj[i] * pesos1[i];
             d2 += cnpj[i] * pesos2[i];
         }
+
         d1 = d1 % 11 < 2 ? 0 : 11 - (d1 % 11);
         d2 += d1 * pesos2[12];
         d2 = d2 % 11 < 2 ? 0 : 11 - (d2 % 11);
 
         const digits = [...cnpj, d1, d2];
+
         return digits
             .join('')
             .replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -144,15 +146,18 @@ export function useTestData() {
         );
         let d1 = 0;
         let d2 = 0;
+
         for (let i = 0; i < 9; i++) {
             d1 += n[i] * (10 - i);
             d2 += n[i] * (11 - i);
         }
+
         d1 = (d1 * 10) % 11;
         d1 = d1 >= 10 ? 0 : d1;
         d2 += d1 * 2;
         d2 = (d2 * 10) % 11;
         d2 = d2 >= 10 ? 0 : d2;
+
         return [...n, d1, d2]
             .join('')
             .replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');

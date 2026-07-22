@@ -5,21 +5,39 @@ on:
     branches:
       - hom
       #- main
+    paths:
+      - 'app/**'
+      - 'resources/**'
+      - 'routes/**'
+      - 'public/**'
+      - 'composer.json'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/lint.yml'
   pull_request:
     branches:
       - hom
       #- main
+    paths:
+      - 'app/**'
+      - 'resources/**'
+      - 'routes/**'
+      - 'public/**'
+      - 'composer.json'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/lint.yml'
 
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4 # Alterado para v4 (v5 não existe oficialmente ainda, o padrão estável é v4)
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5' # Corrigido para 8.5
+          php-version: '8.4' # Recomendado manter 8.4 (ou 8.3) para garantir estabilidade no runner
           extensions: pdo_pgsql, redis, bcmath
           coverage: none
 

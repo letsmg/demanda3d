@@ -40,6 +40,7 @@ const props = defineProps<{
 
 function getCsrfToken(): string {
     const meta = document.querySelector('meta[name="csrf-token"]');
+
     return meta ? (meta as HTMLMetaElement).content : '';
 }
 
@@ -50,8 +51,10 @@ function updateLocalCart(data: any) {
 async function decrease(itemId: number, currentQty: number) {
     if (currentQty <= 1) {
         await removeItem(itemId);
+
         return;
     }
+
     try {
         const res = await fetch('/cart/' + itemId, {
             method: 'PUT',
@@ -62,6 +65,7 @@ async function decrease(itemId: number, currentQty: number) {
             },
             body: JSON.stringify({ quantity: currentQty - 1 }),
         });
+
         if (res.ok) {
             const data = await res.json();
             updateLocalCart(data);
@@ -83,6 +87,7 @@ async function increase(itemId: number, currentQty: number) {
             },
             body: JSON.stringify({ quantity: currentQty + 1 }),
         });
+
         if (res.ok) {
             const data = await res.json();
             updateLocalCart(data);
@@ -100,6 +105,7 @@ async function removeItem(itemId: number) {
             credentials: 'include',
             headers: { 'X-CSRF-TOKEN': getCsrfToken() },
         });
+
         if (res.ok) {
             const data = await res.json();
             updateLocalCart(data);
@@ -117,6 +123,7 @@ async function clearCart() {
             credentials: 'include',
             headers: { 'X-CSRF-TOKEN': getCsrfToken() },
         });
+
         if (res.ok) {
             const data = await res.json();
             updateLocalCart(data);

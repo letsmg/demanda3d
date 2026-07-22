@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, ChevronDown, Save } from 'lucide-vue-next';
+import { ref, watch, nextTick } from 'vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -22,6 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useTestData } from '@/composables/useTestData';
 import { index as suppliersIndex } from '@/routes/suppliers';
 
@@ -197,6 +197,7 @@ function buildTestFields() {
 
 function handleFill() {
     const fields = buildTestFields();
+
     for (const f of fields) {
         if (f.key in form) {
             (form as any)[f.key] = f.value;
@@ -210,11 +211,16 @@ function handleClear() {
 
 function applyMask(raw: string): string {
     const d = raw.replace(/\D/g, '');
-    if (!d) return '';
+
+    if (!d) {
+return '';
+}
+
     if (d.length <= 11) {
         let m = d;
-        if (m.length > 9)
-            m =
+
+        if (m.length > 9) {
+m =
                 m.slice(0, 3) +
                 '.' +
                 m.slice(3, 6) +
@@ -222,14 +228,19 @@ function applyMask(raw: string): string {
                 m.slice(6, 9) +
                 '-' +
                 m.slice(9);
-        else if (m.length > 6)
-            m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
-        else if (m.length > 3) m = m.slice(0, 3) + '.' + m.slice(3);
+} else if (m.length > 6) {
+m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
+} else if (m.length > 3) {
+m = m.slice(0, 3) + '.' + m.slice(3);
+}
+
         return m.slice(0, 14);
     }
+
     let m = d;
-    if (m.length > 12)
-        m =
+
+    if (m.length > 12) {
+m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -239,8 +250,8 @@ function applyMask(raw: string): string {
             m.slice(8, 12) +
             '-' +
             m.slice(12, 14);
-    else if (m.length > 8)
-        m =
+} else if (m.length > 8) {
+m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -248,21 +259,29 @@ function applyMask(raw: string): string {
             m.slice(5, 8) +
             '/' +
             m.slice(8);
-    else if (m.length > 5)
-        m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
-    else if (m.length > 2) m = m.slice(0, 2) + '.' + m.slice(2);
+} else if (m.length > 5) {
+m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
+} else if (m.length > 2) {
+m = m.slice(0, 2) + '.' + m.slice(2);
+}
+
     return m.slice(0, 18);
 }
 
 watch(
     () => form.document,
     (val: string) => {
-        if (!val) return;
+        if (!val) {
+return;
+}
+
         const masked = applyMask(val);
-        if (masked !== val)
-            nextTick(() => {
+
+        if (masked !== val) {
+nextTick(() => {
                 form.document = masked;
             });
+}
     },
 );
 
@@ -271,14 +290,19 @@ const docError = ref('');
 const submit = () => {
     docError.value = '';
     const d = (form.document || '').replace(/\D/g, '');
+
     if (!d) {
         docError.value = 'O documento é obrigatório.';
+
         return;
     }
+
     if (d.length < 11) {
         docError.value = 'Documento muito curto (mín. 11 dígitos).';
+
         return;
     }
+
     form.post('/suppliers', { preserveScroll: true });
 };
 </script>

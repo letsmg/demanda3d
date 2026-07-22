@@ -15,9 +15,14 @@ interface FilterState {
 
 // Função auxiliar para extrair a lista de produtos corretamente
 const extractProducts = (data: any): any[] => {
-    if (Array.isArray(data)) return data;
-    if (data && typeof data === 'object' && Array.isArray(data.data))
-        return data.data;
+    if (Array.isArray(data)) {
+return data;
+}
+
+    if (data && typeof data === 'object' && Array.isArray(data.data)) {
+return data.data;
+}
+
     return [];
 };
 
@@ -43,7 +48,9 @@ export function useStoreProducts(props: ProductList, filters?: FilterState) {
     );
 
     async function loadMoreProducts(): Promise<void> {
-        if (loadingMore.value || !hasMore.value) return;
+        if (loadingMore.value || !hasMore.value) {
+return;
+}
 
         loadingMore.value = true;
         const nextPage = currentPage.value + 1;
@@ -53,17 +60,25 @@ export function useStoreProducts(props: ProductList, filters?: FilterState) {
             qs.set('page', String(nextPage));
 
             if (filters) {
-                if (filters.searchTerm.value.trim().length >= 3)
-                    qs.set('search', filters.searchTerm.value.trim());
-                if (filters.priceMin.value)
-                    qs.set('min_price', filters.priceMin.value);
-                if (filters.priceMax.value)
-                    qs.set('max_price', filters.priceMax.value);
-                if (filters.selectedCategories.value.length > 0)
-                    qs.set(
+                if (filters.searchTerm.value.trim().length >= 3) {
+qs.set('search', filters.searchTerm.value.trim());
+}
+
+                if (filters.priceMin.value) {
+qs.set('min_price', filters.priceMin.value);
+}
+
+                if (filters.priceMax.value) {
+qs.set('max_price', filters.priceMax.value);
+}
+
+                if (filters.selectedCategories.value.length > 0) {
+qs.set(
                         'categories',
                         filters.selectedCategories.value.join(','),
                     );
+}
+
                 qs.set('sort', filters.sortBy.value);
                 qs.set('sort_dir', filters.sortOrder.value);
             }
