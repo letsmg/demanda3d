@@ -10,12 +10,11 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Redis;
 
 /**
- * Publica um payload de notificação na fila Redis
- * que o microsserviço Go (go-notification-service) consome.
+ * Publica um payload de notificação na fila Redis (modo compatível)
+ * ou diretamente no RabbitMQ para processamento pelo Go Service.
  *
- * Este Job NÃO processa a notificação localmente —
- * apenas serializa e publica na fila notifications_queue.
- * O worker Go é responsável por disparar push/FCM, e-mail e SMS.
+ * Em ambiente de desenvolvimento, utiliza Redis como fallback.
+ * Em produção com RabbitMQ habilitado, publica via AMQP.
  */
 class SendNotification implements ShouldQueue
 {
@@ -34,10 +33,6 @@ class SendNotification implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * Publica o payload como JSON na fila Redis 'notifications_queue'.
-     * O Go Notification Service escuta esta fila via BLPOP e processa
-     * o disparo real de forma assíncrona e concorrente.
      */
     public function handle(): void
     {
@@ -50,6 +45,46 @@ class SendNotification implements ShouldQueue
             'timestamp' => now()->toIso8601String(),
         ], JSON_THROW_ON_ERROR);
 
+        // Tenta RabbitMQ primeiro (se configurado), fallback para Redis
+        if ($this->useRabbitMQ()) {
+            $this->publishToRabbitMQ($payload);
+        } else {
+            $this->publishToRedis($payload);
+        }
+    }
+
+    /**
+     * Verifica se RabbitMQ está habilitado no ambiente.
+     */
+    private function useRabbitMQ(): bool
+    {
+        return config('queue.connections.rabbitmq.host') !== null
+            && config('queue.connections.rabbitmq.host') !== '';
+    }
+
+    /**
+     * Publica o payload na fila RabbitMQ 'notifications_queue'.
+     */
+    private function publishToRabbitMQ(string $payload): void
+    {
+        // Usa a conexão queue configurada para rabbitmq
+        // O Laravel Queue Worker publica na exchange padrão com routing key = queue name
+        // Neste caso, usamos o driver 'rabbitmq' configurado como conexão padrão ou
+        // publicamos diretamente na queue 'notifications_queue'
+        dispatch(new static(
+            $this->userId,
+            $this->title,
+            $this->message,
+            $this->channel,
+            $this->tenantId,
+        ))->onConnection('rabbitmq')->onQueue('notifications_queue');
+    }
+
+    /**
+     * Publica o payload via RPUSH no Redis (fallback legado).
+     */
+    private function publishToRedis(string $payload): void
+    {
         Redis::connection('default')
             ->rpush('notifications_queue', $payload);
     }

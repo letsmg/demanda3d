@@ -84,14 +84,16 @@ class OrderPolicy
 
     /**
      * Determine whether the user can delete the model.
+     * SELLER_1 (Vendedor Master) e Admins podem excluir pedidos.
      */
     public function delete(User $user, Order $order): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->access_level === UserAccessLevel::SELLER_1;
     }
 
     /**
      * Determine whether the user can permanently delete the model.
+     * Apenas Admins podem excluir permanentemente.
      */
     public function forceDelete(User $user, Order $order): bool
     {

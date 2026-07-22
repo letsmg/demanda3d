@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\NoContactDataRule;
-use App\Rules\NoOffensiveContentRule;
+use App\Services\MessageSanitizer;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreMessageRequest extends FormRequest
 {
@@ -14,58 +12,52 @@ class StoreMessageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // Autorização delegada à Policy no Controller
+        return true; // A autorização é delegada ao Controller/Policy
     }
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'thread_id' => ['required', 'exists:threads,id'],
             'content' => [
                 'required',
                 'string',
                 'min:1',
                 'max:5000',
-                new NoContactDataRule,
-                new NoOffensiveContentRule,
             ],
-            'sender_type' => ['required', Rule::in(['staff', 'client'])],
         ];
     }
 
     /**
-     * Mensagens de erro customizadas (pt-BR).
+     * Prepare the data for validation.
      *
-     * @return array<string, string>
+     * Aplica trim() e strip_tags() para sanitização básica (XSS prevention).
+     *
+     * O bloqueio de PII (MessageSanitizer) é aplicado na camada de Service
+     * (ThreadService/DisputeService), NÃO aqui na FormRequest, para garantir
+     * que a validação de PII aconteça em TODOS os fluxos de mensagens,
+     * incluindo APIs internas que não passam por FormRequests.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('content') && is_string($this->input('content'))) {
+            $this->merge([
+                'content' => trim(strip_tags($this->input('content'))),
+            ]);
+        }
+    }
+
+    /**
+     * Custom error messages.
      */
     public function messages(): array
     {
         return [
-            'thread_id.required' => 'A thread da conversa é obrigatória.',
-            'thread_id.exists' => 'A thread informada não existe.',
             'content.required' => 'O conteúdo da mensagem é obrigatório.',
-            'content.max' => 'A mensagem não pode ter mais que 5000 caracteres.',
-            'sender_type.required' => 'O tipo de remetente é obrigatório.',
-            'sender_type.in' => 'O tipo de remetente deve ser staff ou client.',
-        ];
-    }
-
-    /**
-     * Nomes dos atributos traduzidos.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'thread_id' => 'thread da conversa',
-            'content' => 'conteúdo da mensagem',
-            'sender_type' => 'tipo de remetente',
+            'content.min'      => 'A mensagem deve ter pelo menos 1 caractere.',
+            'content.max'      => 'A mensagem não pode exceder 5000 caracteres.',
         ];
     }
 }

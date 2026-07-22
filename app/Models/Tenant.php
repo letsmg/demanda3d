@@ -36,6 +36,8 @@ class Tenant extends Model
         'is_profile_complete',
         'rating_average',
         'rating_count',
+        'latitude',
+        'longitude',
     ];
 
     protected $appends = [
@@ -51,6 +53,8 @@ class Tenant extends Model
             'is_profile_complete' => 'boolean',
             'rating_average'      => 'decimal:2',
             'rating_count'        => 'integer',
+            'latitude'            => 'decimal:8',
+            'longitude'           => 'decimal:8',
         ];
     }
 
@@ -157,6 +161,43 @@ class Tenant extends Model
         return $this->belongsToMany(Carrier::class, 'carrier_tenant_agreements')
             ->wherePivot('status', 'active')
             ->withTimestamps();
+    }
+
+    // ── Scopes de Geolocalização ─────────────────────────────
+
+    /**
+     * Filtra tenants por proximidade geográfica utilizando a fórmula de Haversine.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  float  $latitude   Latitude de referência (ex: localização do cliente)
+     * @param  float  $longitude  Longitude de referência
+     * @param  float  $radiusInKm Raio de busca em quilômetros (ex: 10.0 = 10 km)
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNearby($query, float $latitude, float $longitude, float $radiusInKm = 50.0): void
+    {
+        if ($latitude === 0.0 && $longitude === 0.0) {
+            return; // Sem localização válida, não aplica filtro
+        }
+
+        // Fórmula de Haversine:
+        // a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)
+        // c = 2 * atan2(√a, √(1−a))
+        // d = R * c  (R = 6371 km, raio médio da Terra)
+
+        $lat = (float) $latitude;
+        $lon = (float) $longitude;
+        $radius = (float) $radiusInKm;
+
+        $query->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereRaw('
+                (6371 * acos(
+                    cos(radians(?)) * cos(radians(latitude))
+                    * cos(radians(longitude) - radians(?))
+                    + sin(radians(?)) * sin(radians(latitude))
+                )) <= ?
+            ', [$lat, $lon, $lat, $radius]);
     }
 }
 // Copyright (c) 2026 Luiz Eduardo T. Silva. Todos os direitos reservados.

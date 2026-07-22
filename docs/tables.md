@@ -1,7 +1,7 @@
 # Dicionário de Dados — Demanda3D
 
-> Última atualização: 2026-07-15
-> Base: 43 migrations em `database/migrations/`
+> Última atualização: 2026-07-22
+> Base: 45 migrations em `database/migrations/`
 
 ---
 
@@ -49,6 +49,8 @@
 | `city` | VARCHAR(100) | NULLABLE | Cidade |
 | `state` | VARCHAR(2) | NULLABLE | UF |
 | `zipcode` | VARCHAR(10) | NULLABLE | CEP |
+| `latitude` | DECIMAL(10,8) | NULLABLE | Latitude geográfica para busca por proximidade |
+| `longitude` | DECIMAL(11,8) | NULLABLE | Longitude geográfica para busca por proximidade |
 | `logo_path` | VARCHAR(500) | NULLABLE | Caminho da logo no storage |
 | `banner_path` | VARCHAR(500) | NULLABLE | Caminho do banner no storage |
 | `active` | BOOLEAN | DEFAULT true, INDEX | Loja ativa |
@@ -728,8 +730,36 @@
 
 ---
 
-## Infraestrutura Redis (não-SQL)
+## Infraestrutura de Mensageria (RabbitMQ + Redis Fallback)
 
-| Chave | Tipo | Propósito |
-| :--- | :--- | :--- |
-| `notifications_queue` | List (FIFO) | Fila compartilhada Laravel (produtor RPUSH) ↔ Go Notification Service (consumidor BLPOP) |
+| Fila / Chave | Broker | Tipo | Propósito |
+| :--- | :--- | :--- | :--- |
+| `notifications_queue` | RabbitMQ | Queue (durable) | Notificações push/e-mail/SMS — Laravel publica (Redis RPUSH como fallback), Go Service consome via RabbitMQ |
+| `chat_queue` | RabbitMQ | Queue (durable) | Mensagens de chat (dúvidas) cliente↔vendedor — Go Service processa triagem FAQ |
+| `dispute_queue` | RabbitMQ | Queue (durable) | Mensagens do módulo de disputas — Go Service processa logging estruturado |
+| `notifications_queue` (Redis) | Redis | List (FIFO) | Buffer legado — fallback quando RabbitMQ não está disponível |
+
+> **Arquitetura:** O Laravel publica via Jobs (`SendNotification`, `PublishChatMessage`) que fazem RPUSH no Redis como buffer. O microsserviço Go (`go-service/main.go`) consome diretamente do RabbitMQ (biblioteca `amqp091-go`) com worker pool de 5 goroutines e graceful shutdown. Filas declaradas como duráveis para persistência. Confirmação manual (`Ack`/`Nack`) garante entrega confiável.
+
+---
+
+## Geolocalização — Busca por Proximidade (Local-First)
+
+**Tabela:** `tenants` (colunas `latitude` DECIMAL(10,8), `longitude` DECIMAL(11,8))
+
+**Model:** `Tenant::scopeNearby($latitude, $longitude, $radiusInKm)`
+
+**Fórmula:** Haversine — distância em km entre dois pontos geográficos (raio médio da Terra = 6371 km).
+
+```php
+// Exemplo: lojas em raio de 10 km a partir de São Paulo
+$tenants = Tenant::nearby(-23.5505, -46.6333, 10.0)->get();
+```
+
+**Índice:** `tenants_geo_idx (latitude, longitude)` — índice composto para consultas de proximidade.
+
+**Fluxo Local-First:**
+1. Cliente informa localização (lat/lng) via navegador ou app
+2. API de tenants aplica `scopeNearby()` com raio configurável (default 50 km)
+3. Resultados ordenados por distância + rating
+4. Lojas sem geolocalização são excluídas do filtro de proximidade

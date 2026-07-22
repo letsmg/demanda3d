@@ -216,6 +216,26 @@ Route::middleware(['auth', 'verified', 'ensure.staff', 'verify.user.exists'])->g
         Route::delete('{contract}', [InertiaFreightContractController::class, 'destroy'])->name('destroy');
     });
 
+    // ── THREADS (Conversas/Dúvidas) ──
+    Route::prefix('threads')->name('threads.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Inertia\ThreadController::class, 'index'])->name('index');
+        Route::get('{thread}', [App\Http\Controllers\Inertia\ThreadController::class, 'show'])->name('show');
+        Route::post('{thread}/messages', [App\Http\Controllers\Inertia\ThreadController::class, 'storeMessage'])->name('messages.store');
+        Route::post('{thread}/close', [App\Http\Controllers\Inertia\ThreadController::class, 'close'])->name('close');
+        Route::post('{thread}/reopen', [App\Http\Controllers\Inertia\ThreadController::class, 'reopen'])->name('reopen');
+    });
+
+    // ── DISPUTAS (Litígios) ──
+    Route::prefix('disputes')->name('disputes.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Inertia\DisputeController::class, 'index'])->name('index');
+        Route::get('create', [App\Http\Controllers\Inertia\DisputeController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Inertia\DisputeController::class, 'store'])->name('store');
+        Route::get('{dispute}', [App\Http\Controllers\Inertia\DisputeController::class, 'show'])->name('show');
+        Route::post('{dispute}/messages', [App\Http\Controllers\Inertia\DisputeController::class, 'sendMessage'])->name('messages.store');
+        Route::post('{dispute}/resolve', [App\Http\Controllers\Inertia\DisputeController::class, 'resolve'])->name('resolve');
+        Route::post('{dispute}/dismiss', [App\Http\Controllers\Inertia\DisputeController::class, 'dismiss'])->name('dismiss');
+    });
+
     // Ferramentas Admin & Staff
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/tools/security', [\App\Http\Controllers\Admin\ToolsController::class, 'index'])->name('tools.security');

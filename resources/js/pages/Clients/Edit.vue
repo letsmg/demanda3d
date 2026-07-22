@@ -22,6 +22,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    applyDocMask,
+    detectDocType,
+    isValidCpf,
+    isValidCnpj,
+    generateValidCpf as genCpf,
+} from '@/composables/useDocumentValidation';
 import { index as clientsIndex } from '@/routes/clients';
 import type { Client } from '@/types';
 
@@ -91,42 +98,12 @@ function rnd<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ── Gerador de CPF sempre válido e diferente ──────
-function generateValidCpf(): string {
-    const digits: number[] = [];
-
-    for (let i = 0; i < 9; i++) {
-        digits.push(Math.floor(Math.random() * 10));
-    }
-
-    let sum = 0;
-
-    for (let i = 0; i < 9; i++) {
-        sum += digits[i] * (10 - i);
-    }
-
-    let d1 = sum % 11;
-    d1 = d1 < 2 ? 0 : 11 - d1;
-    digits.push(d1);
-    sum = 0;
-
-    for (let i = 0; i < 10; i++) {
-        sum += digits[i] * (11 - i);
-    }
-
-    let d2 = sum % 11;
-    d2 = d2 < 2 ? 0 : 11 - d2;
-    digits.push(d2);
-
-    return digits.join('');
-}
-
 const testFields: TestField[] = [
     { key: 'first_name', value: 'Maria' },
     { key: 'last_name', value: 'Oliveira Costa' },
     { key: 'display_name', value: 'Maria Oliveira Costa' },
     { key: 'doc_type', value: 'CPF' },
-    { key: 'doc', value: generateValidCpf() },
+    { key: 'doc', value: genCpf() },
     { key: 'address', value: 'Avenida Paulista' },
     { key: 'number', value: '1000' },
     { key: 'state', value: 'SP' },
@@ -145,7 +122,7 @@ function handleFill() {
     form.last_name = lastName;
     form.display_name = `${firstName} ${lastName}`;
     form.doc_type = 'CPF';
-    form.doc = applyMask(generateValidCpf(), 'CPF');
+    form.doc = applyDocMask(genCpf(), 'CPF');
     form.address = 'Avenida Paulista';
     form.number = String(Math.floor(Math.random() * 9000) + 100);
     form.state = 'SP';
@@ -182,66 +159,6 @@ watch(docType, () => {
     typeMismatchWarning.value = '';
 });
 
-// ── Máscara via watch + nextTick ──────────────────
-function applyMask(raw: string, type: string): string {
-    const digits = raw.replace(/\D/g, '');
-
-    if (!digits) {
-        return '';
-    }
-
-    if (type === 'CPF') {
-        let m = digits;
-
-        if (m.length > 9) {
-            m =
-                m.slice(0, 3) +
-                '.' +
-                m.slice(3, 6) +
-                '.' +
-                m.slice(6, 9) +
-                '-' +
-                m.slice(9, 11);
-        } else if (m.length > 6) {
-            m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
-        } else if (m.length > 3) {
-            m = m.slice(0, 3) + '.' + m.slice(3);
-        }
-
-        return m.slice(0, 14);
-    }
-
-    let m = digits;
-
-    if (m.length > 12) {
-        m =
-            m.slice(0, 2) +
-            '.' +
-            m.slice(2, 5) +
-            '.' +
-            m.slice(5, 8) +
-            '/' +
-            m.slice(8, 12) +
-            '-' +
-            m.slice(12, 14);
-    } else if (m.length > 8) {
-        m =
-            m.slice(0, 2) +
-            '.' +
-            m.slice(2, 5) +
-            '.' +
-            m.slice(5, 8) +
-            '/' +
-            m.slice(8);
-    } else if (m.length > 5) {
-        m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
-    } else if (m.length > 2) {
-        m = m.slice(0, 2) + '.' + m.slice(2);
-    }
-
-    return m.slice(0, 18);
-}
-
 watch(
     () => form.doc,
     (val: string) => {
@@ -249,7 +166,7 @@ watch(
             return;
         }
 
-        const masked = applyMask(val, form.doc_type);
+        const masked = applyDocMask(val, form.doc_type as 'CPF' | 'CNPJ');
 
         if (masked !== val) {
             nextTick(() => {
@@ -263,21 +180,17 @@ watch(
 const docError = ref('');
 const typeMismatchWarning = ref('');
 
-function detectedType(digits: string): 'CPF' | 'CNPJ' {
-    return digits.length === 11 ? 'CPF' : 'CNPJ';
-}
-
 function validateDoc(): boolean {
-    const digits = (form.doc || '').replace(/\D/g, '');
+    const clean = (form.doc || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     typeMismatchWarning.value = '';
 
-    if (!digits) {
+    if (!clean) {
         docError.value = 'O documento é obrigatório.';
 
         return false;
     }
 
-    const actual = detectedType(digits);
+    const actual = detectDocType(clean);
     const selected = form.doc_type;
 
     if (actual !== selected) {
@@ -287,25 +200,25 @@ function validateDoc(): boolean {
     }
 
     if (selected === 'CPF') {
-        if (digits.length !== 11) {
+        if (clean.length !== 11) {
             docError.value = 'CPF deve ter 11 dígitos.';
 
             return false;
         }
 
-        if (!isValidCpf(digits)) {
+        if (!isValidCpf(clean)) {
             docError.value = 'CPF inválido.';
 
             return false;
         }
     } else {
-        if (digits.length !== 14) {
-            docError.value = 'CNPJ deve ter 14 dígitos.';
+        if (clean.length !== 14) {
+            docError.value = 'CNPJ deve ter 14 caracteres.';
 
             return false;
         }
 
-        if (!isValidCnpj(digits)) {
+        if (!isValidCnpj(clean)) {
             docError.value = 'CNPJ inválido.';
 
             return false;
@@ -315,60 +228,6 @@ function validateDoc(): boolean {
     docError.value = '';
 
     return true;
-}
-
-function isValidCpf(d: string): boolean {
-    let s = 0;
-
-    for (let i = 0; i < 9; i++) {
-        s += parseInt(d[i]) * (10 - i);
-    }
-
-    let d1 = s % 11;
-    d1 = d1 < 2 ? 0 : 11 - d1;
-
-    if (d1 !== parseInt(d[9])) {
-        return false;
-    }
-
-    s = 0;
-
-    for (let i = 0; i < 10; i++) {
-        s += parseInt(d[i]) * (11 - i);
-    }
-
-    let d2 = s % 11;
-    d2 = d2 < 2 ? 0 : 11 - d2;
-
-    return d2 === parseInt(d[10]);
-}
-
-function isValidCnpj(d: string): boolean {
-    const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-    const w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-    let s = 0;
-
-    for (let i = 0; i < 12; i++) {
-        s += parseInt(d[i]) * w1[i];
-    }
-
-    let d1 = s % 11;
-    d1 = d1 < 2 ? 0 : 11 - d1;
-
-    if (d1 !== parseInt(d[12])) {
-        return false;
-    }
-
-    s = 0;
-
-    for (let i = 0; i < 13; i++) {
-        s += parseInt(d[i]) * w2[i];
-    }
-
-    let d2 = s % 11;
-    d2 = d2 < 2 ? 0 : 11 - d2;
-
-    return d2 === parseInt(d[13]);
 }
 
 const submit = () => {
