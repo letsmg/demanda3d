@@ -71,9 +71,5 @@ public/fonts*
 /playwright/.cache/
 /playwright/.auth/
 
-# Ignora tudo dentro de storage/app/public, exceto a pasta imgs/site
-# Ignora conteúdos internos do storage público individualmente, mantendo a árvore acessível para exceções
-/storage/app/public/tenants/
-/storage/app/public/products/
-/storage/app/public/uploads/
-/storage/app/public/cache/
+/storage/app/public/imgs/*
+!/storage/app/public/imgs/site*
