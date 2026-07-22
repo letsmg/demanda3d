@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { AlertCircle, ArrowLeft, Save } from 'lucide-vue-next';
 import { ref, watch, nextTick } from 'vue';
 import FormTestHelper from '@/components/FormTestHelper.vue';
-import type {TestField} from '@/components/FormTestHelper.vue';
+import type { TestField } from '@/components/FormTestHelper.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,14 +50,14 @@ function applyMask(raw: string, type: string): string {
     const digits = raw.replace(/\D/g, '');
 
     if (!digits) {
-return '';
-}
+        return '';
+    }
 
     if (type === 'CPF') {
         let m = digits;
 
         if (m.length > 9) {
-m =
+            m =
                 m.slice(0, 3) +
                 '.' +
                 m.slice(3, 6) +
@@ -65,11 +65,11 @@ m =
                 m.slice(6, 9) +
                 '-' +
                 m.slice(9, 11);
-} else if (m.length > 6) {
-m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
-} else if (m.length > 3) {
-m = m.slice(0, 3) + '.' + m.slice(3);
-}
+        } else if (m.length > 6) {
+            m = m.slice(0, 3) + '.' + m.slice(3, 6) + '.' + m.slice(6);
+        } else if (m.length > 3) {
+            m = m.slice(0, 3) + '.' + m.slice(3);
+        }
 
         return m.slice(0, 14);
     }
@@ -77,7 +77,7 @@ m = m.slice(0, 3) + '.' + m.slice(3);
     let m = digits;
 
     if (m.length > 12) {
-m =
+        m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -87,8 +87,8 @@ m =
             m.slice(8, 12) +
             '-' +
             m.slice(12, 14);
-} else if (m.length > 8) {
-m =
+    } else if (m.length > 8) {
+        m =
             m.slice(0, 2) +
             '.' +
             m.slice(2, 5) +
@@ -96,11 +96,11 @@ m =
             m.slice(5, 8) +
             '/' +
             m.slice(8);
-} else if (m.length > 5) {
-m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
-} else if (m.length > 2) {
-m = m.slice(0, 2) + '.' + m.slice(2);
-}
+    } else if (m.length > 5) {
+        m = m.slice(0, 2) + '.' + m.slice(2, 5) + '.' + m.slice(5);
+    } else if (m.length > 2) {
+        m = m.slice(0, 2) + '.' + m.slice(2);
+    }
 
     return m.slice(0, 18);
 }
@@ -108,16 +108,16 @@ watch(
     () => form.document,
     (val: string) => {
         if (!val) {
-return;
-}
+            return;
+        }
 
         const masked = applyMask(val, form.doc_type);
 
         if (masked !== val) {
-nextTick(() => {
+            nextTick(() => {
                 form.document = masked;
             });
-}
+        }
     },
 );
 

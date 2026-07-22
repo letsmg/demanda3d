@@ -10,18 +10,23 @@ class DocumentValidationService
 {
     /**
      * Validate a Brazilian document (CPF or CNPJ).
+     *
+     * Para CNPJ, tenta primeiro a validação numérica tradicional (dígitos verificadores
+     * por peso fixo). Se falhar, tenta a validação alfanumérica (novo formato da Receita
+     * Federal com conversão ASCII).
      */
     public static function validate(string $doc, ?DocumentType $type = null): bool
     {
-        $digits = preg_replace('/\D/', '', $doc);
+        $clean = preg_replace('/[^A-Za-z0-9]/', '', $doc);
 
         if ($type === null) {
-            $type = DocumentType::detect($digits);
+            $type = DocumentType::detect($clean);
         }
 
         return match ($type) {
-            DocumentType::CPF => self::validateCpf($digits),
-            DocumentType::CNPJ => self::validateCnpj($digits),
+            DocumentType::CPF => self::validateCpf(preg_replace('/\D/', '', $doc)),
+            DocumentType::CNPJ => self::validateCnpjNumeric($clean)
+                || self::validateCnpjAlfanumeric($clean),
         };
     }
 
@@ -65,13 +70,18 @@ class DocumentValidationService
     }
 
     /**
-     * Validate CNPJ (14 digits).
+     * Validate CNPJ numérico tradicional (14 dígitos).
      */
-    public static function validateCnpj(string $cnpj): bool
+    public static function validateCnpjNumeric(string $cnpj): bool
     {
         $cnpj = preg_replace('/\D/', '', $cnpj);
 
         if (strlen($cnpj) !== 14) {
+            return false;
+        }
+
+        // Se contém letras, não é CNPJ numérico puro
+        if (preg_match('/[A-Za-z]/', $cnpj)) {
             return false;
         }
 
@@ -106,7 +116,63 @@ class DocumentValidationService
     }
 
     /**
-     * Extract only digits from a document string.
+     * Validate CNPJ alfanumérico (novo formato da Receita Federal).
+     *
+     * Utiliza conversão ASCII para calcular os dígitos verificadores:
+     *   - Caracteres alfabéticos (A-Z): valor = ord(caractere) - 48
+     *   - Caracteres numéricos (0-9): valor = (int) caractere
+     *
+     * Algoritmo baseado na Nota Técnica da RFB para CNPJ alfanumérico.
+     */
+    public static function validateCnpjAlfanumeric(string $cnpj): bool
+    {
+        $cnpj = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $cnpj));
+
+        if (strlen($cnpj) !== 14) {
+            return false;
+        }
+
+        // Se for 100% numérico, delega para o validador tradicional
+        if (preg_match('/^\d{14}$/', $cnpj)) {
+            return false; // deixa o validateCnpjNumeric cuidar
+        }
+
+        // Valida primeiro dígito verificador (posição 12)
+        for ($t = 12; $t < 14; $t++) {
+            $soma = 0;
+            $pos = $t - 7;
+            for ($i = 0; $i < $t; $i++) {
+                $caractere = $cnpj[$i];
+                $valor = ctype_alpha($caractere) ? (ord($caractere) - 48) : (int) $caractere;
+                $soma += $valor * $pos;
+                $pos--;
+                if ($pos < 2) {
+                    $pos = 9;
+                }
+            }
+            $r = $soma % 11;
+            $dv = ($r < 2) ? 0 : 11 - $r;
+            if ((int) $cnpj[$t] !== $dv) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Método legado mantido para compatibilidade (alias para validateCnpjNumeric).
+     *
+     * @deprecated Use validateCnpjNumeric() ou validateCnpjAlfanumeric() diretamente.
+     */
+    public static function validateCnpj(string $cnpj): bool
+    {
+        return self::validateCnpjNumeric($cnpj);
+    }
+
+    /**
+     * Extract only digits from a document string (para CPF).
+     * Para CNPJ alfanumérico, use cleanDocument().
      */
     public static function digitsOnly(string $doc): string
     {
@@ -114,26 +180,34 @@ class DocumentValidationService
     }
 
     /**
+     * Remove caracteres de formatação mantendo letras e números (para CNPJ alfanumérico).
+     */
+    public static function cleanDocument(string $doc): string
+    {
+        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $doc));
+    }
+
+    /**
      * Format a document with the appropriate mask.
      */
     public static function format(string $doc, ?DocumentType $type = null): string
     {
-        $digits = self::digitsOnly($doc);
+        $clean = self::cleanDocument($doc);
 
         if ($type === null) {
-            $type = DocumentType::detect($digits);
+            $type = DocumentType::detect($clean);
         }
 
         return match ($type) {
             DocumentType::CPF => preg_replace(
                 '/(\d{3})(\d{3})(\d{3})(\d{2})/',
                 '$1.$2.$3-$4',
-                str_pad($digits, 11, '0', STR_PAD_LEFT)
+                str_pad(preg_replace('/[^0-9]/', '', $clean), 11, '0', STR_PAD_LEFT)
             ),
             DocumentType::CNPJ => preg_replace(
-                '/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/',
+                '/([A-Z0-9]{2})([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{4})([A-Z0-9]{2})/',
                 '$1.$2.$3/$4-$5',
-                str_pad($digits, 14, '0', STR_PAD_LEFT)
+                str_pad($clean, 14, '0', STR_PAD_LEFT)
             ),
         };
     }

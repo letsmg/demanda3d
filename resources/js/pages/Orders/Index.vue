@@ -181,7 +181,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                         >
                             <td class="px-6 py-4 font-medium">
                                 {{
-                                    order.client?.name ||
+                                    order.client?.display_name ||
                                     order.client_display_name ||
                                     `Cliente #${order.client_id}`
                                 }}
@@ -193,7 +193,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                                 {{ formatDate(order.delivery_date) }}
                             </td>
                             <td class="px-6 py-4 text-sm font-medium">
-                                {{ formatCurrency(Number(order.price)) }}
+                                {{ formatCurrency(Number(order.amount_total)) }}
                             </td>
                             <td class="px-6 py-4">
                                 <Badge
@@ -250,7 +250,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
                             <CardTitle class="text-base">{{
-                                order.client?.name ||
+                                order.client?.display_name ||
                                 order.client_display_name ||
                                 `Cliente #${order.client_id}`
                             }}</CardTitle>
@@ -285,7 +285,7 @@ const isPending = (deliveryDate: string) => new Date(deliveryDate) > new Date();
                                     class="h-3.5 w-3.5 text-green-600"
                                 />
                                 <span>{{
-                                    formatCurrency(Number(order.price))
+                                    formatCurrency(Number(order.amount_total))
                                 }}</span>
                             </div>
                         </div>

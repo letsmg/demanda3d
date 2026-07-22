@@ -83,8 +83,8 @@ function closeEditModal() {
 
 function submitEdit() {
     if (!editingUser.value) {
-return;
-}
+        return;
+    }
 
     editForm.put(`/admin/users/${editingUser.value.id}`, {
         preserveScroll: true,
@@ -143,16 +143,16 @@ function copyPassword() {
 
 function accessBadge(level: number) {
     if (level >= 10) {
-return { variant: 'default' as const, label: 'Admin', icon: Shield };
-}
+        return { variant: 'default' as const, label: 'Admin', icon: Shield };
+    }
 
     if (level >= 1) {
-return {
+        return {
             variant: 'secondary' as const,
             label: 'Gestor',
             icon: UserCog,
         };
-}
+    }
 
     return {
         variant: 'outline' as const,

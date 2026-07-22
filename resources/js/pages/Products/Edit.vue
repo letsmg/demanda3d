@@ -81,8 +81,8 @@ function initSortable() {
     const total = existingImages.value.length + newPreviews.value.length;
 
     if (!thumbnailContainer.value || total < 2) {
-return;
-}
+        return;
+    }
 
     sortableInstance = Sortable.create(thumbnailContainer.value, {
         animation: 150,
@@ -144,8 +144,8 @@ function handleFill() {
 
     for (const f of fresh) {
         if (f.key in form) {
-(form as any)[f.key] = f.value;
-}
+            (form as any)[f.key] = f.value;
+        }
     }
 }
 

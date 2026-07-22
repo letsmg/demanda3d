@@ -170,8 +170,8 @@ function getCartItemId(productId: number): number | null {
 
 async function removeFromCart(productId: number): Promise<void> {
     if (!authClient.value) {
-return;
-}
+        return;
+    }
 
     const item = cartItems.value.find((i: any) => i.product_id === productId);
 

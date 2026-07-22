@@ -2,13 +2,14 @@
 
 namespace App\Policies;
 
+use App\Enums\UserAccessLevel;
 use App\Models\Dispute;
 use App\Models\User;
 
 class DisputePolicy
 {
     /**
-     * Administradores têm acesso total a todas as disputas para moderação.
+     * Admin tem acesso total.
      */
     public function before(User $user, string $ability): ?bool
     {
@@ -20,7 +21,7 @@ class DisputePolicy
     }
 
     /**
-     * Determine whether the user can view any disputes.
+     * Vendedores podem ver disputas do seu próprio tenant.
      */
     public function viewAny(User $user): bool
     {
@@ -28,38 +29,45 @@ class DisputePolicy
     }
 
     /**
-     * Determine whether the user can view a specific dispute.
+     * Vendedores podem ver uma disputa específica do seu tenant.
      */
     public function view(User $user, Dispute $dispute): bool
     {
-        if ($user->isStaff()) {
-            return true;
-        }
-
-        // Clientes só visualizam disputas que eles mesmos abriram
-        return $dispute->reporter_id === $user->id;
-    }
-
-    /**
-     * Determine whether the user can create disputes.
-     */
-    public function create(User $user): bool
-    {
-        return true; // Qualquer usuário autenticado pode abrir uma disputa
-    }
-
-    /**
-     * Determine whether the user can update the dispute status.
-     */
-    public function update(User $user, Dispute $dispute): bool
-    {
+        // O TenantScope já garante o isolamento por tenant_id
         return $user->isStaff();
     }
 
     /**
-     * Determine whether the user can delete the dispute.
+     * Apenas clientes (via guard) podem criar disputas,
+     * ou admins podem criar em nome de clientes.
      */
-    public function delete(User $user, Dispute $dispute): bool
+    public function create(User $user): bool
+    {
+        // Via painel staff, admins podem abrir disputas também
+        return $user->isAdmin();
+    }
+
+    /**
+     * Apenas admins podem atualizar/fechar disputas.
+     * SELLER_1 e SELLER_2 NÃO podem intervir em disputas.
+     */
+    public function update(User $user, Dispute $dispute): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Apenas admins podem enviar mensagens em disputas.
+     */
+    public function sendMessage(User $user, Dispute $dispute): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Apenas admins podem fechar/resolver disputas.
+     */
+    public function close(User $user, Dispute $dispute): bool
     {
         return $user->isAdmin();
     }

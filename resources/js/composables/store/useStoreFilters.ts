@@ -22,22 +22,22 @@ interface FilterParams {
 // ── Função de Segurança: Garante que nunca enviaremos uma função ao backend ──
 function forceString(val: any, fallback: string): string {
     if (val === undefined || val === null || typeof val === 'function') {
-return fallback;
-}
+        return fallback;
+    }
 
     const str = String(val);
 
     if (str.includes('[native code]')) {
-return fallback;
-}
+        return fallback;
+    }
 
     return str;
 }
 
 function parseCategories(raw: string | undefined): string[] {
     if (!raw || typeof raw === 'function') {
-return [];
-}
+        return [];
+    }
 
     return String(raw).split(',').filter(Boolean);
 }
@@ -62,8 +62,8 @@ export function useStoreFilters(props: { filters: StoreFilters }) {
         () => props.filters,
         (newFilters) => {
             if (!newFilters) {
-return;
-}
+                return;
+            }
 
             searchTerm.value = forceString(newFilters.search, '');
             priceMin.value = Number(newFilters.min_price) || 0;
@@ -82,20 +82,20 @@ return;
         const trimmedSearch = searchTerm.value.trim();
 
         if (trimmedSearch.length >= 3) {
-params.search = trimmedSearch;
-}
+            params.search = trimmedSearch;
+        }
 
         if (priceMin.value > 0) {
-params.min_price = String(priceMin.value);
-}
+            params.min_price = String(priceMin.value);
+        }
 
         if (priceMax.value < 1500) {
-params.max_price = String(priceMax.value);
-}
+            params.max_price = String(priceMax.value);
+        }
 
         if (selectedCategories.value.length > 0) {
-params.categories = selectedCategories.value.join(',');
-}
+            params.categories = selectedCategories.value.join(',');
+        }
 
         // Forçando o envio dos nomes que o Backend espera, mas vindos de refs seguras
         params.sort = forceString(fieldSort.value, 'name');
@@ -140,8 +140,8 @@ params.categories = selectedCategories.value.join(',');
 
     async function fetchSuggestions(): Promise<void> {
         if (abortController) {
-abortController.abort();
-}
+            abortController.abort();
+        }
 
         const val = searchTerm.value.trim();
 
@@ -191,8 +191,8 @@ abortController.abort();
     function onSearchKeydown(e: KeyboardEvent): void {
         if (!showSuggestions.value || suggestions.value.length === 0) {
             if (e.key === 'Enter') {
-applyStoreFilters();
-}
+                applyStoreFilters();
+            }
 
             return;
         }
@@ -227,8 +227,8 @@ applyStoreFilters();
         const target = e.target as HTMLElement;
 
         if (!target.closest('[data-search-area]')) {
-showSuggestions.value = false;
-}
+            showSuggestions.value = false;
+        }
     }
 
     onMounted(() => window.addEventListener('click', onWindowClick));
@@ -240,8 +240,8 @@ showSuggestions.value = false;
         priceMax.value = values[1];
 
         if (debounceTimer) {
-clearTimeout(debounceTimer);
-}
+            clearTimeout(debounceTimer);
+        }
 
         debounceTimer = setTimeout(() => {
             applyStoreFilters();
@@ -253,10 +253,10 @@ clearTimeout(debounceTimer);
         const idx = selectedCategories.value.indexOf(catSlug);
 
         if (idx >= 0) {
-selectedCategories.value.splice(idx, 1);
-} else {
-selectedCategories.value.push(catSlug);
-}
+            selectedCategories.value.splice(idx, 1);
+        } else {
+            selectedCategories.value.push(catSlug);
+        }
 
         applyStoreFilters();
     }
@@ -272,8 +272,8 @@ selectedCategories.value.push(catSlug);
 
     function handleSortChange(value: string | null): void {
         if (!value || typeof value !== 'string') {
-return;
-}
+            return;
+        }
 
         const parts = value.split('_');
         const dir = parts.pop()!;

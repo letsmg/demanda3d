@@ -170,8 +170,8 @@ async function validateCoupon() {
     couponData.value = null;
 
     if (!couponCode.value.trim()) {
-return;
-}
+        return;
+    }
 
     couponLoading.value = true;
 

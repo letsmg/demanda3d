@@ -50,8 +50,8 @@ function maskDoc(doc: string): string {
 
 function formatDate(date: string | null): string {
     if (!date) {
-return '—';
-}
+        return '—';
+    }
 
     return new Date(date).toLocaleDateString('pt-BR');
 }

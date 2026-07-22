@@ -53,8 +53,8 @@ const onFilesSelected = (e: Event) => {
     const target = e.target as HTMLInputElement;
 
     if (!target.files || target.files.length === 0) {
-return;
-}
+        return;
+    }
 
     const files = Array.from(target.files);
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -116,8 +116,8 @@ const submitUpload = () => {
             ) as HTMLInputElement;
 
             if (input) {
-input.value = '';
-}
+                input.value = '';
+            }
         },
         onError: () => {
             uploading.value = false;
@@ -127,8 +127,8 @@ input.value = '';
 
 const deleteImage = (filename: string) => {
     if (!confirm(`Remover "${filename}" do carrossel?`)) {
-return;
-}
+        return;
+    }
 
     // Usa POST com _method=DELETE para compatibilidade com todos os browsers
     const form = useForm({ filename, _method: 'DELETE' });
@@ -143,8 +143,8 @@ const rebuildAllImages = () => {
             'Isso irá APAGAR todas as imagens otimizadas e recriá-las a partir dos originais. Continuar?',
         )
     ) {
-return;
-}
+        return;
+    }
 
     rebuildForm.post('/tools/hero-images/rebuild', { preserveScroll: true });
 };

@@ -38,8 +38,8 @@ onMounted(() => {
 
 const initials = computed(() => {
     if (!props.client?.display_name) {
-return '?';
-}
+        return '?';
+    }
 
     const parts = props.client.display_name.split(' ');
 
